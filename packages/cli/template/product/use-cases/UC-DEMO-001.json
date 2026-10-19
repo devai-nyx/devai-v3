@@ -1,0 +1,13 @@
+{
+  "id": "UC-DEMO-001",
+  "product": "demo",
+  "title": "Create and retrieve a tenant note",
+  "actor": {"name": "Demo member", "roles": ["demo-member"]},
+  "preconditions": ["A verified bearer token identifies a tenant and the demo-member role."],
+  "postconditions": ["A valid submission creates one note retrievable only in its tenant."],
+  "rules": ["RN-DEMO-001", "RN-DEMO-002"],
+  "endpoints": [
+    {"method": "POST", "path": "/notes"},
+    {"method": "GET", "path": "/notes/:id"}
+  ]
+}

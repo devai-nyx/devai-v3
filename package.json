@@ -1,0 +1,10 @@
+{
+  "name": "devai-v3",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": ">=9 <10"
+  },
+  "packageManager": "pnpm@9.15.0"
+}

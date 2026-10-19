@@ -1,0 +1,2 @@
+#!/bin/sh
+exec pnpm exec devai check --hook commit-msg "$1"

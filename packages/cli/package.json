@@ -1,0 +1,28 @@
+{
+  "name": "@devai-nyx/cli",
+  "version": "3.0.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "bin": {
+    "devai": "dist/main.js"
+  },
+  "files": [
+    "dist",
+    "template"
+  ],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "dependencies": {
+    "commander": "15.0.0",
+    "ignore": "7.0.5",
+    "pg": "8.23.1",
+    "pg-query-emscripten": "5.1.0",
+    "typescript": "~6.0.3",
+    "yaml": "2.9.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/pg": "8.20.0"
+  }
+}

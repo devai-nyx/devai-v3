@@ -1,0 +1,2 @@
+#!/bin/sh
+exec pnpm exec devai check --hook pre-push "$@"

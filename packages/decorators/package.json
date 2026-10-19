@@ -1,0 +1,12 @@
+{
+  "name": "@devai-nyx/decorators",
+  "version": "3.0.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^11.1.19"
+  }
+}

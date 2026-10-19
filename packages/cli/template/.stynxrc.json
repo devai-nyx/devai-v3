@@ -1,0 +1,1 @@
+{ "boundary": { "roots": ["apps","domain"], "allowedPackages": ["@stynx-nyx/"], "forbiddenImports": [] } }
