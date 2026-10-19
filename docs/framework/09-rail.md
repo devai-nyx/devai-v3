@@ -23,18 +23,18 @@ Both modes end with the preflight (exit 2 `tooling-missing`).
 
 [opinion] **Shape.** The workspace holds real packages only (04 §1): `apps/api`, `apps/web`, then `domain/*/{api,web}`. Both shells ship from day one: A.1 has no web flag, and a `--web` module needs an Angular app to mount in (08 B.1). Each package extends its published preset [fact: `stynx:tools/tsconfig/node24.json:3`, `angular18.json:3-7`], and `typecheck` orders the projects from the workspace graph (08 B.5). There is no solution file. A root `tsconfig.test.json` puts every `test/` tree under `typecheck` and `lint-tests` (S-32), since package configs include `src` only (P-5-11). STYNX's Vitest `createRequire` serves a workspace resolver, not SWC [fact: `stynx:tools/repo-config/vitest.base.mjs:3,71` vs `:243-254`], so the template imports `unplugin-swc` natively (D-057). STYNX's commitlint scopes are CJS and hand-kept [fact: `stynx:tools/repo-config/commitlint.config.cjs:15-71,73`]; the ESM config computes them at load.
 
-[opinion] **Database.** `apply.sh` is POSIX `sh` and runs `$PSQL -f` over, in order:
+[opinion] **Database.** `apply.sh` is POSIX `sh` and applies, in order (each step with `$PSQL -f` except step 2):
 1. `database/ddl/*.sql`
-2. the installed `@stynx-nyx/data` platform migrations (D-023)
+2. the installed `@stynx-nyx/data` platform migrations, through `stynx migrate up --role-prefix <productPrefix>` (D-023, D-070)
 3. each path in `database/seed/modules.txt`
 4. `database/migrations/*.sql`
 5. `database/seed/*.sql`
 
-Module baselines therefore precede any root migration that alters them. No connection string goes on argv: `psql` reads `PG*` variables, so 08 B.20's `sh -x` census never prints credentials (E-5-08).
+Module baselines therefore precede any root migration that alters them. No connection string goes on argv: `psql` and `stynx migrate` read `PG*` variables, so 08 B.20's `sh -x` census never prints credentials (E-5-08, D-070).
 
 `modules.txt` is the D-023 root manifest. It is in `sha256sum` form (`<sha256>  <path>` per module SQL file, in apply order), so `sh` reads it with `while read` and LINT013 reads it for immutability (D-043, P-5-04). The generator appends lines and never edits them.
 
-`00-core-bootstrap.sql` creates only `<product>_{owner,app,reader}` (S-18). STYNX's platform migrations still hard-code `stynx_*` roles [fact: `stynx:packages/data/migrations/platform/0001_roles.sql:3-11`]; parameterising them is an 11 release prerequisite, not a template compatibility layer (07 §5, P-5-12).
+`00-core-bootstrap.sql` creates only `<product>_{owner,app,reader}` (S-18). STYNX's platform migrations hard-code `stynx_*` roles in their applied bytes [fact: `stynx:packages/data/migrations/platform/0001_roles.sql:3-11`]; STYNX's migration runner substitutes the role prefix at apply time (SM-06, stynx-nyx/stynx#401), so the bytes stay immutable (D-033) and the template carries no compatibility layer (07 §5, P-5-12, D-070).
 
 [opinion] **Fixture and packets.** The five fixture bodies are 06 §7's, byte for byte, in every configuration. The spec is 10,035 bytes, sha256 `12e9041f…f30a` (en-US and pt-BR, D-059; R-5/R-6 split, D-064). Init never translates or re-pins them.
 
