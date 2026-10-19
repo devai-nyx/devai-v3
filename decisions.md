@@ -605,6 +605,24 @@ BUSL-1.1 and STYNX's repository is not modified. Grant text: `agents/relicense-2
 citing D-067; they enter at R6 with the generator, not the seed. Source: Owner, as owner of NYXK
 ("I, as owner of NYXK and this project, mandate you proceed with Apache relicensing").
 
+## D-068 · 2026-10-19 · R2 passed; `sql-typed` describes through a pg Submittable (08 B.10 amended)
+R2 (12 §4), the 08 B.10 adapter prototype, ran on PostgreSQL 16.15 bare (Homebrew) and docker
+(`postgres:16-alpine@sha256:721873c3…a080ea`) with `pg` 8.23.1 / `pg-protocol` 1.16.1, sending only
+Parse/Describe/Close/Sync. All cases met 12 §4's expectations identically in both runtimes: empty
+SELECT and INSERT … RETURNING described (row count unchanged, no prepared statement left), INSERT
+without RETURNING → `noData`, `point` → UNKNOWN `unsupported-oid 600`, parse error → FAIL SQLSTATE
+42601 with the client still usable, terminated backend → UNKNOWN `postgres-unreachable`. 02 §3 is
+not reopened. Rulings: (1) 08 B.10's literal `client.connection.parse/describe/sync` sequence is
+replaced by one pg Submittable per query (`parse`, `describe`, `close`, one `sync`), because the
+literal form makes the Client unqueryable ("Received unexpected rowDescription message from
+backend."); (2) a Client `'error'` listener is mandatory; (3) prepare findings carry the SQLSTATE,
+and cross-runtime comparisons key on it, since the server message follows `lc_messages` (bare
+printed it in Portuguese, docker in English). Options for (1): Submittable (public API) / detach the
+Client's listeners during describe / a raw `Connection` with own startup and auth. Chosen:
+Submittable, the only one on public API. Evidence: devai3 `agents/r2-pg-prototype/`
+(`RESULT.md`, `prototype.mjs` sha256 `b5c165af5d42d521acd963c01ef8ceb31b1d561580e3594755f04132e840b6c7`,
+`result-bare.json`, `result-docker.json`). Source: R2 run, adopted by the Owner.
+
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
