@@ -623,8 +623,32 @@ Submittable, the only one on public API. Evidence: devai3 `agents/r2-pg-prototyp
 (`RESULT.md`, `prototype.mjs` sha256 `b5c165af5d42d521acd963c01ef8ceb31b1d561580e3594755f04132e840b6c7`,
 `result-bare.json`, `result-docker.json`). Source: R2 run, adopted by the Owner.
 
+## D-069 · 2026-10-19 · R3 STYNX wave 1: LINT010 scope, tool publication and release wiring
+Rulings taken while landing SM-02/03/04 (stynx-nyx/stynx#400; superseded #397, #398, #399):
+- LINT010 (SM-04) — options: (a) a collision counts only when it involves a file absent from
+  `--base-dir` (the merge base); (b) scope LINT010 to product roots only; (c) leave STYNX's
+  `migration-lint` red. Chosen: (a). Applied history is immutable like LINT013 (D-033, D-059);
+  STYNX's permanent 0012/0018 duplicates stay green; without `--base-dir` every file counts as
+  new. STYNX's `lint:repo` computes the merge base itself. Source: Owner.
+- Tool packages become publish-ready in their own item — `@stynx-nyx/tsconfig` (not private, no
+  checkout `paths`; aliases move to STYNX's internal `tools/repo-config/tsconfig/`),
+  `@stynx-nyx/migration-linter` (not private), `@stynx-nyx/eslint-config` (private until
+  SM-21) — but STYNX's closed release roster (44 packages, first publications pinned to none),
+  changeset fixed group and discovery roots are changed once, for all three, in SM-21. Each
+  item carries a no-release changeset. Source: orchestrator, Owner approved the private flips.
+- Landing: wave 1 is one combined STYNX PR with one signed local RC (`verified-local-rc`)
+  instead of one per item. Source: Owner.
+- STYNX-local facts recorded for 12: its local RC toolchain law now pins Postgres.app psql 18.6
+  (STYNX ADR-DEVAI-ADOPTION-0025); its RC must run from a non-worktree checkout whose directory
+  is named `stynx` (DEVAI derives the authority repository id from it) and that carries the
+  local `refs/archive/*` history its release tests read; STYNX's release census now accepts
+  standing no-release changeset acknowledgements (Owner ruling). Open: STYNX's local RC tests
+  PostgreSQL 18 while its CI and this foundation use 16 (07 §4, 12 §3).
+Source: Owner panel and directions 2026-10-19.
+
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
 - Mutation testing's home (D-004: outside the cycle or not at all) — not blocking v3.0.
 - 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck (D-058) — not blocking v3.0.
+- STYNX local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 (D-069) — STYNX item, not blocking 3.0.0.
