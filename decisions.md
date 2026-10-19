@@ -646,6 +646,18 @@ Rulings taken while landing SM-02/03/04 (stynx-nyx/stynx#400; superseded #397, #
   PostgreSQL 18 while its CI and this foundation use 16 (07 §4, 12 §3).
 Source: Owner panel and directions 2026-10-19.
 
+## D-070 · 2026-10-19 · Product role prefix is applied by STYNX's migration runner; apply.sh calls it
+SM-06 (stynx-nyx/stynx#401) parameterises the platform roles at apply time: `stynx migrate
+up|down|redo --role-prefix <p>` and `StynxDataModuleOptions.migrations.rolePrefix` rewrite only the
+identifiers `stynx_(owner|app|reader)`; default `stynx` returns the SQL unchanged and the ledger
+checksum stays the file's, so applied bytes are immutable (D-033) and LINT013 is unaffected.
+Consequence for 09 §1 — options: (a) step 2 of `database/apply.sh` runs `stynx migrate up
+--role-prefix <productPrefix>` with `PG*` variables (STYNX makes `--database-url` optional); (b)
+`apply.sh` rewrites the platform SQL itself (a template compatibility layer, against 07 §5 and
+P-5-12); (c) keep `psql -f` and stay on `stynx_*` roles (fails S-18). Chosen: (a); 09 §1 amended.
+No URL on argv (E-5-08). Source: orchestrator under the Owner's standing authorisation
+(recommended option).
+
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
