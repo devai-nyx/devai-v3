@@ -6,5 +6,6 @@ on STYNX: `devai check` decides whether a change is inside the standards and mee
 - Install in a product repository: `pnpm add -D @devai-nyx/cli`
 - Packages: `@devai-nyx/cli`, `@devai-nyx/decorators` (registry `https://npm.pkg.github.com`)
 - The law: `decisions.md` and `docs/framework/`; start at `docs/framework/01-charter.md`
+- Documentation: `docs/` (start, guides, adopters, reference, theory, dev); the site is `site/` (`pnpm --filter @devai-nyx/site start`)
 
 Licensed under Apache-2.0 (`LICENSE`).
