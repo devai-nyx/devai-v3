@@ -658,6 +658,42 @@ P-5-12); (c) keep `psql -f` and stay on `stynx_*` roles (fails S-18). Chosen: (a
 No URL on argv (E-5-08). Source: orchestrator under the Owner's standing authorisation
 (recommended option).
 
+## D-071 · 2026-10-19 · R4 STYNX wave 2: design rulings (SM-07/08/10/13/14/15/16/17/18/19/20)
+Landed in stynx-nyx/stynx#400 together with wave 1 (one signed local RC, Owner's D-069 choice);
+superseded #401-#406. Rulings recorded for 08/09/12 and the v3 template:
+- Check entry points (SM-07): six `stynx` commands share one JSON report (status, counts,
+  findings with `path:line`); exit 0 PASS / 1 FAIL / 2 UNKNOWN with a reason; check forms never
+  write; `.stynxrc.json` keys read: `apiCoverage`, `publicApi`, `openapiContract`, `rlsNegative`.
+  A zero-observation run exits 0 with `observed: 0`; the v3 runner maps it to UNKNOWN (08 §0).
+- SDK (SM-18): `stynx-sdk-codegen` is STYNX-owned (a port of openapi-typescript-codegen 0.31.0,
+  MIT) because the maintained successor drops the class clients the published SDK exposes;
+  prettier is an optional peer; regenerated output differs only in the provenance header.
+- Typed queries (SM-08): `Transaction.run` only (no standalone `run`); `sql` uses the cooked
+  string; errors carry query name and zod path/code, never values; `one` with 0 rows →
+  `NotFoundError` (404); more rows than `expects` allows → `QueryCardinalityError` (500); the
+  row schema strips undeclared columns.
+- Authorization (SM-14, within D-059): token lifetime clamped to the session's deadlines;
+  `perms`/`roles` minted at issuance and refresh; a token without them is refused (401), never
+  looked up; revocation = in-memory session-id list refreshed off the request path (1 s), fail
+  closed (503) when stale (15 s). Permission changes take effect at token refresh.
+- Request id (SM-15): missing and invalid ids get the same 400 `{code: VALIDATION, messageKey:
+  REQUEST_ID_INVALID, requestId: null}` before authentication. Probe routes — options: (a) no
+  exemption, probes send a fixed valid UUIDv7; (b) exempt health routes. Chosen: (a) (no new
+  mechanism, D-055). Browser ids are UUIDv7 from `crypto.getRandomValues` (SM-16).
+- i18n (SM-19): default locale en-US; feature modules call `registerCatalog` from
+  `onModuleInit`; no filesystem scan unless `workspaceRoot` is set. Static module metadata
+  (SM-20) for core, data, auth, i18n; `StynxPlatformPipelineModule` stays option-driven, so
+  `inventory` reports it as `UNKNOWN mount-unresolved` per D-058 if a product mounts it.
+- Test databases (SM-17, committed, pending an Owner receipt): `createTestApp` reads only
+  `DATABASE_URL` and fails closed without it; it creates and drops a uniquely named scratch
+  database on that server. Options: (a) allow test support to create per-app sub-databases;
+  (b) use the supplied database directly. Chosen: (a). The drop needs the Owner's
+  FORBID-DROP-PROD receipt for the exact commit in STYNX.
+- Not yet covered (follow-ups): the SDK transport does not mint request ids (consumers add the
+  header); `packages/cli/src/generate-module.ts` still emits extensionless relative imports;
+  the STYNX RC task `db:rls` does not select the new CLI engine files.
+Source: orchestrator under the Owner's standing authorisation (recommended options).
+
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
