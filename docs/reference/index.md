@@ -22,6 +22,6 @@ DEVAI 3.0.0 is unreleased; the CLI, decorators and template land at release prer
 | [Repository layout](./layout.md) | Root, module, database, tests, governance, state paths | 7 DDL bands, 9 test tiers | [04](../framework/04-layout.md), [02 §11](../framework/02-architecture.md) |
 | [Standards](./standards.md) | Every company standard, one line each, with the nodes that check it | 56 standards | [03 Part A](../framework/03-standards.md) |
 | [Glossary](./glossary.md) | The terms the law uses | 53 terms | all |
-| [Decisions](./decisions.md) | Every numbered decision with date and title | 70 decisions | [decisions.md](../../decisions.md) |
+| [Decisions](./decisions.md) | Every numbered decision with date and title | 71 decisions | [decisions.md](../../decisions.md) |
 
 Source: [docs/framework/00…10](../framework/00-intent.md), [decisions.md](../../decisions.md).
