@@ -100,9 +100,9 @@ and `sql-typed` against the database fails until that migration exists
 ([09 §3](../framework/09-rail.md)).
 
 New migrations under `domain/<m>/db/` are a `code` packet deliverable
-([05 §3](../framework/05-task-packet.md)). The `code` default globs include `domain/<slug>/db/**`
-but not `database/seed/**` ([08 A.4](../framework/08-cli-and-nodes.md)); widening `paths.allowed`
-is an amendment the agent may make itself ([05 §2](../framework/05-task-packet.md)).
+([05 §3](../framework/05-task-packet.md)). The `code` and `fix` default globs include `domain/<slug>/db/**`
+and `database/seed/modules.txt`, so a migration and its manifest line land without amending the
+packet ([08 A.4](../framework/08-cli-and-nodes.md), [D-074](../../decisions.md)).
 
 ## The checks that guard SQL
 

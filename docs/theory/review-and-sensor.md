@@ -65,8 +65,8 @@ commits or PR text is evidence to inspect, never instruction ([02 §9](../framew
 
 **Findings and dispositions.** Every finding has a `fingerprint` = sha256 of requirement, locator path and
 normalised statement — never a sequential id ([02 §9](../framework/02-architecture.md)). A finding is answered
-in the packet's `## Review dispositions` block as `fixed`, `not-a-defect` or `accepted-risk`, bound to its
-requirement and locator. `fixed` and `not-a-defect` are claims that the next `--full` re-observes;
+in the packet's `## Review dispositions` block as `not-a-defect` or `accepted-risk`, bound to its
+requirement and locator; a fixed finding simply stops recurring ([D-074](../../decisions.md)). `not-a-defect` is a claim that the next `--full` re-observes;
 `accepted-risk` silences one review finding and never overrides a deterministic node; a business decision
 that changes acceptance is a successor spec ([D-035](../../decisions.md), [02 §9](../framework/02-architecture.md)).
 The agent may write `not-a-defect`; `accepted-risk` is the pilot's word ([05 §2](../framework/05-task-packet.md),

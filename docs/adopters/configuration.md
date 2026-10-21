@@ -63,7 +63,8 @@ is a closed zod definition: unknown keys are rejected
 Reviewer values are argument vectors split on whitespace, never shell strings; DEVAI appends its own
 fixed flag list. A model is chosen inside the prefix (`codex exec --model <m>`) or left to the CLI's
 default, and `review.json` records the model the CLI reports. The sensor uses the same selection:
-there is no separate sensor backend and no first-entry fallback
+there is no separate sensor backend; when no agent family resolves, it runs the first configured
+reviewer in `Family` order, `claude` then `gpt` ([D-074](../../decisions.md))
 ([08 A.8](../framework/08-cli-and-nodes.md), [07 §6](../framework/07-dependencies.md)).
 
 ## The runtime override

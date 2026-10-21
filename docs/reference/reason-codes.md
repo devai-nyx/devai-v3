@@ -45,8 +45,8 @@ Some node blocks attach detail to a code, for example `unsupported-oid <oid>`, `
 | 10 | `spec-not-approved` | `new module`, `packet new` (pinning kinds) | 2 | new | the pilot approves the spec (status: approved, approved-by); note it under ## Notes and stop |
 | 11 | `spec-invalid` | `new module`, `packet new` | 2 | new | fix the SL line above in a spec packet |
 | 12 | `spec-superseded` | `packet new` (pinning kinds, spec carries `superseded-by`) | 2 | new | pin the successor named in the status line |
-| 13 | `output-exists` | `new module` (`--out` exists without `--regenerate`) | 1 | new | the module exists: use --regenerate |
-| 14 | `spec-mismatch` | `new module --regenerate` (manifest `specId` ≠ spec id and ≠ `supersedes.id`) | 1 | new | regenerate only from the spec the manifest names; a successor spec's module is not supported: note it under ## Notes |
+| 13 | `output-exists` | `new module` (`--out` exists without `--regenerate`) | 2 | new | the module exists: use --regenerate |
+| 14 | `spec-mismatch` | `new module --regenerate` (manifest `specId` ≠ spec id and ≠ `supersedes.id`) | 2 | new | regenerate only from the spec the manifest names; a successor spec's module is not supported: note it under ## Notes |
 
 ## Node level (40)
 
@@ -97,7 +97,6 @@ Some node blocks attach detail to a code, for example `unsupported-oid <oid>`, `
 
 ## Notes
 
-- `output-exists` and `spec-mismatch` are listed in the enum's "could not run (command level)" group, but [08 A.2](../framework/08-cli-and-nodes.md) gives them exit `1`. The `Report` invariant "a command-level reason is exit 2" ([08 C.2](../framework/08-cli-and-nodes.md)) applies to `report.json`, which `devai new module` does not write; its JSON output has its own shape.
 - `prerequisite-failed` and `no-observations` are applied by the runner, not by the node ([08 C.1](../framework/08-cli-and-nodes.md) steps 8–9).
 - A hint that says "note it under ## Notes" means the agent records it in the packet and stops; the pilot decides ([05 §5](../framework/05-task-packet.md)).
 

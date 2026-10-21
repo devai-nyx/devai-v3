@@ -65,7 +65,7 @@ These are the [09 §1.1](../framework/09-rail.md) rows whose bytes the foundatio
 | `scripts/hooks/pre-commit`, `pre-push`, `commit-msg` (mode `100755`) | [08 A.7](../framework/08-cli-and-nodes.md) |
 | `product/demo/README.md`, `product/demo/rules/RN-DEMO-001.md`, `RN-DEMO-002.md`, `product/use-cases/UC-DEMO-001.json`, `specs/notes/SPEC-DEMO-001.md` | [06 §7](../framework/06-spec-format.md) |
 | `packets/CMP-DEMO-001/campaign.md`, `PKT-DEMO-001.md` … `PKT-DEMO-004.md` | [05 §7](../framework/05-task-packet.md); `base` is rendered by `init` |
-| `database/README.md`, `.stynxrc.json`, `.gitignore`, `compose.yaml` | [09 §1.1](../framework/09-rail.md) values |
+| `database/README.md`, `.stynxrc.json`, `gitignore` (written as `.gitignore` by `init`; npm and pnpm drop `.gitignore` when packing, [D-074](../../decisions.md)), `compose.yaml` | [09 §1.1](../framework/09-rail.md) values |
 
 The rest of 09 §1.1 (for example `devai.json`, the root `package.json` and lock, `eslint.config.mjs`,
 `vitest.config.ts`, the `apps/` shells, `database/apply.sh` and `checks.sql`, `test/`, and

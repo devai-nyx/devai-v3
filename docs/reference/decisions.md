@@ -85,7 +85,7 @@ Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-0
 | D-071 | 2026-10-19 | R4 STYNX wave 2: design rulings (SM-07/08/10/13/14/15/16/17/18/19/20) |
 | D-072 | 2026-10-21 | Liveness and readiness probes may omit the request id (revisits D-071) |
 | D-073 | 2026-10-21 | Stale-text corrections found by the docs set (devai-v3#14–#30) |
-| D-074 | 2026-10-21 | PROPOSED · Rulings on the docs-set gaps that need a choice (devai-v3#7–#13) |
+| D-074 | 2026-10-21 | Rulings on the docs-set gaps that need a choice (devai-v3#7–#13) |
 
 ## Still open
 

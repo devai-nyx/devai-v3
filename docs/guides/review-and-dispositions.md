@@ -101,10 +101,11 @@ acceptance means is a successor spec and a new packet, not a disposition.
 | Rule | What it checks |
 |---|---|
 | PL-09 | The line parses; the fingerprint prefix resolves to exactly one finding in the committed review history since `base`; `R-n` and locator match it |
-| PL-10 | `fixed` and `not-a-defect` hold against the **current** review: the finding is absent, or contradicted by `basis: observed` evidence |
+| PL-10 | `not-a-defect` holds against the **current** review: the finding is absent, or contradicted by `basis: observed` evidence |
 
-([05 §5](../framework/05-task-packet.md)) A claimed `fixed` whose finding recurs with observed
-evidence keeps the verdict at `blockers`. Fingerprints are hashes of requirement, locator path and
+([05 §5](../framework/05-task-packet.md)) A claimed `not-a-defect` whose finding recurs with observed
+evidence keeps the verdict at `blockers`. A fixed finding needs no line: the next `--full` no longer
+reports it, and the earlier review stays in git history ([D-074](../../decisions.md)). Fingerprints are hashes of requirement, locator path and
 statement, never sequential ids, so a replaced review cannot erase the binding
 ([06 §8](../framework/06-spec-format.md)). A disposition edits the packet and labels the PR
 `protected:spec` ([02 §9](../framework/02-architecture.md)).

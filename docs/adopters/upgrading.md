@@ -22,8 +22,8 @@ Every module the generator writes has a `domain/<m>/generation-manifest.json`
 - the `options` used (`web`, `locales`, `lgpd`, `productPrefix`);
 - every file with its digest and its mode, `generated` or `seed`.
 
-It has no timestamp: identical inputs give identical bytes. Only a `generate` packet may change it
-(PL-07) ([02 §7](../framework/02-architecture.md), [05 §5](../framework/05-task-packet.md)).
+It has no timestamp: identical inputs give identical bytes. Only a `generate` packet, or a `standards`
+upgrade packet running a same-id `--regenerate`, may change it (PL-07, [D-074](../../decisions.md)) ([02 §7](../framework/02-architecture.md), [05 §5](../framework/05-task-packet.md)).
 
 ## How `generated` verifies a module
 
@@ -48,7 +48,8 @@ packages are pinned exactly, never by range ([09 §3](../framework/09-rail.md); 
 devai new module --spec <path-to-the-same-spec> --regenerate
 ```
 
-Run it inside a `generate` packet, since it rewrites the manifest. For each manifest entry
+Run it inside a `generate` packet, or inside a `standards` upgrade packet for a same-id regenerate,
+since it rewrites the manifest, including `generatorVersion` ([D-074](../../decisions.md)). For each manifest entry
 ([08 A.2](../framework/08-cli-and-nodes.md)):
 
 - `generated` files are rewritten;
@@ -59,7 +60,7 @@ Run it inside a `generate` packet, since it rewrites the manifest. For each mani
 There is no three-way merge assistant ([D-033](../../decisions.md)). If a seed you edited needs the
 new shape, you change it yourself, in a `code` or `fix` packet.
 
-`--regenerate` against a different spec id exits 1 `spec-mismatch`, unless that spec is a successor
+`--regenerate` against a different spec id exits 2 `spec-mismatch`, unless that spec is a successor
 whose `supersedes.id` equals the manifest's `specId` ([08 A.2](../framework/08-cli-and-nodes.md)).
 
 ## Changing a spec: successor specs
@@ -87,18 +88,25 @@ A business decision that changes what acceptance means takes the same path: `pro
 `spec` packet, a successor spec, then new packets ([05 §4](../framework/05-task-packet.md),
 [D-035](../../decisions.md)).
 
-## What the law does not prescribe
+## Upgrading DEVAI or STYNX
 
-The checks above are specified, but there is no "upgrade" command or procedure:
+An upgrade is one `standards` packet ([D-074](../../decisions.md), [05 §3](../framework/05-task-packet.md)). The bump and
+the regeneration must land together: as soon as the installed CLI differs from a manifest's
+`generatorVersion`, `generated` is `UNKNOWN` for that module.
 
-- DEVAI's own release notes and compatibility policy for 3.x are not part of the law.
-- Each module's `api/package.json` is a seed whose `@devai-nyx/decorators` dependency starts exact at
-  `generatorVersion` ([09 §2](../framework/09-rail.md)). Seeds are hand-owned, so `--regenerate`
-  does not bump it.
-- STYNX packages are pinned to one exact fixed-group version (12 §3). The law does not say how a
-  product moves to a later one.
+1. Bump the exact pins: `@devai-nyx/cli` in the root `package.json`, and for a STYNX move the
+   fixed-group `<v>` in the root and `apps/*/package.json`; refresh `pnpm-lock.yaml`.
+2. Run `devai new module --spec <the module's spec> --regenerate` for every module. It rewrites the
+   generated files and the manifest's `generatorVersion`, never a seed.
+3. Edit each module's `api/package.json` so `@devai-nyx/decorators` equals the new version.
+   `generated` FAILs while a pin differs from its manifest
+   ([08 B.16](../framework/08-cli-and-nodes.md)).
+4. Run `devai check --packet <p> --full`. A `standards` packet that touches a `package.json` or the
+   lock also requires `generated`, `unit`, `db-apply` and `integration`.
 
-When one of these comes up, record the choice in your repository's `decisions.md`
-([D-031](../../decisions.md)).
+The `standards` default globs cover those files. PL-07 lets the packet change `domain/**` only at a
+module's `api/package.json`, its manifest and its `mode: generated` files.
 
-Source: 02 §7, 05 §4–§5, 06 §6, 08 A.2, B.16, 09 §2–§3, decisions D-031, D-033, D-035, D-043, D-053; 12 §3 (bootstrap history).
+DEVAI's own release notes and compatibility policy for 3.x are not part of the law.
+
+Source: 02 §7, 05 §4–§5, 06 §6, 08 A.2, B.16, 09 §2–§3, decisions D-031, D-033, D-035, D-043, D-053, D-074; 12 §3 (bootstrap history).

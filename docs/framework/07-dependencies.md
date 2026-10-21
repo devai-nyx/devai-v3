@@ -84,7 +84,7 @@ The E1–E5 classification makes the draft's module-format evidence explicit: **
 
 ## 6. Agent harness interfaces
 
-[opinion] Select the other-family reviewer from trailers and `review.reviewers`; unknown/equal family remains UNKNOWN, with no first-entry fallback (`F:02-architecture.md:450–459`). Send reviewer and sensor prompts on **stdin**, never in a long argv element (D-057). These are argument-vector recipes; placeholders are values, not shell substitutions (`F:decisions.md:423–425`; `NOTES.md:75`):
+[opinion] Select the other-family reviewer from trailers and `review.reviewers`; unknown/equal family remains UNKNOWN, with no first-entry fallback (`F:02-architecture.md:450–459`). The one exception is the sensor: when no family resolves, it runs the first configured reviewer in `Family` order (D-074). Send reviewer and sensor prompts on **stdin**, never in a long argv element (D-057). These are argument-vector recipes; placeholders are values, not shell substitutions (`F:decisions.md:423–425`; `NOTES.md:75`):
 
 ```text
 claude -p --output-format json --json-schema <schema-json> --model <model>
