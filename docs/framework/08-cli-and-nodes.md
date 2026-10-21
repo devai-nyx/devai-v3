@@ -749,7 +749,7 @@ summary (--summary, ≤ 10 lines, becomes the PR body; 02 §8 example is an inst
   1  <packetId>  <title>   spec <specId> @ <sha256[0:4]>… (frozen)        ← pinning kinds
      <packetId>  <title>   spec <specId> (candidate, <draft|approved>)     ← kind: spec
      <packetId>  <title>   standards                                       ← kind: standards
-     line 2: <n> = planned nodes other than `accept` (B.28's `expected`; 27 under `--packet --full`), SKIPPED included (D-073)
+     line 2: <n> = every planned node, `accept` and SKIPPED included, as in report.json `nodes` (28 under `--packet --full`; D-073)
   2  acceptance: <PASS|FAIL|UNKNOWN> (<n> nodes: <p> pass, <s> skipped: <node>[<evidence>], …)   runtime: <mode>
   3  protected paths: none touched | <class> (<path>[, +k], declared|undeclared), …   packet scope: ok | <n> findings   spec tests: <o>/<e> requirements covered[, <k> expected red (R-…)] | deferred
   4  review: no blockers | blockers (<n>) | unknown (<reason>) (<m> minor, <d> disposed: …; mustRun: <bool>[, tallied])   worker: <family>   reviewer: <family>   bound to head <sha1[0:4]>…

@@ -442,7 +442,7 @@ the result.
 
 ```
 PKT-BOAT-103  Implement crash record start/classify routes   spec SPEC-BOAT-CRASH-0001 @ 9ab2… (frozen)
-acceptance: PASS (27 nodes: 25 pass, 2 skipped: e2e[no test/e2e files], i18n[no opted-in locale beyond en-US and no Angular app])   runtime: bare
+acceptance: PASS (28 nodes: 26 pass, 2 skipped: e2e[no test/e2e files], i18n[no opted-in locale beyond en-US and no Angular app])   runtime: bare
 protected paths: none touched   packet scope: ok   spec tests: 7/7 requirements covered
 review: no blockers (2 minor, see review.json)   worker: claude   reviewer: gpt   bound to head 9e41…
 ```
