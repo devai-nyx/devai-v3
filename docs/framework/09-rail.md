@@ -54,7 +54,7 @@ Mode is `seed` unless stated. "init-owned" marks the files attach mode rewrites.
 | `package.json` | Workspace root: `type: module`, `engines >=24 <25`, `packageManager pnpm@9.15.0`, `scripts.test: "devai check --only unit"` (02 §10), STYNX's `prettier` block [fact: `stynx:package.json:130-135`], 07 §2 dev pins (exact), `@devai-nyx/cli` exact at the release version (B.16), only the STYNX packages emitted code imports, at the versions 12 fixes | `inventory` S-07/S-31 · `format` · `lint` · `deadcode` | seed | — |
 | `pnpm-workspace.yaml` | `apps/*`, `domain/*/api`, `domain/*/web` | `inventory` S-06 · `layout` (real packages only) | seed | — |
 | `pnpm-lock.yaml` | Lock produced at the DEVAI release from the template manifests (12) | `inventory` `toolchainDigest` | seed | — |
-| `.gitignore` | `node_modules/ dist/ coverage/ .angular/ .playwright/ .devai/cache/` (never `.devai/review/`) | `inventory` untracked census · C.6 | seed | — |
+| `.gitignore` | `node_modules/ dist/ coverage/ .angular/ .playwright/ .devai/cache/` (never `.devai/review/`); stored as `template/gitignore` and written as `.gitignore`, because npm and pnpm drop `.gitignore` from the packed CLI (D-074) | `inventory` untracked census · C.6 | seed | — |
 | `.npmrc` | `@devai-nyx:registry=https://npm.pkg.github.com` · `@stynx-nyx:registry=https://npm.pkg.github.com` · `//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}` [fact: `stynx:.npmrc:1-3`] | pnpm install · 09 §4 clean install | seed | — |
 | `.stynxrc.json` | `{ "boundary": { "roots": ["apps","domain"], "allowedPackages": ["@stynx-nyx/"], "forbiddenImports": [] } }` [fact: shape `stynx:scripts/verify-stynx-boundary.ts:5-10`] | `boundary` S-44 (absence is FAIL, D-058) | seed | — |
 | `tsconfig.test.json` | Extends `@stynx-nyx/tsconfig/node24.json`; includes `test/**`, `apps/*/test/**`, `domain/*/*/test/**`; references the package projects | `typecheck` · `lint-tests` | seed | — |
@@ -118,7 +118,7 @@ Not created, because nothing reads them (D-055, P-5-09):
 - **Header** (02 §7, literal; P-5-03): `// @generated from SPEC-<ID> do not edit` in TS and JSONC, `-- …` in SQL, `<!-- … -->` in Markdown. Seeds carry no header.
 - **generated:** `README.md`, `api/tsconfig.json`, `index.ts`, the module file, `dto/*`, the catalogs, and `db/<ns>_<slug>.sql` until it is base-present. With `--web`: `web/tsconfig.json`, `web/src/index.ts`, `<slug>.routes.ts`.
 - **seed:**
-  - `api/package.json`, whose dependencies accrue (checked by `depcheck` and `boundary`), starting with `@devai-nyx/decorators` exact at `generatorVersion`.
+  - `api/package.json`, whose dependencies accrue (checked by `depcheck` and `boundary`), starting with `@devai-nyx/decorators` exact at `generatorVersion`; an upgrade edits the pin by hand and `generated` FAILs while it differs from the manifest (D-074).
   - The controller: bodies get written; `route-contract` keeps verifying the decorators.
   - The service: one stub per route, `throw new NotImplementedException('SPEC-<ID> R-n: implement in a code packet')`.
   - The repository. `sql-typed` already compares every `defineQuery` with `queries[]` (08 B.10).
@@ -178,7 +178,7 @@ Ownership comes from the renderer, so changing a DTO's `mode` to `seed` exempts 
 
 **Base-present module SQL belongs to LINT013, not `generated`.** D-043 chose LINT013 over a `generated` check on the initial DDL. Such an entry leaves B.16's `expected`, and the `modules.txt` hash guards it (P-5-05, E-5-02). A hand edit prints `domain/notes/api/src/dto/create-note.dto.ts:1 differs from regeneration [S-45] regenerate (devai new module --regenerate) or move the logic to a seed file`.
 
-[opinion] **Regeneration** follows A.2. Same-id `--regenerate` rewrites every `generated` entry except base-present SQL (E-5-03), and reports each seed as `seed unchanged, safe to overwrite` or `seed edited, left alone` without writing it. A spec change means a successor (D-053), which A.2 admits inside a `generate` packet when `supersedes.id` equals the manifest's `specId`; otherwise exit 1 `spec-mismatch`.
+[opinion] **Regeneration** follows A.2. Same-id `--regenerate` rewrites every `generated` entry except base-present SQL (E-5-03), and reports each seed as `seed unchanged, safe to overwrite` or `seed edited, left alone` without writing it. A spec change means a successor (D-053), which A.2 admits inside a `generate` packet when `supersedes.id` equals the manifest's `specId`; otherwise exit 2 `spec-mismatch` (D-074). Same-id `--regenerate` also rewrites the manifest's `generatorVersion` to the installed version; inside a `standards` upgrade packet it is how a module follows a DEVAI bump (05 §3, D-074).
 
 A.2 admits that successor inside a `generate` packet. In that case:
 - non-SQL generated files and the manifest follow the successor;

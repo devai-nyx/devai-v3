@@ -351,8 +351,9 @@ OnPush components with `input()/output()` signals and the `<prefix>-` selector (
 ```
 
 No timestamp: identical inputs give identical bytes (STYNX INV-CLI-002 [fact:
-`stynx:law/invariants/INV-CLI-002.json`]). **The manifest is writable only by `generate` packets**;
-`packet-scope` fails any other packet that changes it (C-9 conceded).
+`stynx:law/invariants/INV-CLI-002.json`]). **The manifest is writable only by `generate` packets**,
+and by a `standards` upgrade packet's same-id `--regenerate` (D-074); `packet-scope` fails any other
+packet that changes it (C-9 conceded).
 
 **Two file modes.** `generated` files (`index.ts`, `module.ts`, `dto/*`, `routes.ts`, `README.md`, `tsconfig.json`, the catalogs `<slug>.i18n.<locale>.ts`,
 the module's initial `db/*.sql`) carry a header **in the language's comment syntax**: `// @generated
@@ -490,8 +491,8 @@ spec is wrong (that is a finding for the pilot). **Its PASS is never authorizati
 pilot's act or branch protection's.
 
 **Dispositions (D-035).** A small block in the packet, `## Review dispositions`, for `review`
-findings only: `RV <fingerprint> · R-3 · <locator> · fixed|not-a-defect|accepted-risk · <reason>`.
-`fixed` and `not-a-defect` are claims: the next `--full` re-observes the candidate and the finding
+findings only: `RV <fingerprint> · R-3 · <locator> · not-a-defect|accepted-risk · <reason>`. A fixed
+finding needs no line: the next `--full` no longer reports it (D-074). `not-a-defect` is a claim: the next `--full` re-observes the candidate and the finding
 must be absent or contradicted by evidence against the unchanged contract. `accepted-risk` silences a
 `review` finding for that requirement and locator only and **never overrides a deterministic node**.
 A business decision that changes what acceptance means is a successor spec and a new packet. The
