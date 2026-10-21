@@ -1,14 +1,14 @@
 ---
 title: Decisions
 sidebar_position: 12
-description: Index of the 73 numbered decisions D-001 to D-073 in decisions.md, with date and title.
+description: Index of the 74 numbered decisions D-001 to D-074 in decisions.md, with date and title.
 ---
 
 # Decisions
 
-[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **73 decisions** (D-001…D-073), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
+[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **74 decisions** (D-001…D-074), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
 
-Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 2 on 2026-10-21 (D-072, D-073). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
+Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
 
 | Id | Date | Title |
 |---|---|---|
@@ -85,6 +85,7 @@ Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-0
 | D-071 | 2026-10-19 | R4 STYNX wave 2: design rulings (SM-07/08/10/13/14/15/16/17/18/19/20) |
 | D-072 | 2026-10-21 | Liveness and readiness probes may omit the request id (revisits D-071) |
 | D-073 | 2026-10-21 | Stale-text corrections found by the docs set (devai-v3#14–#30) |
+| D-074 | 2026-10-21 | PROPOSED · Rulings on the docs-set gaps that need a choice (devai-v3#7–#13) |
 
 ## Still open
 
