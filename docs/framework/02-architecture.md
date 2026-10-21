@@ -80,7 +80,7 @@ are keyed by slice or candidate digest + prompt digest + model.
 | `openapi` | S-20, S-22, S-23, S-40 | `api:coverage --strict`, contract and public-API baselines; a breaking baseline diff without a matching major changeset is a finding. *Sources, `openapi.json`, `.changeset/`.* | B–C | P, R |
 | `db-apply` | S-01, S-02, S-13, S-18 | `database/apply.sh` from an empty DB + module `db/` via the seed manifest (D-023) + `checks.sql` + `verify-rls-negative.mjs`; emits the schema digest; `needs: postgres`. *DDL, migrations, seeds.* | C | P (SQL changed), R, F |
 | `spec-tests` | setpoint, S-61, S-63, S-65 | Vitest over `domain/<m>/api/test/acceptance/*.acceptance.spec.ts` named in the packet; `expected` = `acceptance: yes` requirements, `observed` = `it` blocks tagged `R-n:` collected; `--expect-red` per §8; `needs: postgres`. *Packet, acceptance tests.* | B–C | F, R |
-| `integration` | tiers, S-02, S-18, S-70 | `test/integration`, `test/db`; template-emitted tests: RLS isolation as `<product>_app`, never as owner (S-18); a request without a request id is rejected and ids are UUIDv7 (S-70); `needs: postgres`. *Affected.* | C | P (affected), R |
+| `integration` | tiers, S-02, S-18, S-70 | `test/integration`, `test/db`; template-emitted tests: RLS isolation as `<product>_app`, never as owner (S-18); a request without a request id is rejected, except an id-less `GET`/`HEAD` `/healthz` or `/readyz` probe (D-072), and ids are UUIDv7 (S-70); `needs: postgres`. *Affected.* | C | P (affected), R |
 | `e2e` | tiers | `test/e2e` Playwright. *Apps.* | C | R |
 | `permissions-pattern` | S-12 | agentic, §4. *Permission slice.* | C + tokens | F, R |
 | `protected-paths` | D-019, D-027, D-031 | hook/Action, §5. *Old and new paths vs base.* | A | P (notice), R (label) |

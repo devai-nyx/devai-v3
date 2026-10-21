@@ -1,14 +1,14 @@
 ---
 title: Decisions
 sidebar_position: 12
-description: Index of the 71 numbered decisions D-001 to D-071 in decisions.md, with date and title.
+description: Index of the 72 numbered decisions D-001 to D-072 in decisions.md, with date and title.
 ---
 
 # Decisions
 
-[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **71 decisions** (D-001…D-071), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
+[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **72 decisions** (D-001…D-072), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
 
-Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
+Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 1 on 2026-10-21 (D-072). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
 
 | Id | Date | Title |
 |---|---|---|
@@ -83,6 +83,7 @@ Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-0
 | D-069 | 2026-10-19 | R3 STYNX wave 1: LINT010 scope, tool publication and release wiring |
 | D-070 | 2026-10-19 | Product role prefix is applied by STYNX's migration runner; apply.sh calls it |
 | D-071 | 2026-10-19 | R4 STYNX wave 2: design rulings (SM-07/08/10/13/14/15/16/17/18/19/20) |
+| D-072 | 2026-10-21 | Liveness and readiness probes may omit the request id (revisits D-071) |
 
 ## Still open
 

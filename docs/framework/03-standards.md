@@ -79,7 +79,7 @@ All our applications are webapp stack. Always:
 | S-16 | i18n / multi-language / multi-locale is mandatory. Default language **en-US**; **pt-BR opted in at project bootstrap** | both |
 | S-25 | Every write route declares idempotency (`@Idempotent()`/`@NoIdempotent()`), role binding, error contract, use-case claim and SLO; a coverage check verifies every route carries them | both |
 | S-36 | Naming: no `enum` (string-literal unions / `as const`); named exports only; `<product>` prefix on public modules, services, components and DI tokens; kebab-case files with role suffix | check |
-| S-70 | Request ID is UUIDv7 and required on every request | both |
+| S-70 | Request ID is UUIDv7 and required on every request, except a `GET`/`HEAD` liveness or readiness probe (`/healthz`, `/readyz`) that sends none (D-072) | both |
 
 ### Added 2026-10-18 — O-003 closed (D-049)
 

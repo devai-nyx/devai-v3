@@ -36,7 +36,7 @@ R3–R4 (12 §4).
 **Where things stand.** `decisions.md` records the seed (D-065, D-067), R2 passed
 ([D-068](../../decisions.md)), and rulings taken while landing STYNX wave 1
 ([D-069](../../decisions.md), [D-070](../../decisions.md)) and the wave-2 design rulings
-([D-071](../../decisions.md)).
+([D-071](../../decisions.md)), with the probe ruling revisited in [D-072](../../decisions.md).
 
 **Not blocking 3.0.0** (12 §4): the D-047 edit-loop p95 measurement (3.0.0 ships 90000); the first
 DETRAN campaign that settles D-026; each adopter's own `review.mustRun` flip (D-028); the open items

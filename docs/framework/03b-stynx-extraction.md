@@ -83,7 +83,7 @@ v3's check DAG should make the coverage complete.
 | S-45 Generated artifacts are committed and byte-verified; never hand-edited | §5 | check |
 | S-61 100% coverage default (lines/branches/functions/statements); relaxed per package by declaration | `tools/repo-config/test-policy.json` | check |
 | S-62 Tests live in `test/`, not colocated; taxonomy unit / wiring / integration / db / e2e per ADR-TEST-TAXONOMY | §9 | both |
-| S-70 Request ID is UUIDv7, required on every request; tenant resolved from Host vs token claim with mismatch rejection | §7 | both |
+| S-70 Request ID is UUIDv7, required on every request except an id-less `GET`/`HEAD` `/healthz` or `/readyz` probe (D-072); tenant resolved from Host vs token claim with mismatch rejection | §7 | both |
 | S-71 Observability: pino with redaction + Prometheus; no OpenTelemetry (gap 14, decision pending) | §3, §12.14 | rail |
 
 Antonio to confirm, reject or amend each before they enter `03-standards.md` Part A.
