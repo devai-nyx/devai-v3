@@ -117,47 +117,8 @@ D-015 dispositions, as decided: byte-verification adopted narrowly (S-45); 100 %
 favour of S-61 (D-036); taxonomy is the layout's suffixes with no wiring tier (S-62); pino +
 `prom-client` as the template default with no OpenTelemetry ban (S-71).
 
-## 13. What v3 does not do
-
-- Run, schedule, dispatch, lock or journal tasks; know that a task is running (D-018).
-- Keep an evidence chain, signed receipts or attestations beyond CI verifying `report.json` and
-  `review.json` by digest (D-002, D-037).
-- Require a human to read diffs or ratify them as observation (D-003).
-- Refuse commits by identity or role, or admit paths by signature (D-019).
-- Ask the pilot to waive failed checks, rebind artifacts, approve a bypass or repair a signature
-  (D-003, D-006).
-- Run mutation testing in the cycle (D-004); enforce S-12 at runtime (D-009); measure SLOs inside
-  packet acceptance (D-038).
-- Re-express or vendor STYNX lint, tsconfig or the migration linter (D-029).
-- Treat STYNX conventions as authority over company standards (D-007, D-012, D-013, D-025).
-- Hold governance state: scorecard, campaign status, round lifecycle (D-005).
-- Author or migrate business specs; execute a mid-task setpoint change (D-008, D-016).
-- Ship a three-way merge assistant for seeds or rewrite applied migrations (D-033).
-- Manage subagents, worktrees, sandboxes, memory or MCP (harness features; pointers only).
-- Turn reviewer opinion or exit zero into deployment or publication authority (D-003, D-018).
-- Tolerate CommonJS output or `any` (D-012, D-013).
-
-## 14. Open questions for the author
-
-Closed 2026-10-18 by D-041–D-049 except where marked.
-
-1. **Edit-loop service level (D-047, provisional).** The affected subset of §2 (latency classes A/B)
-   is fixed now. A **provisional ceiling of 90 s warm** shapes the class partition: a node that
-   cannot meet it on the reference machine moves to class C. The binding number is the measured p95 on
-   the first STYNX and DETRAN modules in both runtimes (adjudication 7: a service level, not a latency
-   target), then written into `devai.json` as the threshold `accept` reports against. Provisional
-   until measured.
-2. **Example fixture for 05/06 (D-048).** The round-1 example attributed a 72-hour occurrence cutoff
-   to RN-BOAT-119. [fact] `detran:docs/framework/product/domains/est/boat/rules/RN-BOAT-119.md` is
-   about the instantaneous speed/time recorder (tachograph): in a crash **with victims**, only the
-   official forensic expert may remove the disc or storage unit (CTB art. 279); the rule has no time
-   cutoff. Decision: the foundation docs and the `devai init` template use **clearly fictional ids
-   under a fictional product** (`RN-DEMO-nnn`, `UC-DEMO-nnn`, a `product/` fixture shipped with
-   DEVAI); no real DETRAN rule is quoted in DEVAI's own material. `spec-lint`'s `source:` resolution
-   rule makes a repeat mechanically impossible against the fixture and against real repositories
-   alike.
-3. **Mutation testing's home** stays (b) periodic hardening outside the cycle or (c) not used
-   (D-004); nothing in v3 depends on it, so it need not close before v3.0. *Still open; not blocking.*
+What v3 does not do and the author's open questions are 02 §13 and 02 §14; they are not
+repeated here (D-073).
 
 Amendments without a new number (D-043, D-045): **S-24** gains LINT010 (unique prefix), LINT011
 (`app.*` GUC only), LINT012 (`@pii` annotation), LINT013 (applied migrations immutable). **S-31**
@@ -223,8 +184,8 @@ guarded · **—** not present. Source: STYNX report §4, §8, §9, §12, verifi
 - **S-31 settled (D-012)**: ESM only. STYNX's CJS backend output becomes a STYNX migration item.
 - **S-33 settled (D-013)**: on from day 0. Expect it to surface whatever "nearly any-free" hides.
 - **Every `check`-tagged item is a node in v3's local check DAG; every `rail` item is a
-  constraint on the scaffolder.** S-12 is the only item that can only be guarded by a test or a
-  runtime assertion, never by a lint.
+  constraint on the scaffolder.** S-12 is the only item no lint can guard; D-009 rules out runtime
+  enforcement and guards it with a narrow agentic check, the `permissions-pattern` sensor (02 §4).
 - **S-60's rationale ("survive mutations") is the only place mutation testing appears**, and it
   appears as a design principle for assertions. Consistent with D-004: mutation testing informs
   how tests are written; it does not run in the cycle.

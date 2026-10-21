@@ -287,15 +287,22 @@ validated against the shipped `$schema`; no executable configuration (D-034):
   "runtime": { "mode": "bare",
                "services": { "postgres": { "bare": "env:DATABASE_URL", "docker": "compose:postgres" } } },
   "locales": ["en-US"], "lgpd": false, "productPrefix": "boat",
-  "protected": { "spec": ["specs/**", "packets/**"] },
+  "protected": { "spec": ["specs/**", "packets/**"], "product": ["product/**"],
+                 "decisions": ["decisions.md", "law/**"],
+                 "standards": ["tools/**", "eslint.config.*", "tsconfig*.json", "devai.json", ".stynxrc.json",
+                               "AGENTS.md", "CLAUDE.md", ".agents/**", ".claude/skills/**"],
+                 "infra": ["infra/**", "database/ddl/**", "database/migrations/**", "compose.yaml"],
+                 "ci": [".github/**", "scripts/**"], "acceptance": ["domain/*/api/test/acceptance/**", "test/**"] },
   "review": { "mustRun": false, "reviewers": { "claude": "codex exec", "gpt": "claude -p" } },
-  "agentic": { "permissionsPattern": { "minConfidence": 0.7, "maxInputTokens": 60000 } }
+  "agentic": { "permissionsPattern": { "minConfidence": 0.7, "maxInputTokens": 60000 } },
+  "check": { "editLoopCeilingMs": 90000 }
 }
 ```
 
 `"mode"` is `"bare"` or `"docker"`; `DEVAI_RUNTIME=bare|docker` is the single per-invocation
 override; any other value fails the command. `"locales"` is where pt-BR is opted in and `"lgpd"` where
-S-15 is opted in (D-014). `"productPrefix"` is per app (D-032): `boat`, `pec`, `teat`, `rait`; shared
+S-15 is opted in (D-014). `"protected"` lists all seven classes of §5; `"check"` holds the D-047
+ceiling (08 A.8 is the full definition). `"productPrefix"` is per app (D-032): `boat`, `pec`, `teat`, `rait`; shared
 code uses `detran`.
 
 **How checks read it.** One function, `resolveRuntime(): { mode, provide(service) }`, resolved once
@@ -435,7 +442,7 @@ the result.
 
 ```
 PKT-BOAT-103  Implement crash record start/classify routes   spec SPEC-BOAT-CRASH-0001 @ 9ab2… (frozen)
-acceptance: PASS (26 nodes: 24 pass, 2 skipped: e2e, i18n[pt-BR not enabled])   runtime: bare
+acceptance: PASS (27 nodes: 25 pass, 2 skipped: e2e[no test/e2e files], i18n[no opted-in locale beyond en-US and no Angular app])   runtime: bare
 protected paths: none touched   packet scope: ok   spec tests: 7/7 requirements covered
 review: no blockers (2 minor, see review.json)   worker: claude   reviewer: gpt   bound to head 9e41…
 ```
@@ -473,7 +480,9 @@ tests); emit findings with locators and counterexamples; no repairs.
 severity: blocker|major|minor, requirement, locator, statement, evidence, counterexample?, basis: observed|derived,
 confidence }], verdict: 'no-blockers'|'blockers'|'unknown', inputTokens, outputTokens, seconds,
 model }`. `fingerprint` = `sha256(requirement, locator path, normalised statement)`, never a
-sequential id. The Action posts it as one PR comment; nothing else is written into the repository.
+sequential id. The Action posts it as one PR comment. Besides `review.json` and the permissions
+evidence file `.devai/review/<packet>.permissions.json`, both tracked on the PR branch (§11, D-037,
+D-058), the reviewer writes nothing into the repository.
 
 **What it may and may not do.** May: turn the exit code red while `verdict` is `blockers` or
 `unknown` and the node is in `must-run`. May not: edit the candidate, re-run the DAG or the suite, approve, merge, or decide that a
