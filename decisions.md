@@ -751,6 +751,79 @@ added (D-055). Two items needed a choice; the Owner ruled on both.
   because a tag checkout is detached.
 Source: Owner, 2026-10-21 (rulings on #26 and #28; the corrections adopted as drafted).
 
+## D-074 · 2026-10-21 · PROPOSED · Rulings on the docs-set gaps that need a choice (devai-v3#7–#13)
+**Not binding.** Each item gives the options and a recommendation; `Chosen` stays empty until the
+Owner rules. On adoption, the framework amendments named under each item land in the same PR and
+this heading loses `PROPOSED`. All seven were found while writing the docs set (#4).
+- **Human-only packets and `permissions-pattern` (#7).** The sensor runs the reviewer command of the
+  worker family, read from `Co-Authored-By` trailers (08 B.24, A.8), and gates while
+  `review.mustRun` is false, so a packet with no agent trailer is `UNKNOWN: family` and
+  `--packet --full` exits 2. Options: (a) intended: `--full` needs agent-authored commits, stated
+  in 02 §4 and the quickstart; (b) when no family resolves, the sensor runs the first configured
+  reviewer in `Family` order (`claude`, then `gpt`), recorded in the permissions file; (c) the
+  sensor reports a non-gating `UNKNOWN` when no family resolves. Recommended: (b). The sensor
+  checks S-12 compliance, not independence, so who runs it does not matter; (a) refuses work by
+  commit signature, which D-019 rules out; (c) leaves S-12 unguarded on exactly the packets nobody
+  reviews. `review` keeps `UNKNOWN (family)` (02 §9): a missing trailer cannot prove a human
+  worker, and the rule is non-gating until `mustRun` flips (D-028). Amends 08 B.24 and 07 §6's
+  "no first-entry fallback" for the sensor only. Chosen:
+- **Test module that fails to import (#8).** 08 B.11 makes it `FAIL` for `unit`; 08 C.5 maps
+  "module import failure" to `setup-failed` for every Vitest node. Options: (a) `FAIL`, a defect in
+  the change; (b) `UNKNOWN: setup-failed`, nothing was observed. Recommended: (a) for `unit` and
+  `integration`, keeping B.21's `UNKNOWN: setup-failed` for `spec-tests`, where expected-red claims
+  need collection to succeed first (corrections section). Missing tooling is already `UNKNOWN`
+  from preflight (D-029), so an import failure that reaches the runner is in the candidate. C.5
+  reports the import failure as its own event and each node maps it. Amends 08 C.5. Chosen:
+- **Exit code of `output-exists` and `spec-mismatch` (#9).** The `ReasonCode` enum lists both as
+  command-level "could not run", which `report.json` ties to exit 2; 08 A.2 gives them exit 1.
+  Options: (a) keep exit 1 and limit the exit-2 rule to commands that write `report.json`;
+  (b) exit 2. Recommended: (b). Both are refusals to run, not demonstrated violations (08 Part A:
+  `1` a demonstrated violation, `2` could not run), and `devai init`'s `dir-not-empty`, the same
+  refusal, is already exit 2. Agents read exit 1 as "fix the change" (10 §4). Amends 08 A.2 and
+  docs/reference/reason-codes.md. Chosen:
+- **Template `.gitignore` lost on publish (#10).** [fact] `npm pack` (npm 12.2.0) and `pnpm pack`
+  (pnpm 9.15.0, the version `ci.yml` publishes with) both omit `template/.gitignore` from
+  `@devai-nyx/cli`, so `devai init` would scaffold without one; every other template file is
+  packed. Options: (a) store it as `template/gitignore` and have `init` write it as `.gitignore`;
+  (b) have `init` generate it from 09 §1.1's value; (c) leave it and rely on the adopter.
+  Recommended: (a), with a build test that packs the CLI and asserts the file is in the tarball.
+  The template stays the single source of the bytes; (b) moves them into code. Before R6.
+  Amends 09 §1.1 (stored name) and 12's seed tree note. Chosen:
+- **Upgrade procedure (#11).** The law has the checks (`generator-version-mismatch`,
+  `--regenerate`) but no procedure: no packet kind may touch the root `package.json`, the seed
+  `api/package.json` pins `@devai-nyx/decorators` at `generatorVersion` and `--regenerate` never
+  writes seeds, nothing moves a product to a later STYNX `<v>`, and only 08 A.2 and 09 §2 imply that
+  a same-id `--regenerate` rewrites the manifest's `generatorVersion`. A bump makes every module's
+  `generated` `UNKNOWN` until it is regenerated, so the bump and the regeneration must land in one
+  packet. Options: (a) an upgrade is a `standards` packet: its default globs add `package.json`,
+  `pnpm-lock.yaml`, `apps/*/package.json`, `domain/*/api/package.json` and, for a generator bump,
+  `domain/**` generated files and manifests (the one exception to "manifest writable only by
+  `generate` packets", limited to a same-id `--regenerate`); its required set adds `generated`,
+  `unit`, `db-apply` and `integration` by population; (b) a seventh kind `upgrade` with that glob
+  set and required set; (c) no rule: each upgrade amends `paths.allowed` by hand. Recommended: (a),
+  plus: same-id `--regenerate` rewrites `generatorVersion` to the installed version; the agent
+  edits the decorators pin by hand and `generated` FAILs when a module's pin ≠ its manifest
+  `generatorVersion`; a STYNX `<v>` move is the same packet shape. (b) adds a kind, which D-055's
+  brake resists; (c) cannot work, since only `generate` packets may write manifests. Amends 05 §3,
+  08 A.2, A.4, B.16 and 09 §2. Chosen:
+- **Who writes `fixed` (#12).** 05 §2 gives dispositions to the pilot and `not-a-defect` to the
+  agent; 10 §2.4 offers the agent only `not-a-defect`; nobody is named for `fixed`. PL-10 holds a
+  `fixed` line only when the finding is absent from the current review, which the next `--full`
+  shows anyway, and the earlier `review.json` stays in git history. Options: (a) `fixed` is the
+  pilot's; (b) drop `fixed`; (c) the agent may write it too. Recommended: (b). It adds no
+  information PL-10 does not already re-derive, (a) spends the pilot's attention on a diff-level
+  fact (D-003), and (c) keeps a word with no use. Amends D-035's vocabulary, 05 §2 and PL-10.
+  Chosen:
+- **Migration manifest outside the `code` globs (#13).** 09 §3 appends a new module migration to
+  `database/seed/modules.txt`; the `code`/`fix` default globs (08 A.4) cover `domain/<slug>/db/**`
+  but not that file, so a default `code` packet adding a migration fails `packet-scope`. Options:
+  (a) add `database/seed/modules.txt` (that file only) to the `code` and `fix` default globs;
+  (b) keep it out; each such packet widens `paths.allowed` (05 §2 allows it). Recommended: (a).
+  05 §3 lists new migrations as a `code` deliverable, so the default should admit them; the file's
+  applied lines stay guarded by its hash and LINT013 (09 §3, D-043). Amends 08 A.4.
+  Chosen:
+Source: drafted 2026-10-21 for the Owner; no item binds until the Owner writes its `Chosen`.
+
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
