@@ -7,7 +7,7 @@ Citation prefix `stynx:` means `/Volumes/Development/projects/stech/stynx/`; oth
 
 ## 1. Purpose and reading boundary
 
-[inference] The technical spec is the **setpoint**: a `spec` packet derives it from business rules and use cases in `product/`; the pilot approves it, and subsequent packets freeze its complete bytes. One Markdown file under `specs/<module.slug>/` carries human explanation and one machine block, consumed by the module generator (rail), `spec-lint`, `route-contract`, `spec-tests`, and the independent reviewer in phase 1. This realizes `foundation/00-intent.md:13–14,32–34`, `foundation/01-charter.md:50–66`, D-008/D-027 and `foundation/02-architecture.md:319–325,463–469`.
+[inference] The technical spec is the **setpoint**: a `spec` packet derives it from business rules and use cases in `product/`; the pilot approves it, and subsequent packets freeze its complete bytes. One Markdown file under `specs/<module.slug>/` (the module slug is 04 §1's `<area>-<capability>`, the same folder name as `domain/<slug>/`) carries human explanation and one machine block, consumed by the module generator (rail), `spec-lint`, `route-contract`, `spec-tests`, and the independent reviewer in phase 1. This realizes `foundation/00-intent.md:13–14,32–34`, `foundation/01-charter.md:50–66`, D-008/D-027 and `foundation/02-architecture.md:319–325,463–469`.
 
 [opinion] Sections 2–6 are the implementer's contract; agents normally read only the instantiated spec in §7. Inherited obligations are cited; proposed details are tagged. The specimen is fictional design data, not a deployed product. Required human sections are **Purpose**, **Scope**, **Contract notes**, **Acceptance notes**, **Open questions**. They explain choices and boundary cases. Approval requires no unresolved questions. Contradictory prose is a reviewer finding, not something a parser can reliably settle.
 
@@ -101,7 +101,7 @@ unimplemented:                         # eligibility, not current execution stat
 # Slug = [a-z][a-z0-9]*(-[a-z0-9]+)*; SqlIdentifier = [a-z][a-z0-9_]*, <=48 characters.
 # PascalCase = [A-Z][A-Za-z0-9]*; InputName/ColumnName use SqlIdentifier.
 # I18nKey and QualifiedQueryName are dot-separated lowercase identifiers.
-# UpperSnakeIdentifier = [A-Z][A-Z0-9_]*; Locale is a D-014 language tag (en-US, pt-BR); every configured locale must be present.
+# UpperSnakeIdentifier = [A-Z][A-Z0-9_]*; Locale is a canonical BCP 47 tag (08 A.8; D-014 names en-US, the default, and pt-BR; D-073); every configured locale must be present.
 # Each table has >=1 column, a non-null primary key and non-null UUID tenant_id.
 # Default/type pairs: generated-uuid/uuid, tenant-context/uuid, transaction-time/timestamptz.
 ```

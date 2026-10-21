@@ -710,6 +710,48 @@ The Owner revisited D-071's SM-15 probe ruling and chose option (b): exempt the 
   deployment's probes would otherwise need a configured header.
 Source: Owner, 2026-10-21.
 
+## D-073 · 2026-10-21 · Stale-text corrections found by the docs set (devai-v3#14–#30)
+Writing the docs set (#4) found framework text that no longer matches decisions already taken. Each
+item below aligns the text with the decision it cites; no node, state, command, file or field is
+added (D-055). Two items needed a choice and give their options.
+- **D-046 (#14).** D-046's "the label set stays at six" is read as: the class set stays at
+  seven (`spec`, `product`, `decisions`, `standards`, `infra`, `ci`, `acceptance`; no `database`
+  class), and the labels are the seven `protected:<class>` plus `protected:unplanned` (02 §5,
+  08 A.8). D-046 itself is not rewritten.
+- **D-064 fixture re-pin not propagated (#15–#18).** 09's provenance header names the 10,035-byte
+  `12e9041f…` digest as current; 09 §2 attributes input rejection to R-5; 08 B.21's example reads
+  `expected 6, observed 6`; 05 §2's summary line follows 08 C.3's `requirements covered` grammar.
+- **05 §7 example (#19).** The shipped template seeds `apps/web` and `test/e2e/shell.playwright.ts`
+  (09 §1.1), so neither `i18n` nor `e2e` can be SKIPPED on it; the example skips `sql-lint` and
+  `actionlint` only.
+- **PL-06 (#20).** `CONTRIBUTING.md` leaves PL-06's root-file list (D-060, E-5-05; 04 §1, 09 §1.1).
+- **S-12 (#21).** 03 Part C follows D-009: no lint guards S-12, runtime enforcement is ruled out,
+  the narrow agentic check (`permissions-pattern`, 02 §4) guards it.
+- **One copy (#22).** 03's verbatim copy of 02 §13–§14 is replaced by a pointer; 02 is the copy.
+- **02 §6 sample (#23).** The sample lists all seven classes and `check.editLoopCeilingMs`, so it
+  validates against 08 A.8 (D-047, D-058).
+- **02 §9 (#24).** Besides `review.json` and `.devai/review/<packet>.permissions.json`, both tracked
+  on the PR branch (02 §11, D-037, D-058), the reviewer writes nothing into the repository.
+- **08 §0 (#25).** v3 has five commands (seven invocations, 08 Part A).
+- **Summary node count (#26).** 08 C.3 left `<n>` undefined and 02 §8, 05 §7 read 26 against 28
+  contracts. Options: (a) every planned node, `accept` included (28 under `--packet --full`);
+  (b) every planned node other than `accept`, i.e. B.28's `expected` (27), SKIPPED included.
+  Chosen: (b), because the line is `accept`'s verdict over the nodes it observes. 02 §8 and 05 §7
+  now read 27.
+- **Spec folder (#27).** `specs/<module.slug>/` (06) and `specs/<area>-<capability>/` (04, 02) name
+  one folder: the module slug is 04 §1's `<area>-<capability>`, as `domain/<slug>/` is.
+- **Locales (#28).** Options: (a) only en-US and pt-BR, as a zod enum; (b) any canonical BCP 47 tag,
+  en-US first (08 A.8 as written). Chosen: (b). D-014 fixes the default and opts pt-BR in; it
+  limits nothing, so 06 §2's two tags are examples.
+- **Standards rows (#29).** 08 B.9 (`route-contract`) cites S-29 and B.25 (`protected-paths`) cites
+  S-63, as 03 Part A says they enforce them.
+- **Release workflow (#30).** 12 is bootstrap history and is not edited (D-066). `ci.yml` is the
+  record where it differs from 12 §5: `matrix` also runs on every `v*` tag and fails tags until R8,
+  so `publish` cannot run on an unfilled matrix; `publish` runs `pnpm -r publish --no-git-checks`
+  because a tag checkout is detached.
+Source: drafted 2026-10-21 for Owner adoption; the choices for #26 and #28 are the drafter's
+recommendations and bind only once the Owner adopts them.
+
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.

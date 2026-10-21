@@ -10,8 +10,6 @@ description: Every devai command, flag, mode, exit code and reason code, as 08 P
 
 This page lists the whole command surface of [08 Part A](../framework/08-cli-and-nodes.md): **7 invocations** under 5 command words (`init`, `new module`, `check`, `packet new|lint|rebase`, `packets status`), **20 distinct flags** (28 flag uses across the 7 invocations), and **3 hook scripts**. `devai doctor` is specified as *not built* ([08 A.6](../framework/08-cli-and-nodes.md)).
 
-> 08 §0 says "v3 has six commands and one flag family". Part A specifies the seven invocations listed below; this page lists all of them and does not settle how the six are counted.
-
 ## Rules for every command
 
 These hold for every command and are not repeated per command ([08 Part A](../framework/08-cli-and-nodes.md)):
