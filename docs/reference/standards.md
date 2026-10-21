@@ -68,7 +68,7 @@ The company standards are the table in [03 Part A](../framework/03-standards.md)
 | S-65 | Every check reports `expected`/`observed`/`evaluated`; zero observations is `UNKNOWN`; never `PASS` on empty | harness | `spec-tests`, `accept` | runner |
 | S-66 | Independent review by a model of a different family, run pre-push and digest-verified in CI | check | `review` | [D-028](../../decisions.md), [D-037](../../decisions.md) |
 | S-67 | Expected red only for named unimplemented observations, reaching their behavioural assertion; rail behaviour stays green | check | `spec-tests` | [D-004](../../decisions.md), [D-051](../../decisions.md) |
-| S-70 | Request ID is UUIDv7 and required on every request | both | `route-contract`, `integration` | [D-045](../../decisions.md) |
+| S-70 | Request ID is UUIDv7 and required on every request, except an id-less `/healthz` or `/readyz` probe | both | `route-contract`, `integration` | [D-045](../../decisions.md), [D-072](../../decisions.md) |
 | S-71 | Logging is pino with redaction; metrics are `prom-client`; no standard against OpenTelemetry | rail | — | template |
 
 Count: 56 rows. By group in 03 Part A: Platform 8, Security and access 4, API and data access 5, Language and compiler 6, Code hygiene 5, Angular 2, Tests 1, adopted by [D-014](../../decisions.md) 6, added by [D-049](../../decisions.md) 19.

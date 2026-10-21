@@ -694,6 +694,22 @@ superseded #401-#406. Rulings recorded for 08/09/12 and the v3 template:
   the STYNX RC task `db:rls` does not select the new CLI engine files.
 Source: orchestrator under the Owner's standing authorisation (recommended options).
 
+## D-072 · 2026-10-21 · Liveness and readiness probes may omit the request id (revisits D-071)
+The Owner revisited D-071's SM-15 probe ruling and chose option (b): exempt the health routes.
+- A `GET` or `HEAD` on exactly `/healthz` or `/readyz` (query string allowed) that sends no
+  `X-Request-Id` is served without a request context and echoes no id. Orchestrators and load
+  balancers probe without a client id. A probe that sends an id is still held to UUIDv7, so an
+  invalid one is the SM-15 400. Every other route and method keeps the SM-15 rejection.
+- S-70 is amended accordingly (03, 03b, 02 `integration`, 08 B.22, the 09 template test).
+- STYNX: `isProbeRequest` in `@stynx-nyx/core`, applied in the CLS request seed and in
+  `RequestContextInterceptor` [fact: `stynx:packages/core/src/request-id-rejection.ts:20-38`,
+  `stynx:packages/core/src/core.module.ts:55`, `stynx:packages/core/src/request-context.interceptor.ts:72`],
+  commits `aceca908` (code), `dde6a84e` (tests), `c454ce64` (rebind) on stynx-nyx/stynx#400. The
+  CI health-gate workflow edit prepared under D-071 (a) is dropped and needs no receipt.
+- [opinion] Cost: one small mechanism where D-071 chose none (D-055). Accepted because every
+  deployment's probes would otherwise need a configured header.
+Source: Owner, 2026-10-21.
+
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
