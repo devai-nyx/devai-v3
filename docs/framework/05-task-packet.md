@@ -363,7 +363,7 @@ What `--full` prints for it when green, abridged (02 §8 summary form; the diges
 
 ```
 PKT-DEMO-004  Implement note creation and retrieval (R-1, R-2, R-4)   spec SPEC-DEMO-001 @ ‹digest›… (frozen)
-acceptance: PASS (27 nodes: 25 pass, 2 skipped: sql-lint[no changed *.sql], actionlint[no changed .github/**])   runtime: bare
+acceptance: PASS (28 nodes: 26 pass, 2 skipped: sql-lint[no changed *.sql], actionlint[no changed .github/**])   runtime: bare
 protected paths: spec (packets/CMP-DEMO-001/PKT-DEMO-004.md, declared)   packet scope: ok   spec tests: 6/6 requirements covered
 review: no blockers (1 disposed: not-a-defect R-4; mustRun: false, tallied)   worker: claude   reviewer: gpt   bound to head 9e41…
 ```

@@ -713,7 +713,7 @@ Source: Owner, 2026-10-21.
 ## D-073 · 2026-10-21 · Stale-text corrections found by the docs set (devai-v3#14–#30)
 Writing the docs set (#4) found framework text that no longer matches decisions already taken. Each
 item below aligns the text with the decision it cites; no node, state, command, file or field is
-added (D-055). Two items needed a choice and give their options.
+added (D-055). Two items needed a choice; the Owner ruled on both.
 - **D-046 (#14).** D-046's "the label set stays at six" is read as: the class set stays at
   seven (`spec`, `product`, `decisions`, `standards`, `infra`, `ci`, `acceptance`; no `database`
   class), and the labels are the seven `protected:<class>` plus `protected:unplanned` (02 §5,
@@ -734,10 +734,10 @@ added (D-055). Two items needed a choice and give their options.
   on the PR branch (02 §11, D-037, D-058), the reviewer writes nothing into the repository.
 - **08 §0 (#25).** v3 has five commands (seven invocations, 08 Part A).
 - **Summary node count (#26).** 08 C.3 left `<n>` undefined and 02 §8, 05 §7 read 26 against 28
-  contracts. Options: (a) every planned node, `accept` included (28 under `--packet --full`);
-  (b) every planned node other than `accept`, i.e. B.28's `expected` (27), SKIPPED included.
-  Chosen: (b), because the line is `accept`'s verdict over the nodes it observes. 02 §8 and 05 §7
-  now read 27.
+  contracts. Options: (a) every planned node, `accept` and SKIPPED included (28 under
+  `--packet --full`); (b) every planned node other than `accept`, i.e. B.28's `expected` (27).
+  Chosen: (a), because it is the length of `report.json`'s `nodes` array (08 C.2) and the 28 the
+  node set is known by. 02 §8 and 05 §7 now read 28.
 - **Spec folder (#27).** `specs/<module.slug>/` (06) and `specs/<area>-<capability>/` (04, 02) name
   one folder: the module slug is 04 §1's `<area>-<capability>`, as `domain/<slug>/` is.
 - **Locales (#28).** Options: (a) only en-US and pt-BR, as a zod enum; (b) any canonical BCP 47 tag,
@@ -749,8 +749,7 @@ added (D-055). Two items needed a choice and give their options.
   record where it differs from 12 §5: `matrix` also runs on every `v*` tag and fails tags until R8,
   so `publish` cannot run on an unfilled matrix; `publish` runs `pnpm -r publish --no-git-checks`
   because a tag checkout is detached.
-Source: drafted 2026-10-21 for Owner adoption; the choices for #26 and #28 are the drafter's
-recommendations and bind only once the Owner adopts them.
+Source: Owner, 2026-10-21 (rulings on #26 and #28; the corrections adopted as drafted).
 
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
