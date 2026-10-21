@@ -123,6 +123,4 @@ export const DevaiConfig = z.strictObject({
 export type DevaiConfig = z.infer<typeof DevaiConfig>;
 ```
 
-> The sample object in [02 §6](../framework/02-architecture.md) is abridged: it shows one protected class and no `check` key. 08 A.8 defines the keys as "exactly those 02 §6 shows plus `check.editLoopCeilingMs`", and requires all seven classes; a file shaped exactly like the 02 §6 sample would not validate.
-
 Source: [08 A.8](../framework/08-cli-and-nodes.md), [02 §4, §5, §6, §9](../framework/02-architecture.md), [09 §2](../framework/09-rail.md), [07 §6](../framework/07-dependencies.md), [D-014](../../decisions.md), [D-032](../../decisions.md), [D-034](../../decisions.md), [D-047](../../decisions.md), [D-056](../../decisions.md), [D-058](../../decisions.md).

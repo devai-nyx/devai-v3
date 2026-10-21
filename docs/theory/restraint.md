@@ -18,7 +18,7 @@ explicit brake, [D-055](../../decisions.md):
 - prefer what STYNX already uses;
 - every document carries a "what we are not building" section.
 
-The brake is why the CLI has six commands where v2 exposed 69 actions
+The brake is why the CLI has five commands where v2 exposed 69 actions
 ([08 §0](../framework/08-cli-and-nodes.md)), why the node set is a closed list of 28
 ([D-045](../../decisions.md), [08 Part D](../framework/08-cli-and-nodes.md)), and why the template does not
 create folders nothing reads ([09 §1.1](../framework/09-rail.md)). It also governs changes to the law; see

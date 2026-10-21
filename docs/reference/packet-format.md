@@ -120,7 +120,7 @@ Expected red applies only to `kind: test` with a non-empty `observations.unimple
 | PL-16 | No packet under `packets/**` at HEAD carries `supersedes: <this id>` | `packet PKT-DEMO-004 is superseded by PKT-DEMO-006; work that packet` | 1 | `accept` |
 | PL-17 | Spec transitions (SL09, against the blob at `base`): added as `draft`, or `approved` with `approved-by`; `draft → draft`; `draft → approved` with `approved-by`; `approved → superseded-by: <X>` with no other byte changed and `X` in the candidate carrying `supersedes: {id, path, sha256}` where `sha256` is the blob at `base` | `spec SPEC-DEMO-001: illegal transition approved → draft; write a successor` · `spec SPEC-DEMO-001 superseded-by SPEC-DEMO-002 but SPEC-DEMO-002.supersedes.sha256 ≠ blob at base` | 1 | `packet-scope` |
 
-PL-06's root files: `README.md`, `AGENTS.md`, `CLAUDE.md`, `CONTRIBUTING.md`, `decisions.md`, `devai.json`, `eslint.config.*`, `tsconfig*.json`, `.stynxrc.json`, `compose.yaml`, `vitest.config.ts`, `package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`.
+PL-06's root files: `README.md`, `AGENTS.md`, `CLAUDE.md`, `decisions.md`, `devai.json`, `eslint.config.*`, `tsconfig*.json`, `.stynxrc.json`, `compose.yaml`, `vitest.config.ts`, `package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`.
 
 By node: `packet-scope` owns 12 (PL-01–07, 09, 11, 13, 14, 17), `accept` 3 (PL-12, 15, 16), `review` 1 (PL-10), `protected-paths`/`accept` 1 (PL-08). `devai packet lint` evaluates all but PL-10, PL-12, PL-15, PL-16, which it prints as `deferred` ([08 A.4](../framework/08-cli-and-nodes.md)). Messages ending in "write a successor" are the only ones the agent cannot act on alone; they go to the pilot through `## Notes`.
 

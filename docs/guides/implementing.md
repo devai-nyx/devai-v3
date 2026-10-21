@@ -123,7 +123,7 @@ it cannot act on alone ([05 §5](../framework/05-task-packet.md)).
 The summary that becomes the PR body, abridged ([05 §7](../framework/05-task-packet.md)):
 
 ```
-acceptance: PASS (26 nodes: 22 pass, 4 skipped: e2e[no test/e2e files], …)   runtime: bare
+acceptance: PASS (27 nodes: 25 pass, 2 skipped: sql-lint[no changed *.sql], …)   runtime: bare
 protected paths: spec (packets/CMP-DEMO-001/PKT-DEMO-004.md, declared)   packet scope: ok   spec tests: 6/6 requirements covered
 review: no blockers (1 disposed: not-a-defect R-4; mustRun: false, tallied)   worker: claude   reviewer: gpt
 ```
