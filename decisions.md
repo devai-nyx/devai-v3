@@ -1076,32 +1076,40 @@ per-tool special cases in each B row only. (a) decides now what DEVAI can decide
 `io` are reused). Amends 08 §0 and one sentence each in B.4, B.9, B.15, B.17, B.19. Chosen: (a).
 Source: Owner (R6 packet, 2026-10-24).
 
-## D-087 · 2026-10-24 · Config contracts: template `.stynxrc.json` names the 04 roots and is validated by DEVAI; generated routes use `@Permission`/`@Public` from `@stynx-nyx/auth` (R6 W2 fact sheet b7, b8, b10)
+## D-087 · 2026-10-24 · Config contracts: template `.stynxrc.json` names the 04 roots and is validated by DEVAI; generated routes keep `@RequireRoles` from `@stynx-nyx/backend` (R6 W2 fact sheet b7, b8, b10)
 Three items. **b7**: `verify-api-coverage` scans `apiCoverage.sourceRoots` (literal paths, default
-STYNX's layout) and `verify-public-api-baselines` scans `publicApi.packageRoots` (one level); 09 §1.1's
-`.stynxrc.json` carried `boundary` only, so both saw 0 and passed with `observed 0`. Options: (a) the
-template `.stynxrc.json` gains `apiCoverage.sourceRoots` and `publicApi.packageRoots` for the 04 layout,
-and, because `sourceRoots` are literal, the generator prints the per-module entry as one more mount
-line (09 §2: mounting is the `generate` packet's job); (b) ask STYNX for globs (S10) and block
-`openapi`; (c) pass roots on argv (3.0.0 has no such option). (a) works with 3.0.0 as published.
-**b8**: `verify-stynx-boundary` reads `.boundary ?? {}` unchecked, so `[1]` passes with default roots.
-Options: (a) DEVAI validates `.stynxrc.json` with a zod definition of `boundary`, `apiCoverage`,
-`publicApi` before any `stynx` call: malformed → `UNKNOWN: config-invalid` for every node that reads
-it, absent → `boundary` `FAIL` (08 B.17); (b) rely on each command's own handling. (a) closes the one
-path where a malformed config yields `PASS`. **b10**: `list-routes` accepts `Public`, `Permission` and
-the other auth markers only from `@stynx-nyx/auth`, `@stynx-nyx/backend` or STYNX's decorators path,
-and `RequireRoles` is not an auth marker, so 09 §6's `@RequireRoles` controller fails `route-contract`
-on the template's own fixture. Options: (a) the generator emits `@Permission(…)` / `@Public()` from
-`@stynx-nyx/auth`; 02 §2 drops "either role decorator"; `RequireRoles` stays legal in hand-written code
-but does not role-bind a route for `route-contract`; (b) ask STYNX to treat `RequireRoles` as an auth
-marker (S10) and block `route-contract`; (c) `route-contract` reads `RequireRoles` itself beside
-`list-routes` (a second census, D-029). (a) changes template bytes and the 09 §6 oracle before W8
-exists, the cheapest moment; (b) leaves the fixture red until STYNX moves. Open sub-question (not
-decided here, listed under Open): whether 06 §2 `roles` maps onto `@Permission`'s argument or 06 §2
-needs a `permissions` key. Amends 09 §1.1 (`.stynxrc.json` row), 09 §2 (lowering, mount lines),
-§2.1 (`routes[]` row), §6 (controller lines), 02 §2 (generator outputs), 08 B.17 (validation), B.19
-(roots). Chosen: b7 (a) with the generator printing the entry as a mount line, b8 (a), b10 (a).
-Source: Owner (R6 packet, 2026-10-24).
+STYNX's layout) and `verify-public-api-baselines` scans `publicApi.packageRoots` (one level deep,
+skipping folders without a manifest); 09 §1.1's `.stynxrc.json` carried `boundary` only, so both saw 0
+and passed with `observed 0`. Options: (a) the template `.stynxrc.json` gains `"apiCoverage":
+{ "sourceRoots": ["apps/api/src"] }` and `"publicApi": { "packageRoots": [] }`, and, because the roots
+are literal and one level deep, the generator prints one entry per module for each as mount lines
+(`domain/<slug>/api/src`, `domain/<slug>`; 09 §2: mounting is the `generate` packet's job); (b) ask
+STYNX for globs (S10) and block `openapi`; (c) pass roots on argv (3.0.0 has no such option). (a)
+works with 3.0.0 as published; `["domain"]` would scan `domain/<m>` folders, which have no
+`package.json`. **b8**: `verify-stynx-boundary` reads `.boundary ?? {}` unchecked, so `[1]` passes with
+default roots. Options: (a) DEVAI validates `.stynxrc.json` with a zod definition of `boundary`,
+`apiCoverage`, `publicApi` before any `stynx` call: malformed → `UNKNOWN: config-invalid` for every node
+that reads it, absent → `boundary` `FAIL` (08 B.17); (b) rely on each command's own handling. (a)
+closes the one path where a malformed config yields `PASS`. **b10**: `list-routes` accepts `Public`,
+`Permission` and the other auth markers only from `@stynx-nyx/auth`, `@stynx-nyx/backend` or STYNX's
+decorators path, and `RequireRoles` is not an auth marker, so 09 §6's controller fails `route-contract`
+on the template's own fixture. STYNX's `@Permission(key)` takes one permission key
+(`stynx:packages/auth/src/decorators.ts:25`), while 06 §2 `roles: Slug[]` means "all of these roles"
+and maps to `@RequireRoles(roles, 'all')`, exported by `@stynx-nyx/backend`
+(`stynx:packages/backend/src/authorization/decorators.ts:10`). Options: (a) the generator emits
+`@Permission(…)` / `@Public()` from `@stynx-nyx/auth`; (b) the generator keeps `@RequireRoles(roles,
+'all')` imported from `@stynx-nyx/backend`; S10 gains an item for `list-routes` to accept `RequireRoles`
+as a role-binding marker and report it in `permissions`; until STYNX ships it, `route-contract` reports
+a generated route `UNKNOWN: tooling-missing — route-contract: install @stynx-nyx/cli ≥ <v> whose
+list-routes reads RequireRoles` (D-029, the D-088 pattern); (c) `route-contract` reads `RequireRoles`
+itself beside `list-routes` (a second census, D-029). (a) cannot express 06 §2's role set in one
+permission key without a new spec key; (b) keeps 06 §2, 08 B.9's `roles ↔ @RequireRoles([...], 'all')`
+comparison and S-28 unchanged and puts the gap in STYNX, where the census lives; (c) duplicates a
+STYNX rule. The first panel chose (a); the Owner revisited it in a second panel the same day after the
+`@Permission(key)` fact and chose (b). Amends 09 §1.1 (`.stynxrc.json` row), 09 §2 (lowering, mount
+lines), §2.1 (`routes[]` row), §6 (import line), 02 §2 (generator outputs: import origin), 08 B.9
+(Status, `tooling-missing`), B.17 (validation), B.19 (roots). Chosen: b7 (a), b8 (a), b10 (b).
+Source: Owner (R6 packet, 2026-10-24; b10 second panel, 2026-10-24).
 
 ## D-088 · 2026-10-24 · STYNX publishes the write pair; until then `openapi` and the STYNX `generated` pairs are `tooling-missing` and the contract files are seed (R6 W2 fact sheet c1)
 `@stynx-nyx/cli` 3.0.0 ships the check forms only (`verify-api-coverage --json --strict`,
@@ -1117,8 +1125,8 @@ back; (c) is forbidden by D-029. S10 items filed for STYNX, by name: **`stynx ap
 **`stynx public-api-baselines write`**. Amends 08 B.16 and B.19 (Status, hint text), 09 §1.1
 (contracts row Mode: seed until the pair exists). Chosen: (a). Source: Owner (R6 packet, 2026-10-24).
 
-## D-089 · 2026-10-24 · Stale citations after STYNX 3.0.0 (R6 W2 fact sheet a1–a9)
-STYNX 3.0.0 was published on 2026-10-23 from `10514fea`, renaming `tools/*` to `@stynx-nyx/*`. Nine
+## D-089 · 2026-10-24 · Stale citations after STYNX 3.0.0 (R6 W2 fact sheet a1–a9; a10 added in review)
+STYNX 3.0.0 was published on 2026-10-23 from `10514fea`, renaming `tools/*` to `@stynx-nyx/*`. Ten
 places in 08 and 07 cited a `stynx:` path at `63e5f788` or a "today" clause that moved; behaviour is
 unchanged in each. No option set; the Owner ratifies the list. Citations now name the published
 package path `P:<pkg>@3.0.0/<path>` (D-073 pattern):
@@ -1131,7 +1139,8 @@ package path `P:<pkg>@3.0.0/<path>` (D-073 pattern):
 - **a7 · 08 B.14 `actionlint`.** The JSON-output `[inference]` is now `[fact]`: 1.7.12 downloads the binary at install and `-format '{{json .}}'` prints a JSON array.
 - **a8 · 08 B.20 `db-apply`.** `stynx verify-rls-negative --json --ddl <roots>` is published (default `database/ddl`, `*` per segment).
 - **a9 · 07 §2.** The four "pending publication" rows (`tsconfig`, `migration-linter`, `eslint-config`, `cli`) read "published 3.0.0".
-Amends 08 B.3, B.4, B.7, B.9, B.14, B.17, B.19, B.20 and the 08 provenance header; 07 §2 and its
+- **a10 · 08 Part B preamble.** Every STYNX entry point the blocks invoke exists at 3.0.0; "`UNKNOWN: tooling-missing` until it exists" now applies only to D-088's write pair and to `list-routes` reading `RequireRoles` (D-087).
+Amends 08 Part B preamble, B.3, B.4, B.7, B.9, B.14, B.17, B.19, B.20 and the 08 provenance header; 07 §2 and its
 citation key. Source: Owner (R6 packet, 2026-10-24).
 
 ## Open
@@ -1140,4 +1149,3 @@ citation key. Source: Owner (R6 packet, 2026-10-24).
 - Mutation testing's home (D-004: outside the cycle or not at all) — not blocking v3.0.
 - 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck (D-058) — not blocking v3.0.
 - STYNX local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 (D-069) — STYNX item, not blocking 3.0.0.
-- D-087: does 06 §2 `roles` map onto `@Permission`'s argument, or does 06 §2 need a `permissions` key? Until ruled, 09 §6 prints `@Permission(…)` and 08 B.9 still compares `roles` with `@RequireRoles`.
