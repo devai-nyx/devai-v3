@@ -11,6 +11,8 @@ import { diffNameStatus } from '../git/git.js';
 import { spawn } from '../proc/spawn.js';
 import { type NodeId, NODE_IDS } from '../runner/edges.js';
 import type { InventoryData, NodeOutcome, Population, RunContext } from '../runner/run.js';
+import { mountCensus } from '../ts/mounts.js';
+import { affectedClosure } from '../ts/program.js';
 
 type Finding = NodeOutcome['findings'][number];
 type Reason = NonNullable<NodeOutcome['reason']>;
@@ -114,7 +116,7 @@ export function populations(f: PopulationFacts): Record<NodeId, Population> {
   const surface = f.changed.filter((p) => /\.controller\.ts$|\/dto\/|(^|\/)index\.ts$|^apps\/[^/]+\/src\/.*\.module\.ts$/.test(p));
   const testPath = (p: string) => /^(test\/|apps\/[^/]+\/test\/|domain\/[^/]+\/(api|web)\/test\/)/.test(p);
   return {
-    inventory: always('always applies', f.manifests.length),
+    inventory: always('always applies', f.manifests.filter((m) => m.dir !== '.').length),
     format: n('no changed *.{ts,mjs,json,md}', cp.filter((p) => ext(p, '.ts', '.mjs', '.json', '.md')).length),
     lint: n('no changed *.ts, *.mts or *.html', cp.filter((p) => ext(p, '.ts', '.mts', '.html')).length),
     'lint-tests': n('no changed *.spec.ts', cp.filter((p) => p.endsWith('.spec.ts')).length),
@@ -131,7 +133,7 @@ export function populations(f: PopulationFacts): Record<NodeId, Population> {
     commitlint: n('no commits between base and HEAD', f.commitsSinceBase),
     generated: n('no generation-manifest.json under domain/', f.paths.filter((p) => /^domain\/[^/]+\/generation-manifest\.json$/.test(p)).length),
     boundary: always(),
-    deadcode: always('always applies', f.manifests.length),
+    deadcode: always('always applies', f.manifests.filter((m) => m.dir !== '.').length),
     openapi: n('no app binding changed and no public-API surface changed', surface.length),
     'db-apply': n('no database/', f.paths.filter((p) => p.startsWith('database/')).length),
     'spec-tests': n('no acceptance file for <spec id>', f.paths.filter((p) => p.endsWith('.acceptance.spec.ts')).length),
@@ -147,7 +149,6 @@ export function populations(f: PopulationFacts): Record<NodeId, Population> {
 
 // ---- the node ------------------------------------------------------------------------------------
 
-const MOUNT_FILES = /^(apps\/[^/]+\/src\/.*\.module\.ts|domain\/[^/]+\/api\/src\/[^/]+\.module\.ts)$/;
 const env = { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: '0' }; // Part D: no interactive prompt
 
 async function version(root: string, bin: string): Promise<string | null> {
@@ -207,15 +208,22 @@ export async function runInventory(ctx: RunContext): Promise<{ outcome: NodeOutc
       findings.push({ locator: `pnpm-workspace.yaml:${line}`, message: `glob ${g} matches no package`, standard: 'S-06', hint: 'remove it' });
     }
   }
+  // D-084 item 7: a workspace whose globs match no package is FAIL, never `observed 0`. With no glob at
+  // all there is no `<g>` to name; the finding says so (open: the law gives no form for it).
+  if (packageDirs.length === 0 && positive.length === 0 && !findings.some((f) => f.locator === 'pnpm-workspace.yaml:1')) {
+    findings.push({ locator: 'pnpm-workspace.yaml:1', message: 'no workspace glob matches a package', standard: 'S-06', hint: 'name the real packages in pnpm-workspace.yaml (04 §1)' });
+  }
 
-  // Manifests: the root plus every package the globs name.
+  // Manifests: every package the globs name (the observations) and the root manifest, which is read and
+  // checked for engines, `"type"` and its tsconfig but is not an observation (D-084 item 7).
   const manifests: Manifest[] = [];
   let observed = 0;
   let evaluated = 0;
-  const expected = 1 + packageDirs.length;
+  const expected = packageDirs.length;
   const tscBin = resolve(root, 'node_modules/.bin/tsc'); // the product's installed binary (D-057)
   for (const dir of ['.', ...packageDirs]) {
     const path = dir === '.' ? 'package.json' : `${dir}/package.json`;
+    const isRoot = dir === '.';
     const text = present.has(path) ? readText(root, path) : null;
     if (text === null) {
       findings.push({ locator: `${path}:1`, message: 'manifest not readable', standard: 'S-06', hint: 'restore the package.json' });
@@ -230,7 +238,7 @@ export async function runInventory(ctx: RunContext): Promise<{ outcome: NodeOutc
       manifests.push({ dir, path, json: null });
       continue;
     }
-    observed++;
+    if (!isRoot) observed++;
     manifests.push({ dir, path, json });
     if (json['type'] !== 'module') findings.push({ locator: `${path}:1`, message: '"type" is not "module"', standard: 'S-31', hint: 'set "type": "module"' });
     const tsconfig = dir === '.' ? 'tsconfig.json' : `${dir}/tsconfig.json`;
@@ -253,7 +261,7 @@ export async function runInventory(ctx: RunContext): Promise<{ outcome: NodeOutc
       const deps = { ...(json['dependencies'] as object | undefined), ...(json['devDependencies'] as object | undefined) };
       findings.push(...tsconfigFindings(tsconfig, options, '@angular/core' in deps));
     }
-    evaluated++;
+    if (!isRoot) evaluated++;
   }
 
   // Engines, packageManager, Corepack (UNKNOWN engines-mismatch; no pin file, D-057).
@@ -270,10 +278,11 @@ export async function runInventory(ctx: RunContext): Promise<{ outcome: NodeOutc
   else if (pnpmV !== pmVersion) mismatch(`host pnpm ${pnpmV ?? 'absent'} ≠ packageManager ${pm}`);
   if (corepackV === null) mismatch('corepack is absent');
 
-  // Mounted-route census (D-058): the TypeScript walk arrives with route-contract (R6 W2).
-  // TODO(R6 W2): walk apps/*/src root modules through static imports/controllers with the TS parser.
-  const moduleFile = paths.find((p) => MOUNT_FILES.test(p));
-  if (moduleFile) unknown.push({ reason: 'mount-unresolved', finding: { locator: `${moduleFile}:1`, message: 'mounted-route census not computed (R6 W2)', standard: 'S-06', hint: 'make the module\'s imports/controllers arrays static at the locator' } });
+  // Mounted-route census (D-058, D-084 item 9): app root modules through static imports/controllers.
+  const packageNames = new Map<string, string>();
+  for (const m of manifests) if (m.dir !== '.' && typeof m.json?.['name'] === 'string') packageNames.set(m.json['name'] as string, m.dir);
+  const mounts = mountCensus(root, paths, packageNames);
+  for (const u of mounts.unresolved) unknown.push({ reason: 'mount-unresolved', finding: { locator: u.locator, message: u.message, standard: 'S-06', hint: "make the module's imports/controllers arrays static at the locator" } });
 
   // toolchainDigest = sha256(node version ‖ pnpm version ‖ pnpm-lock.yaml), framed as C.4's components.
   let lock: Buffer = Buffer.alloc(0);
@@ -292,9 +301,16 @@ export async function runInventory(ctx: RunContext): Promise<{ outcome: NodeOutc
   ]);
   const changed = [...changedSet].sort();
   const commitsSinceBase = 0; // `git log <base>..HEAD` counts arrive with `--packet` (R6 W4)
+  // The affected `tsc -b` closure (B.1 side product; B.5 builds it): package tsconfigs as projects.
+  const projectRoots = packageDirs.map((d) => `${d}/tsconfig.json`).filter((t) => present.has(t));
+  if (present.has('tsconfig.json')) projectRoots.unshift('tsconfig.json');
+  const projects = affectedClosure(root, projectRoots, changed).map((p) => p.tsconfig);
   const data: InventoryData = {
     toolchainDigest,
     changed,
+    mounts,
+    projects,
+    packageDirs,
     populations: populations({
       paths, changed, changedPresent: changed.filter((p) => present.has(p)), packageDirs: ['.', ...packageDirs], manifests,
       locales: ctx.config.locales.length, commitsSinceBase, packet: ctx.base !== null,

@@ -24,6 +24,7 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
+    "@stynx-nyx/cli": "3.0.0",
     "@types/pg": "8.20.0",
     "vitest": "4.1.11"
   },

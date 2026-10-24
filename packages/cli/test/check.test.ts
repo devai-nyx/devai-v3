@@ -58,6 +58,18 @@ describe('devai check --only inventory (W1 entry point)', () => {
   });
 });
 
+describe('devai check --only <W2b node> --format json on the template workspace', () => {
+  it.each(['typecheck', 'layout', 'route-contract', 'sql-typed', 'test-integrity'])('%s: a C.2-valid report with the node, its prerequisites and accept', (id) => {
+    const dir = templateWorkspace();
+    const r = devai(dir, 'check', '--only', id, '--format', 'json');
+    expect(r.stderr).toBe('');
+    const report = Report.parse(JSON.parse(r.stdout));
+    expect(report.nodes.map((n) => n.id)).toEqual(id === 'route-contract' ? ['inventory', 'typecheck', 'route-contract', 'accept'] : ['inventory', id, 'accept']);
+    expect(report.exitCode).toBe(r.status);
+    expect(report.nodes.find((n) => n.id === id)!.status).toBe(id === 'layout' ? 'PASS' : 'SKIPPED');
+  });
+});
+
 describe('devai check refusals (W1)', () => {
   const usage = (dir: string, ...args: string[]) => {
     const r = devai(dir, 'check', ...args, '--format', 'json');
@@ -66,9 +78,13 @@ describe('devai check refusals (W1)', () => {
   };
   it('a node without an adapter: exit 2 usage "node <id> arrives in a later wave"', () => {
     const dir = templateWorkspace();
-    expect(usage(dir, '--only', 'format')).toMatchObject({ reason: 'usage', message: 'node format arrives in a later wave' });
-    expect(usage(dir)).toMatchObject({ reason: 'usage', message: 'node format arrives in a later wave' });
-    expect(usage(dir, '--only', 'route-contract')).toMatchObject({ reason: 'usage', message: 'node typecheck arrives in a later wave' });
+    expect(usage(dir, '--only', 'unit')).toMatchObject({ reason: 'usage', message: 'node unit arrives in a later wave' });
+  });
+  it('A.3 (D-084 item 19): --only on a packet-bound node without --packet is exit 2 usage "<node> needs --packet"', () => {
+    const dir = templateWorkspace();
+    for (const n of ['review', 'permissions-pattern', 'packet-scope', 'spec-tests']) {
+      expect(usage(dir, '--only', n)).toMatchObject({ reason: 'usage', message: `${n} needs --packet` });
+    }
   });
   it('flags of later waves refuse naming the wave', () => {
     const dir = templateWorkspace();

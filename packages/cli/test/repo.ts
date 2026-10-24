@@ -27,13 +27,15 @@ export const commitAll = (dir: string, message = 'c'): string => {
 
 export const templateDir = resolve(import.meta.dirname, '../template');
 
-/** A workspace carrying the template's fixed files (09 §1.1) plus a minimal root manifest, committed. */
+/** A workspace carrying the template's fixed files (09 §1.1) plus a minimal root manifest and `apps/api`, committed. */
 export function templateWorkspace(extra: Record<string, string> = {}): string {
   const dir = tempRepo('devai-w1-ws-');
   cpSync(templateDir, dir, { recursive: true, verbatimSymlinks: true });
   renameSync(resolve(dir, 'gitignore'), resolve(dir, '.gitignore'));
   write(dir, 'package.json', JSON.stringify({ name: 'demo', private: true, type: 'module', engines: { node: '>=24 <25', pnpm: '>=9 <10' }, packageManager: 'pnpm@9.15.0' }, null, 2) + '\n');
-  write(dir, 'pnpm-workspace.yaml', 'packages: []\n');
+  // 09 §1.1's `apps/*` glob with one real package (D-084 item 7: a glob matching no package is FAIL).
+  write(dir, 'pnpm-workspace.yaml', "packages:\n  - 'apps/*'\n");
+  write(dir, 'apps/api/package.json', JSON.stringify({ name: '@demo/api', private: true, type: 'module' }, null, 2) + '\n');
   write(dir, 'devai.json', JSON.stringify(templateConfig(), null, 2) + '\n');
   for (const [p, c] of Object.entries(extra)) write(dir, p, c);
   commitAll(dir, 'chore(template): devai init demo');

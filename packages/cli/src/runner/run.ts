@@ -7,6 +7,7 @@ import type { Listing } from '../candidate/digest.js';
 import { cacheKey, configDigest, inputDigest, nodeVersion } from '../cache/key.js';
 import { type NodeRow, resultDigest } from '../cache/result-digest.js';
 import type { CacheStore } from '../cache/store.js';
+import type { MountCensus } from '../ts/mounts.js';
 import { isEditLoopClass, lane, needsOf, type NodeId } from './edges.js';
 import type { Plan } from './plan.js';
 
@@ -27,6 +28,12 @@ export interface InventoryData {
   populations: Record<NodeId, Population>;
   /** Changed paths (base..HEAD plus working tree, adds/deletes/untracked; B.1 Inputs), sorted. */
   changed: string[];
+  /** B.1 side products (R6 W2): the mounted-route census and the affected `tsc -b` project closure. */
+  mounts: MountCensus;
+  /** Repo-relative tsconfig paths of the affected project closure, sorted. */
+  projects: string[];
+  /** Workspace package folders the globs match (root excluded), sorted. */
+  packageDirs: string[];
 }
 
 export interface RunContext {
