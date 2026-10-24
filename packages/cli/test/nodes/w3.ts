@@ -185,20 +185,16 @@ export async function databaseExists(name: string): Promise<boolean> {
   }
 }
 
-/** A PATH holding only links to the binaries named (to hide `psql`, or to put a fake `docker` first). */
-export function pathWith(dir: string, names: readonly string[], extra: Record<string, string> = {}): string {
+/** The current PATH with a folder of fake binaries in front (a `psql` that cannot run, a `docker` without a daemon). */
+export function pathWith(dir: string, fakes: Record<string, string>): string {
   const binDir = resolve(dir, '.devai-test-bin');
   mkdirSync(binDir, { recursive: true });
-  for (const n of names) {
-    const which = spawnSync('sh', ['-c', `command -v ${n}`], { encoding: 'utf8' }).stdout.trim();
-    if (which) symlinkSync(which, resolve(binDir, n));
-  }
-  for (const [n, script] of Object.entries(extra)) {
+  for (const [n, script] of Object.entries(fakes)) {
     writeFileSync(resolve(binDir, n), script);
     chmodSync(resolve(binDir, n), 0o755);
   }
   writeFileSync(resolve(dir, '.git/info/exclude'), '/node_modules\n/.devai-test-bin\n');
-  return binDir;
+  return `${binDir}:${process.env['PATH'] ?? ''}`;
 }
 
 /** The template's tier selection reduced to what `unit` needs (09 §1.1 `vitest.config.ts`, TEST_TIER). */

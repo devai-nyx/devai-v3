@@ -105,9 +105,9 @@ describe.skipIf(!server)('B.20 db-apply on PostgreSQL (bare)', () => {
     expect(check(d, 'db-apply', env).row).toMatchObject({ status: 'UNKNOWN', reason: 'runner-crashed', findings: [{ locator: 'database/apply.sh:1', message: 'stynx: usage error' }] });
   });
 
-  it('UNKNOWN psql-missing: the 07 §4 preflight finds no psql on PATH', () => {
+  it('UNKNOWN psql-missing: the 07 §4 preflight finds no working psql (`psql --version` fails)', () => {
     const d = ws();
-    const path = pathWith(d, ['git', 'node', 'pnpm', 'corepack', 'sh']);
+    const path = pathWith(d, { psql: '#!/bin/sh\nexit 127\n' });
     expect(check(d, 'db-apply', { ...env, PATH: path }).row).toMatchObject({ status: 'UNKNOWN', reason: 'psql-missing', findings: [{ message: 'psql is not on PATH' }] });
   });
 
@@ -143,7 +143,7 @@ describe('B.20 db-apply without a reachable server', () => {
   it('UNKNOWN docker-unreachable (docker mode): docker info fails; remedy "start Docker", no fallback to bare (02 §6)', () => {
     const d = ws();
     const fake = '#!/bin/sh\ncase "$1 $2" in "compose version") echo "Docker Compose version v2"; exit 0;; esac\necho "Cannot connect to the Docker daemon" >&2\nexit 1\n';
-    const path = pathWith(d, ['git', 'node', 'pnpm', 'corepack', 'sh', 'psql'], { docker: fake });
+    const path = pathWith(d, { docker: fake });
     const { row } = check(d, 'db-apply', { ...env, PATH: path, DEVAI_RUNTIME: 'docker' });
     expect(row).toMatchObject({ status: 'UNKNOWN', reason: 'docker-unreachable', findings: [{ locator: 'compose.yaml:1', message: 'docker-unreachable: Cannot connect to the Docker daemon', hint: 'start Docker' }] });
   });
