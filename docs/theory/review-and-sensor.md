@@ -47,9 +47,9 @@ candidate spec; for `standards`, the cited standards without the diff ([05 §3](
 ([D-042](../../decisions.md)). It may confirm a concrete counterexample by running it against scratch storage
 only — a throwaway worktree copy and a scratch database from `db-apply`'s schema digest. A finding
 confirmed that way has `basis: observed`; one reasoned from reading has `basis: derived`
-([02 §9](../framework/02-architecture.md)). Isolation is a demonstrated capability, not a working directory:
-if the harness CLI cannot show in its event stream that it stayed read-only and off the network, the node
-is `UNKNOWN: capability-missing` ([D-058](../../decisions.md), [08 B.27](../framework/08-cli-and-nodes.md)).
+([02 §9](../framework/02-architecture.md)). Isolation is enforced by the harness CLI's sandbox and tool denial and then checked in its event stream,
+not supplied by a working directory; a CLI that cannot enforce it leaves the node
+`UNKNOWN: capability-missing` ([D-058](../../decisions.md), [D-082](../../decisions.md), [08 B.27](../framework/08-cli-and-nodes.md)).
 
 **Bounds.** At most 150k input tokens, 4k output, 20 tool calls and 5 minutes, across both phases. Running
 out of input or time before every requirement is examined is `UNKNOWN`, listing the unexamined ones;
@@ -93,8 +93,8 @@ the file list, and acceptance fails closed ([02 §4](../framework/02-architectur
 **One question.** The model receives the slice and a single fixed question — is authorization decided
 from claims in the verified token, with no database, cache or network call to obtain permissions on the
 request path ([02 §4](../framework/02-architecture.md), [D-025](../../decisions.md)) — and must answer with JSON
-matching a schema. It gets one call and no tools, and "no tools" is checked in the CLI's event stream,
-not assumed ([08 B.24](../framework/08-cli-and-nodes.md)).
+matching a schema. It gets one call and no tools: the CLI's tool removal enforces it and the event stream
+confirms it ([08 B.24](../framework/08-cli-and-nodes.md), [D-082](../../decisions.md)).
 
 **Reading the answer.** `violation` is `FAIL` with the model's findings as locators. Only `compliant`, with
 every locator validated, every mounted entrypoint inspected, nothing unresolved and `confidence` at or
@@ -104,7 +104,8 @@ entrypoint, `unknown` — is `UNKNOWN` ([02 §4](../framework/02-architecture.md
 **When and where.** It runs in full acceptance, and the model is called only when the slice digest changed
 since the last `PASS`; in CI the evidence is verified, not re-run. The sensor uses the reviewer command of the candidate's worker family ([08 A.8](../framework/08-cli-and-nodes.md)).
 Its validated output is committed at `.devai/review/<packet-id>.permissions.json`, bound to the slice
-digest; CI recomputes the digest and never calls a model ([D-058](../../decisions.md), [02 §11](../framework/02-architecture.md)).
+digest and recording the `minConfidence` it was judged by; CI recomputes the digest, re-applies the PR head's
+threshold and never calls a model ([D-058](../../decisions.md), [D-083](../../decisions.md), [02 §11](../framework/02-architecture.md)).
 
 **What it is not.** It is not a security proof; `review` and `integration` remain the behavioural checks
 ([02 §4](../framework/02-architecture.md)). Nor does it bend to existing code: the current STYNX guard
