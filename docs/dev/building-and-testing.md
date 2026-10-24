@@ -17,7 +17,7 @@ will run once the CLI exists at R6.
 - pnpm 9.15.0 through Corepack, selected by `packageManager`. If your global `pnpm` is another
   version, run it as `corepack pnpm@9.15.0` (12 §3). There is no pin file
   ([D-057](../../decisions.md)).
-- `NODE_AUTH_TOKEN` set to a GitHub Packages token, because `.npmrc` resolves both `@devai-nyx` and
+- `NODE_AUTH_TOKEN` set to a GitHub Packages token with `read:packages` on `stynx-nyx` (the `@stynx-nyx/*` packages are private; in CI this is the `STYNX_READ_TOKEN` secret of 12 §5 H4, locally `gh auth token` works for a member), because `.npmrc` resolves both `@devai-nyx` and
   `@stynx-nyx` from `npm.pkg.github.com`.
 
 ## Build today
