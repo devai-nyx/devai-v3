@@ -7,6 +7,7 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { Command, CommanderError } from 'commander';
 import type { z } from 'zod';
+import { check } from './commands/check.js';
 import { DevaiConfig } from './config.js';
 import type { ReasonCode } from './report.js';
 
@@ -62,31 +63,59 @@ export function renderRefusal(r: CommandRefusal, format: Format): string {
   return `devai: ${r.reason} — ${r.message}\nexit 2`;
 }
 
-export function formatOf(opts: { format?: string }): Format {
+export function formatOf(opts: { format?: string | undefined }): Format {
   if (opts.format === undefined || opts.format === 'text') return 'text';
   if (opts.format === 'json') return 'json';
   throw new CommandRefusal('usage', `--format ${opts.format}: expected text or json`);
 }
 
 /** The `devai` program. Subcommands register here as their waves land (R6 plan W1–W8). */
-export function buildProgram(): Command {
+export function buildProgram(state: { exitCode: number; argv: readonly string[] } = { exitCode: 0, argv: [] }): Command {
   const program = new Command('devai')
     .version(cliVersion(), '--version', 'print the CLI version')
     .option('--format <text|json>', 'output format (07 §3)', 'text')
     .showHelpAfterError(false)
     .configureOutput({ writeErr: (s) => process.stderr.write(s) })
     .exitOverride();
+  // A.3. The command prints its own refusals: its --format may follow options the program does not know.
+  program
+    .command('check')
+    .description('run the check DAG over the candidate (08 A.3)')
+    .argument('[msgfile]', '--hook commit-msg message file')
+    .option('--packet <path>', 'packet file (05)')
+    .option('--full', 'every applicable node')
+    .option('--only <node>', 'named node and its prerequisites (repeatable)', (v: string, acc: string[]) => [...acc, v], [] as string[])
+    .option('--hook <stage>', 'pre-commit | pre-push | commit-msg')
+    .option('--expect-red', "restate a test packet's observations.unimplemented")
+    .option('--summary', 'print the PR summary')
+    .option('--format <text|json>', 'output format (07 §3)')
+    .option('--prune', 'prune .devai/cache')
+    .exitOverride()
+    .action(async (_msgfile: string | undefined, opts: { format?: string } & Parameters<typeof check>[1]) => {
+      let format: Format = 'text';
+      try {
+        format = formatOf({ format: opts.format ?? program.opts<{ format?: string }>().format });
+        const r = await check(state.argv.slice(state.argv.indexOf('check') + 1), opts, format, process.cwd());
+        process.stdout.write(r.stdout);
+        state.exitCode = r.exitCode;
+      } catch (e) {
+        if (!(e instanceof CommandRefusal)) throw e;
+        process.stdout.write(renderRefusal(e, format) + '\n');
+        state.exitCode = 2;
+      }
+    });
   return program;
 }
 
 export async function main(argv: string[]): Promise<number> {
-  const program = buildProgram();
+  const state = { exitCode: 0, argv };
+  const program = buildProgram(state);
   let format: Format = 'text';
   try {
     program.parseOptions(argv);
     format = formatOf(program.opts<{ format?: string }>());
     await program.parseAsync(argv, { from: 'user' });
-    return 0;
+    return state.exitCode;
   } catch (e) {
     if (e instanceof CommanderError) {
       if (e.code === 'commander.version' || e.code === 'commander.helpDisplayed' || e.code === 'commander.help') return 0;
