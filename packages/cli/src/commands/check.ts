@@ -9,6 +9,11 @@ import { GitFailed, GitMissing, revParse, topLevel } from '../git/git.js';
 import { CommandRefusal, cliVersion, type Format, loadConfig, resolveRuntime } from '../main.js';
 import { acceptOutcome } from '../nodes/accept.js';
 import { runInventory } from '../nodes/inventory.js';
+import { layout } from '../nodes/layout.js';
+import { routeContract } from '../nodes/route-contract.js';
+import { sqlTyped } from '../nodes/sql-typed.js';
+import { testIntegrity } from '../nodes/test-integrity.js';
+import { typecheck } from '../nodes/typecheck.js';
 import { Report } from '../report.js';
 import { type NodeId, NODE_IDS } from '../runner/edges.js';
 import { exitCodeOf } from '../runner/gating.js';
@@ -26,8 +31,17 @@ export interface CheckFlags {
   prune?: boolean;
 }
 
-/** Node adapters by id (Part D: the closed enum, no registry). W1 has none beyond inventory and accept. */
-export const ADAPTERS: Partial<Record<NodeId, NodeAdapter>> = {};
+/** Node adapters by id (Part D: the closed enum, no registry); inventory and accept are the runner's. */
+export const ADAPTERS: Partial<Record<NodeId, NodeAdapter>> = {
+  typecheck,
+  layout,
+  'route-contract': routeContract,
+  'sql-typed': sqlTyped,
+  'test-integrity': testIntegrity,
+};
+
+/** A.3: the packet-bound nodes `--only` refuses without `--packet` (D-084 item 19). */
+const PACKET_ONLY: readonly string[] = ['review', 'permissions-pattern', 'packet-scope', 'spec-tests'];
 
 /** W1: flags whose behaviour arrives with a later R6 wave. */
 const LATER: [keyof CheckFlags, string, string][] = [
@@ -60,8 +74,10 @@ export async function check(argv: readonly string[], flags: CheckFlags, format: 
   if (flags.prune && (flags.packet || flags.full || only.length > 0 || flags.hook || flags.expectRed || flags.summary)) {
     throw new CommandRefusal('usage', '--prune combines with nothing else (A.3)');
   }
-  for (const [key, flag, wave] of LATER) if (flags[key]) throw new CommandRefusal('usage', `${flag} arrives in a later wave (${wave})`);
   for (const n of only) if (!(NODE_IDS as readonly string[]).includes(n)) throw new CommandRefusal('usage', `--only ${n}: not one of the 28 nodes of 02 §2`);
+  // A.3 (D-084 item 19): `--only` on a packet-bound node needs `--packet`.
+  for (const n of only) if (PACKET_ONLY.includes(n) && !flags.packet) throw new CommandRefusal('usage', `${n} needs --packet`);
+  for (const [key, flag, wave] of LATER) if (flags[key]) throw new CommandRefusal('usage', `${flag} arrives in a later wave (${wave})`);
 
   try {
     const { root, head } = await repositoryRoot(cwd);
