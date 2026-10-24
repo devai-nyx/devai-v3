@@ -1,0 +1,12 @@
+{
+  "extends": "@stynx-nyx/tsconfig/node24.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "composite": true,
+    "tsBuildInfoFile": "dist/.tsbuildinfo"
+  },
+  "include": [
+    "src"
+  ]
+}

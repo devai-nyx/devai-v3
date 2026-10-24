@@ -11,7 +11,9 @@ permissions:
   contents: read
 
 env:
-  NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # 12 §5 H4: @stynx-nyx/* are private packages of another organisation, which GITHUB_TOKEN cannot read;
+  # STYNX_READ_TOKEN (read:packages) is the install token, GITHUB_TOKEN the fallback.
+  NODE_AUTH_TOKEN: ${{ secrets.STYNX_READ_TOKEN || secrets.GITHUB_TOKEN }}
 
 jobs:
   build:
@@ -27,7 +29,7 @@ jobs:
         with:
           node-version: '24.20.0'
           cache: pnpm
-      - name: Build (12 §2, until R6)
+      - name: Build and test (12 §5)
         run: pnpm install --frozen-lockfile && pnpm -r --if-present build && pnpm -r --if-present test
       - name: Did packages/cli/** change
         id: changes

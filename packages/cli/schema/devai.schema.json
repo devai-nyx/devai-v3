@@ -1,0 +1,182 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "const": "https://devai.nyx/schema/devai.json/3"
+    },
+    "productPrefix": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*$"
+    },
+    "locales": {
+      "minItems": 1,
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "lgpd": {
+      "type": "boolean"
+    },
+    "runtime": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "type": "string",
+          "enum": [
+            "bare",
+            "docker"
+          ]
+        },
+        "services": {
+          "type": "object",
+          "properties": {
+            "postgres": {
+              "type": "object",
+              "properties": {
+                "bare": {
+                  "type": "string",
+                  "pattern": "^env:[A-Z][A-Z0-9_]*$"
+                },
+                "docker": {
+                  "type": "string",
+                  "pattern": "^compose:[a-z][a-z0-9_-]*$"
+                }
+              },
+              "required": [
+                "bare",
+                "docker"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "postgres"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "services"
+      ],
+      "additionalProperties": false
+    },
+    "protected": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "enum": [
+          "spec",
+          "product",
+          "decisions",
+          "standards",
+          "infra",
+          "ci",
+          "acceptance"
+        ]
+      },
+      "additionalProperties": {
+        "minItems": 1,
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "spec",
+        "product",
+        "decisions",
+        "standards",
+        "infra",
+        "ci",
+        "acceptance"
+      ]
+    },
+    "review": {
+      "type": "object",
+      "properties": {
+        "mustRun": {
+          "type": "boolean"
+        },
+        "reviewers": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "enum": [
+              "claude",
+              "gpt"
+            ]
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "mustRun",
+        "reviewers"
+      ],
+      "additionalProperties": false
+    },
+    "agentic": {
+      "type": "object",
+      "properties": {
+        "permissionsPattern": {
+          "type": "object",
+          "properties": {
+            "minConfidence": {
+              "type": "number",
+              "minimum": 0.7,
+              "maximum": 1
+            },
+            "maxInputTokens": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 60000
+            }
+          },
+          "required": [
+            "minConfidence",
+            "maxInputTokens"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "permissionsPattern"
+      ],
+      "additionalProperties": false
+    },
+    "check": {
+      "type": "object",
+      "properties": {
+        "editLoopCeilingMs": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "editLoopCeilingMs"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "$schema",
+    "productPrefix",
+    "locales",
+    "lgpd",
+    "runtime",
+    "protected",
+    "review",
+    "agentic",
+    "check"
+  ],
+  "additionalProperties": false
+}

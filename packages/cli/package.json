@@ -8,7 +8,8 @@
   },
   "files": [
     "dist",
-    "template"
+    "template",
+    "schema"
   ],
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
@@ -23,6 +24,13 @@
     "zod": "4.4.3"
   },
   "devDependencies": {
-    "@types/pg": "8.20.0"
+    "@types/pg": "8.20.0",
+    "vitest": "4.1.11"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "project": "node dist/schema.js write"
   }
 }

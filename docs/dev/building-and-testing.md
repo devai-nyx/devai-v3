@@ -17,7 +17,7 @@ will run once the CLI exists at R6.
 - pnpm 9.15.0 through Corepack, selected by `packageManager`. If your global `pnpm` is another
   version, run it as `corepack pnpm@9.15.0` (12 §3). There is no pin file
   ([D-057](../../decisions.md)).
-- `NODE_AUTH_TOKEN` set to a GitHub Packages token, because `.npmrc` resolves both `@devai-nyx` and
+- `NODE_AUTH_TOKEN` set to a GitHub Packages token with `read:packages` on `stynx-nyx` (the `@stynx-nyx/*` packages are private; in CI this is the `STYNX_READ_TOKEN` secret of 12 §5 H4, locally `gh auth token` works for a member), because `.npmrc` resolves both `@devai-nyx` and
   `@stynx-nyx` from `npm.pkg.github.com`.
 
 ## Build today
@@ -28,9 +28,11 @@ The build is the CI `build` job's command, also given in `AGENTS.md` (12 §2):
 pnpm install --frozen-lockfile && pnpm -r --if-present build && pnpm -r --if-present test
 ```
 
-At the seed, neither package defines a `build` or `test` script, so `--if-present` skips both and
-the job verifies a clean install from the committed lock. There is no `src/main.ts` yet
-(12 §2; [D-065](../../decisions.md)).
+Since R6 W0 both packages define `build` (`tsc -b`) and the CLI defines `test` (`vitest run`), so the
+job compiles both packages and runs the CLI's tests: the 08 C.2 invariants, the A.8 definition, byte
+parity of `report.ts`/`config.ts` with 08, the D-056 projections, the built binary's preamble and the
+packed tarball. `pnpm project` in `packages/cli` rewrites `schema/devai.schema.json` after a change to
+`config.ts`. Only `--version` runs; commands arrive with the R6 waves (12 §4).
 
 ## Build from R6
 
