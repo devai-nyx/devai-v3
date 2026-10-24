@@ -27,6 +27,8 @@ import { lintTests } from '../nodes/lint-tests.js';
 import { openapi } from '../nodes/openapi.js';
 import { packetScope } from '../nodes/packet-scope.js';
 import { protectedPaths } from '../nodes/protected-paths.js';
+import { permissionsPattern } from '../nodes/permissions-pattern.js';
+import { review } from '../nodes/review.js';
 import { routeContract } from '../nodes/route-contract.js';
 import { specLint } from '../nodes/spec-lint.js';
 import { specTests } from '../nodes/spec-tests.js';
@@ -35,8 +37,8 @@ import { sqlTyped } from '../nodes/sql-typed.js';
 import { testIntegrity } from '../nodes/test-integrity.js';
 import { typecheck } from '../nodes/typecheck.js';
 import { unit } from '../nodes/unit.js';
-import { type Packet, PacketInvalid } from '../packet/packet.js';
-import { introducing, loadPacket, pl12, pl16, specMeta } from '../packet/rules.js';
+import { type Packet, PacketInvalid, sectionBullets } from '../packet/packet.js';
+import { type Introduced, introducing, loadPacket, pl12, pl16, specMeta } from '../packet/rules.js';
 import { Report } from '../report.js';
 import { type NodeId, NODE_IDS } from '../runner/edges.js';
 import { exitCodeOf } from '../runner/gating.js';
@@ -44,6 +46,7 @@ import { type HookStage, plan } from '../runner/plan.js';
 import { type NodeAdapter, type RunContext, runPlan } from '../runner/run.js';
 import { renderText } from '../text/report.js';
 import { renderSummary } from '../text/summary.js';
+import { readSpecText } from '../ts/spec.js';
 import { dataLayerChanged, fetchedBase, HOOK_STAGES, materialiseStaged, stageLine } from './hook.js';
 
 export interface CheckFlags {
@@ -85,6 +88,8 @@ export const ADAPTERS: Partial<Record<NodeId, NodeAdapter>> = {
   integration,
   e2e,
   unit,
+  'permissions-pattern': permissionsPattern,
+  review,
 };
 
 /** A.3: the packet-bound nodes `--only` refuses without `--packet` (D-084 item 19). */
@@ -119,12 +124,28 @@ export async function packetPopulation(root: string): Promise<string[]> {
 }
 
 /** C.1 step 1 for `--packet`: PL-01..03, 06, 14 and the pre-DAG branches of PL-04/05 (exit 2). */
-export async function packetPreflight(root: string, path: string): Promise<NonNullable<RunContext['packet']>> {
+export async function packetPreflight(root: string, path: string, full = false): Promise<NonNullable<RunContext['packet']> & { packet: Packet; intro: Introduced | null }> {
   try {
     const packet = await loadPacket(root, path, await packetPopulation(root));
     // W3's view for `spec-tests` (B.21 Inputs): the pinned spec's bytes at base, empty for unpinned kinds.
-    const specText = packet.spec?.sha256 ? ((await show(root, packet.base, packet.spec.path))?.toString('utf8') ?? '') : '';
-    return { packet, intro: await introducing(root, packet.path), kind: packet.kind, unimplemented: packet.unimplemented, specText };
+    const pin = packet.spec?.sha256 ? packet.spec : null;
+    const specText = pin ? ((await show(root, packet.base, pin.path))?.toString('utf8') ?? '') : '';
+    // W5's facts for the model nodes (B.24, B.27): `kind: spec` cites the context and the candidate spec's sources[].
+    let sources: string[] = [];
+    if (packet.kind === 'spec' && packet.spec) {
+      let candidate: string | null = null;
+      try {
+        candidate = readFileSync(resolve(root, packet.spec.path), 'utf8');
+      } catch {
+        candidate = null;
+      }
+      sources = [...new Set([...packet.context.map((c) => c.path), ...(candidate ? readSpecText(packet.spec.path, candidate)?.sources ?? [] : [])])];
+    }
+    return {
+      packet, intro: await introducing(root, packet.path), kind: packet.kind, unimplemented: packet.unimplemented, specText,
+      id: packet.id, path: packet.path, base: packet.base, text: packet.text, specPath: pin?.path ?? null, specSha256: pin?.sha256 ?? null,
+      sources, deliverables: sectionBullets(packet.text, 'Deliverables'), full,
+    };
   } catch (e) {
     if (e instanceof PacketInvalid) throw new CommandRefusal(e.reason, e.message);
     throw e;
@@ -172,7 +193,7 @@ export async function check(argv: readonly string[], flags: CheckFlags, format: 
     }
 
     // C.1 step 1: the packet's pre-DAG rules; A.3 `--expect-red` must agree with it (PL-11, D-051).
-    const pk = flags.packet ? await packetPreflight(root, repoPath(root, flags.packet)) : null;
+    const pk = flags.packet ? await packetPreflight(root, repoPath(root, flags.packet), flags.full === true) : null;
     if (flags.expectRed && pk && (pk.packet.kind !== 'test' || pk.packet.unimplemented.length === 0)) {
       throw new CommandRefusal('expect-red-nothing-named', '--expect-red given but observations.unimplemented is empty');
     }

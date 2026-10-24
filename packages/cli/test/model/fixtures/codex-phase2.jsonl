@@ -1,0 +1,11 @@
+{"type":"thread.started","thread_id":"01a1700e-64ba-7322-a2aa-edd1643b874a"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":""}}
+{"type":"item.started","item":{"id":"item_1","type":"command_execution","command":"/bin/zsh -lc ls","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_1","type":"command_execution","command":"/bin/zsh -lc ls","aggregated_output":"a.ts\n","exit_code":0,"status":"completed"}}
+{"type":"item.started","item":{"id":"item_2","type":"command_execution","command":"/bin/zsh -lc 'printf hello > /tmp/devai-rec/outside/x.ts'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_2","type":"command_execution","command":"/bin/zsh -lc 'printf hello > /tmp/devai-rec/outside/x.ts'","aggregated_output":"","exit_code":0,"status":"completed"}}
+{"type":"item.started","item":{"id":"item_3","type":"command_execution","command":"/bin/zsh -lc 'curl -sS -m 5 https://example.com'","aggregated_output":"","exit_code":null,"status":"in_progress"}}
+{"type":"item.completed","item":{"id":"item_3","type":"command_execution","command":"/bin/zsh -lc 'curl -sS -m 5 https://example.com'","aggregated_output":"curl: (6) Could not resolve host: example.com\n","exit_code":6,"status":"failed"}}
+{"type":"item.completed","item":{"id":"item_4","type":"agent_message","text":"{\"files\":[\"a.ts\"],\"wrote\":true,\"network\":false}"}}
+{"type":"turn.completed","usage":{"input_tokens":37852,"cached_input_tokens":18816,"cache_write_input_tokens":0,"output_tokens":191,"reasoning_output_tokens":0}}

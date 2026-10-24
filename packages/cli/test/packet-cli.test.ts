@@ -6,6 +6,8 @@ import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { packetPreflight } from '../src/commands/check.js';
+import { modelPacket } from '../src/model/packet.js';
 import { Report } from '../src/report.js';
 import { gates } from '../src/runner/gating.js';
 import { templateConfig } from './fixtures.js';
@@ -224,5 +226,17 @@ describe('devai check --packet (A.3, B.25, B.26)', () => {
     expect(report.nodes[0]!.details).toMatchObject({ populations: { commitlint: { count: 2 } } });
     // no tools/commitlint.config.mjs in the template workspace: pre-flighted, never invoked (D-086)
     expect(report.nodes.find((n) => n.id === 'commitlint')).toMatchObject({ status: 'UNKNOWN', reason: 'lint-config-failed', expected: 2 });
+  });
+
+  it('fills RunContext.packet for the packet-bound nodes: W3\'s view and W5\'s PacketFacts', async () => {
+    const { dir, base, sha } = packetWorkspace();
+    const text = packetText({ base, sha, kind: 'test', unimplemented: ['R-1'], allowed: ['domain/notes/api/test/acceptance/**', PACKET], body: '## Intent\n\nx\n\n## Deliverables\n\n- R-1 case\n  in acceptance\n- R-2 case\n' });
+    commitPacket(dir, text);
+    const pk = await packetPreflight(dir, PACKET, true);
+    expect(pk).toMatchObject({ kind: 'test', unimplemented: ['R-1'], specText: readFileSync(resolve(dir, SPEC_PATH), 'utf8'), intro: { sha: gitIn(dir, 'rev-parse', 'HEAD').trim() } });
+    expect(modelPacket(pk)).toEqual({
+      ...pk, id: 'PKT-DEMO-005', kind: 'test', path: PACKET, base, text, specPath: SPEC_PATH, specSha256: sha, sources: [],
+      deliverables: ['R-1 case\n  in acceptance', 'R-2 case'], full: true,
+    });
   });
 });

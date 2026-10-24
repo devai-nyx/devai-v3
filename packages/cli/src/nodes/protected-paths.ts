@@ -10,9 +10,9 @@ export const protectedPaths: NodeAdapter = {
   id: 'protected-paths',
   contract: 1,
   configFiles: () => ['devai.json'],
-  inputs: (ctx) => [...(ctx.inventory?.changed ?? []), ...(ctx.packet ? [ctx.packet.packet.path] : [])],
+  inputs: (ctx) => [...(ctx.inventory?.changed ?? []), ...(ctx.packet?.packet ? [ctx.packet.packet.path] : [])],
   // The diff is `base..HEAD` plus the working tree and the declaration is read at the introducing commit.
-  keyExtra: (ctx) => [ctx.base ?? 'none', ctx.head, ctx.packet?.intro?.sha ?? 'none'],
+  keyExtra: async (ctx) => [ctx.base ?? 'none', ctx.head, ctx.packet?.intro?.sha ?? 'none'],
   async run(ctx: RunContext): Promise<NodeOutcome> {
     if (ctx.baseUnresolved) {
       return {
@@ -20,7 +20,7 @@ export const protectedPaths: NodeAdapter = {
         findings: [{ locator: 'HEAD', message: 'the pushed range has no fetched base', standard: '02 §5', hint: 'git fetch origin, then re-run' }],
       };
     }
-    const declared = ctx.packet ? introducedProtected(ctx.packet.packet, ctx.packet.intro) : null;
+    const declared = ctx.packet?.packet ? introducedProtected(ctx.packet.packet, ctx.packet.intro ?? null) : null;
     const touched = classify(ctx.config, ctx.inventory?.changed ?? [], declared);
     return { status: 'PASS', expected: 1, observed: 1, evaluated: 1, findings: [], details: { node: 'protected-paths', touched } };
   },

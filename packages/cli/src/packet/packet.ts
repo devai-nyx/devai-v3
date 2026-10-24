@@ -222,6 +222,18 @@ export function parsePacket(path: string, text: string): Packet {
   };
 }
 
+/** The bullets of a `## <name>` section, verbatim (continuation lines kept), without the leading `- `. */
+export function sectionBullets(text: string, name: string): string[] {
+  const out: string[] = [];
+  let inside = false;
+  for (const line of text.split('\n')) {
+    if (/^## /.test(line)) inside = line.trim() === `## ${name}`;
+    else if (inside && /^[-*] /.test(line)) out.push(line.slice(2));
+    else if (inside && /^\s+\S/.test(line) && out.length > 0) out[out.length - 1] += `\n${line}`;
+  }
+  return out;
+}
+
 /** A gitignore matcher (`ignore` 7.0.5, B.26) over repo-relative globs. */
 export const matcher = (globs: readonly string[]) => ignore().add([...globs]);
 

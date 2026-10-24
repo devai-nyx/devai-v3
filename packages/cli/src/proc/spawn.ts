@@ -12,6 +12,8 @@ export interface SpawnSpec {
   maxBytes?: number;
   /** Wall-time bound; beyond it the process is killed and `timedOut` is set. */
   timeoutMs?: number;
+  /** Sees each stdout chunk as it arrives; returning true kills the process and sets `stopped` (a caller's budget). */
+  onStdout?: (chunk: Buffer) => boolean | void;
 }
 
 export type SpawnResult =
@@ -24,6 +26,8 @@ export type SpawnResult =
       stderr: Buffer;
       overflow: boolean;
       timedOut: boolean;
+      /** Killed because `onStdout` asked for it. */
+      stopped: boolean;
       durationMs: number;
     };
 
@@ -49,6 +53,7 @@ export function spawn(spec: SpawnSpec): Promise<SpawnResult> {
     let errLen = 0;
     let overflow = false;
     let timedOut = false;
+    let stopped = false;
     const timer = setTimeout(() => {
       timedOut = true;
       child.kill('SIGKILL');
@@ -62,14 +67,21 @@ export function spawn(spec: SpawnSpec): Promise<SpawnResult> {
       }
       chunks.push(chunk);
     };
-    child.stdout.on('data', collect(out, (n) => (outLen += n)));
+    const collectOut = collect(out, (n) => (outLen += n));
+    child.stdout.on('data', (chunk: Buffer) => {
+      collectOut(chunk);
+      if (!stopped && spec.onStdout?.(chunk) === true) {
+        stopped = true;
+        child.kill('SIGKILL');
+      }
+    });
     child.stderr.on('data', collect(err, (n) => (errLen += n)));
     child.on('error', (e: NodeJS.ErrnoException) => {
       if (e.code === 'ENOENT' || e.code === 'EACCES') done({ kind: 'missing', binary });
-      else done({ kind: 'exited', code: null, signal: null, stdout: Buffer.alloc(0), stderr: Buffer.from(String(e.message)), overflow, timedOut, durationMs: Date.now() - started });
+      else done({ kind: 'exited', code: null, signal: null, stdout: Buffer.alloc(0), stderr: Buffer.from(String(e.message)), overflow, timedOut, stopped, durationMs: Date.now() - started });
     });
     child.on('close', (code, signal) => {
-      done({ kind: 'exited', code, signal, stdout: Buffer.concat(out), stderr: Buffer.concat(err), overflow, timedOut, durationMs: Date.now() - started });
+      done({ kind: 'exited', code, signal, stdout: Buffer.concat(out), stderr: Buffer.concat(err), overflow, timedOut, stopped, durationMs: Date.now() - started });
     });
     child.stdin.on('error', () => undefined); // a child that exits before reading stdin is reported by its exit, not here
     child.stdin.end(spec.stdin ?? '');

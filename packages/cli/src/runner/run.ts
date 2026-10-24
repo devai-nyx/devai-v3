@@ -8,6 +8,7 @@ import { cacheKey, configDigest, inputDigest, nodeVersion } from '../cache/key.j
 import { type NodeRow, resultDigest } from '../cache/result-digest.js';
 import type { CacheStore } from '../cache/store.js';
 import type { Scratch } from '../db/scratch.js';
+import type { PacketFacts } from '../model/packet.js';
 import type { PacketView } from '../nodes/spec-tests.js';
 import type { Packet } from '../packet/packet.js';
 import type { Introduced } from '../packet/rules.js';
@@ -15,8 +16,11 @@ import type { MountCensus } from '../ts/mounts.js';
 import { isEditLoopClass, lane, needsOf, type NodeId } from './edges.js';
 import type { HookStage, Plan } from './plan.js';
 
-/** What a node returns; the runner adds id, durationMs, cached, cacheKey and needs. */
-export type NodeOutcome = Omit<NodeRow, 'id' | 'durationMs' | 'cached' | 'cacheKey' | 'needs'>;
+/**
+ * What a node returns; the runner adds id, durationMs, cached, cacheKey and needs. `fromEvidence` marks a
+ * PASS read from a tracked evidence file whose digests matched (B.24: reported as `cached: true`).
+ */
+export type NodeOutcome = Omit<NodeRow, 'id' | 'durationMs' | 'cached' | 'cacheKey' | 'needs'> & { fromEvidence?: boolean };
 
 /** `inventory`'s population verdict per node (B.1 "every population Part B names"). */
 export interface Population {
@@ -51,8 +55,6 @@ export interface RunContext {
   base: string | null;
   head: string;
   plan: Plan;
-  /** `--packet`: the packet (pre-DAG rules passed), its introducing commit (05 §5) and W3's view for `spec-tests`. */
-  packet?: PacketView & { packet: Packet; intro: Introduced | null };
   /** `--hook <stage>` (A.7). */
   hook?: HookStage;
   /** `--hook commit-msg`: the message file, repo-relative or absolute. */
@@ -63,6 +65,14 @@ export interface RunContext {
   inventory?: InventoryData;
   /** Set by `db-apply` (B.20), run or reused: the scratch database its consumers use. */
   scratch?: Scratch;
+  /**
+   * The packet the run is bound to (`--packet`): `spec-tests` reads its kind, observations and pin; the
+   * model nodes read the `PacketFacts` part (`modelPacket` in model/packet.ts); `packet-scope` and
+   * `protected-paths` read the parsed packet (pre-DAG rules passed) and its introducing commit (05 §5).
+   */
+  packet?: PacketView & Partial<PacketFacts> & { packet?: Packet; intro?: Introduced | null };
+  /** Results so far, by node (B.27 phase 2 reads the current report). */
+  rows?: ReadonlyMap<NodeId, NodeRow>;
 }
 
 export interface NodeAdapter {
@@ -73,9 +83,9 @@ export interface NodeAdapter {
   configFiles(ctx: RunContext): string[];
   /** Declared inputs (Part B "Inputs"), repo-relative paths at the candidate. */
   inputs(ctx: RunContext): string[];
+  /** Trailing key components after the general C.4 key: the model components of B.24, B.27 (D-076), or the commits a node reads (W4). */
+  keyExtra?(ctx: RunContext): Promise<string[]>;
   run(ctx: RunContext): Promise<NodeOutcome>;
-  /** Key components beyond the declared path inputs (C.4 "node-specific trailing components"), e.g. the commits a node reads. */
-  keyExtra?(ctx: RunContext): string[];
   /** C.4 Reuse beyond the key: a stored PASS is re-emitted only when this agrees (`db-apply`: its database still exists). */
   reuse?(ctx: RunContext, hit: NodeRow): Promise<boolean>;
 }
@@ -112,9 +122,13 @@ export async function runPlan(ctx: RunContext, deps: RunnerDeps, digest0: string
   const { plan } = ctx;
   const phase = plan.sqlTypedPhase;
   const rows = new Map<NodeId, NodeRow>();
+  ctx.rows = rows;
   const timings: Timing[] = [];
-  const row = (id: NodeId, o: NodeOutcome, durationMs: number, extra: Partial<Pick<NodeRow, 'cached' | 'cacheKey'>> = {}): NodeRow =>
-    ({ id, ...o, durationMs, cached: false, needs: needsOf(id, phase), ...extra }) as NodeRow;
+  const row = (id: NodeId, outcome: NodeOutcome, durationMs: number, extra: Partial<Pick<NodeRow, 'cached' | 'cacheKey'>> = {}): NodeRow => {
+    const { fromEvidence, ...o } = outcome;
+    const cached = fromEvidence === true && o.status === 'PASS' && extra.cacheKey !== undefined;
+    return ({ id, ...o, durationMs, cached, needs: needsOf(id, phase), ...extra }) as NodeRow;
+  };
   const timed = async <T>(id: NodeId, f: () => Promise<T>): Promise<T> => {
     const start = Date.now();
     try {
@@ -163,7 +177,13 @@ export async function runPlan(ctx: RunContext, deps: RunnerDeps, digest0: string
     if (pre2) return void rows.set(id, row(id, pre2, 0));
     const adapter = deps.adapters[id];
     if (!adapter) throw new Error(`no adapter for planned node ${id}`); // the command refuses such plans (W1: later waves)
-    const key = UNCACHED.includes(id) ? undefined : keyOf(ctx, adapter, rows);
+    let key: string | undefined;
+    try {
+      key = UNCACHED.includes(id) ? undefined : keyOf(ctx, adapter, rows, (await adapter.keyExtra?.(ctx)) ?? []);
+    } catch (e) {
+      deps.diagnostic?.(`devai: ${id} key crashed: ${(e as Error).stack ?? String(e)}`);
+      return void rows.set(id, row(id, { status: 'UNKNOWN', reason: 'runner-crashed', expected: 0, observed: 0, evaluated: 0, findings: [] }, Date.now() - start));
+    }
     if (key) {
       const hit = deps.store.lookup(id, key);
       if (hit && (!adapter.reuse || (await adapter.reuse(ctx, hit)))) return void rows.set(id, { ...hit, durationMs: Date.now() - start, cached: true, cacheKey: key });
@@ -223,7 +243,7 @@ export async function runPlan(ctx: RunContext, deps: RunnerDeps, digest0: string
 }
 
 /** C.4 key of a node at this candidate. */
-export function keyOf(ctx: RunContext, adapter: NodeAdapter, rows: ReadonlyMap<NodeId, NodeRow>): string {
+export function keyOf(ctx: RunContext, adapter: NodeAdapter, rows: ReadonlyMap<NodeId, NodeRow>, extra: readonly string[] = []): string {
   const hashes = new Map(ctx.listing.entries.map((e) => [e.path, e.hash]));
   const deps = (ctx.plan.prerequisites.get(adapter.id) ?? []).map((p) => resultDigest(rows.get(p)!));
   return cacheKey({
@@ -234,7 +254,7 @@ export function keyOf(ctx: RunContext, adapter: NodeAdapter, rows: ReadonlyMap<N
     runtimeOrSchema: schemaOrRuntime(ctx, adapter.id, rows),
     inputDigests: adapter.inputs(ctx).map((p) => inputDigest(p, hashes.get(p) ?? null)),
     dependencyResultDigests: deps,
-    extra: [...(adapter.id === 'sql-typed' ? [ctx.plan.sqlTypedPhase] : []), ...(adapter.keyExtra?.(ctx) ?? [])],
+    extra: [...(adapter.id === 'sql-typed' ? [ctx.plan.sqlTypedPhase] : []), ...extra],
   });
 }
 

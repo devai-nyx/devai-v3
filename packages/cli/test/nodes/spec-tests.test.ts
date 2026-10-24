@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest';
 import { serverOf } from '../../src/db/provide.js';
 import { specTests, type PacketView } from '../../src/nodes/spec-tests.js';
 import { NodeResult } from '../../src/report.js';
-import { rewriteNoObservations, type RunContext } from '../../src/runner/run.js';
+import { rewriteNoObservations } from '../../src/runner/run.js';
 import { templateWorkspace, write } from '../repo.js';
 import { contextOf } from './helpers.js';
 import { linkModules, VITEST_CONFIG } from './w3.js';
@@ -22,15 +22,12 @@ const file = (cases: string[], head = "import { expect, it } from 'vitest';\n") 
 const ALL_GREEN = file(['R-1', 'R-2', 'R-3', 'R-4', 'R-5', 'R-6'].map(green));
 const EXPECT_RED = file(['R-1', 'R-2', 'R-4'].map(red).concat(['R-3', 'R-5', 'R-6'].map(green)));
 
-/** W4's RunContext.packet extends this view with the parsed packet; spec-tests reads the view only. */
-const view = (v: PacketView) => v as NonNullable<RunContext['packet']>;
-
 async function run(content: string, packet: Partial<PacketView> = {}) {
   const dir = templateWorkspace({ 'vitest.config.ts': VITEST_CONFIG, [FILE]: content });
   linkModules(dir, { vitest: true, stynx: false });
   const ctx = await contextOf(dir, { only: 'unit' });
   const specText = readFileSync(resolve(dir, 'specs/notes/SPEC-DEMO-001.md'), 'utf8');
-  ctx.packet = view({ kind: 'code', unimplemented: [], specText, ...packet });
+  ctx.packet = { kind: 'code', unimplemented: [], specText, ...packet };
   ctx.scratch = { database: 'devai_000000000000', server: serverOf('postgresql://localhost:1/unused'), url: 'postgresql://localhost:1/unused' };
   const o = rewriteNoObservations(await specTests.run(ctx));
   NodeResult.parse({ id: 'spec-tests', ...o, durationMs: 0, cached: false, needs: ['postgres'] });
@@ -102,7 +99,7 @@ describe('B.21 spec-tests', () => {
   it('FAIL: the derived acceptance file absent while another acceptance file populates the node', async () => {
     const dir = templateWorkspace({ 'vitest.config.ts': VITEST_CONFIG, 'domain/other/api/test/acceptance/spec-demo-009.acceptance.spec.ts': ALL_GREEN });
     const ctx = await contextOf(dir, { only: 'unit' });
-    ctx.packet = view({ kind: 'code', unimplemented: [], specText: readFileSync(resolve(dir, 'specs/notes/SPEC-DEMO-001.md'), 'utf8') });
+    ctx.packet = { kind: 'code', unimplemented: [], specText: readFileSync(resolve(dir, 'specs/notes/SPEC-DEMO-001.md'), 'utf8') };
     const o = await specTests.run(ctx);
     expect(o).toMatchObject({ status: 'FAIL', findings: [{ locator: 'domain/<m>/api/test/acceptance/spec-demo-001.acceptance.spec.ts:1', message: 'uncovered R-1, R-2, R-3, R-4, R-5, R-6' }] });
   });
@@ -111,7 +108,7 @@ describe('B.21 spec-tests', () => {
     const dir = templateWorkspace({ 'vitest.config.ts': VITEST_CONFIG, [FILE]: ALL_GREEN });
     write(dir, '.git/info/exclude', '');
     const ctx = await contextOf(dir, { only: 'unit' });
-    ctx.packet = view({ kind: 'code', unimplemented: [], specText: readFileSync(resolve(dir, 'specs/notes/SPEC-DEMO-001.md'), 'utf8') });
+    ctx.packet = { kind: 'code', unimplemented: [], specText: readFileSync(resolve(dir, 'specs/notes/SPEC-DEMO-001.md'), 'utf8') };
     ctx.scratch = { database: 'devai_000000000000', server: serverOf('postgresql://localhost:1/x'), url: 'postgresql://localhost:1/x' };
     expect(await specTests.run(ctx)).toMatchObject({ status: 'UNKNOWN', reason: 'tooling-missing' });
   });

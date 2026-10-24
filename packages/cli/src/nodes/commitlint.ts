@@ -98,7 +98,7 @@ export const commitlint: NodeAdapter = {
   configFiles: () => [COMMITLINT_CONFIG],
   inputs: () => [], // the messages are commits or the message file, keyed through `keyExtra` (C.4); no path input
   // Range form: the commits `base..HEAD`; commit-msg form: the message file's bytes.
-  keyExtra: (ctx) => (ctx.messageFile !== undefined ? [`msg:${messageDigest(ctx.root, ctx.messageFile)}`] : [ctx.base ?? 'none', ctx.head]),
+  keyExtra: async (ctx) => (ctx.messageFile !== undefined ? [`msg:${messageDigest(ctx.root, ctx.messageFile)}`] : [ctx.base ?? 'none', ctx.head]),
   async run(ctx: RunContext): Promise<NodeOutcome> {
     if (ctx.messageFile !== undefined) return lintMessageFile(ctx, ctx.messageFile);
     if (ctx.base === null) return outcome(0, []);

@@ -9,12 +9,13 @@ export const packetScope: NodeAdapter = {
   id: 'packet-scope',
   contract: 1,
   configFiles: () => ['devai.json'],
-  inputs: (ctx) => [...(ctx.inventory?.changed ?? []), ...(ctx.packet ? [ctx.packet.packet.path, ctx.packet.packet.spec?.path ?? ''].filter((p) => p !== '') : [])],
+  inputs: (ctx) => [...(ctx.inventory?.changed ?? []), ...(ctx.packet?.packet ? [ctx.packet.packet.path, ctx.packet.packet.spec?.path ?? ''].filter((p) => p !== '') : [])],
   // Base blobs, the introducing commit and the review history in base..HEAD are commits, not paths.
-  keyExtra: (ctx) => [ctx.base ?? 'none', ctx.head, ctx.packet?.intro?.sha ?? 'none'],
+  keyExtra: async (ctx) => [ctx.base ?? 'none', ctx.head, ctx.packet?.intro?.sha ?? 'none'],
   async run(ctx: RunContext): Promise<NodeOutcome> {
-    if (!ctx.packet) return { status: 'PASS', expected: 0, observed: 0, evaluated: 0, findings: [] }; // deferred by the plan
-    const { packet, intro } = ctx.packet;
+    if (!ctx.packet?.packet) return { status: 'PASS', expected: 0, observed: 0, evaluated: 0, findings: [] }; // deferred by the plan
+    const { packet } = ctx.packet;
+    const intro = ctx.packet.intro ?? null;
     const skip = new Set(reviewFiles(packet.id));
     const changed = (ctx.inventory?.changed ?? []).filter((c) => !skip.has(c));
     const rules = await scopeRules({ root: ctx.root, packet, changed, intro });
