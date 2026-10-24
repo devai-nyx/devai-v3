@@ -9,7 +9,7 @@ import type { Reason } from '../main.js';
 import { proxyTokens, SENSOR_OUTPUT_BOUND, SENSOR_TIMEOUT_MS } from '../model/budget.js';
 import { callModel, modelIdOf, type ModelResult } from '../model/cli.js';
 import { ciMode, sensorPath, verifySensor, writeSensor, writeVerdict } from '../model/evidence.js';
-import { harnessOf, rangeFamily, sensorReviewerFor, workerTrailers, type WorkerFamily } from '../model/packet.js';
+import { harnessOf, modelPacket, rangeFamily, sensorReviewerFor, workerTrailers, type WorkerFamily } from '../model/packet.js';
 import { fill, promptDigest, SENSOR } from '../model/prompts.js';
 import { linesOf, permissionSlice, renderSlice, type Slice } from '../model/slice.js';
 import { SensorOutput } from '../report.js';
@@ -33,7 +33,7 @@ const sliceOf = (ctx: RunContext): Slice => {
 
 interface Reviewer { family: WorkerFamily; trailers: string[]; prefix: string | null }
 async function reviewerOf(ctx: RunContext): Promise<Reviewer> {
-  const base = ctx.packet?.base ?? ctx.base;
+  const base = modelPacket(ctx.packet)?.base ?? ctx.base;
   const trailers = base ? await workerTrailers(ctx.root, base) : [];
   const family = rangeFamily(trailers);
   return { family, trailers, prefix: sensorReviewerFor(ctx.config, family) };
@@ -106,12 +106,13 @@ export const permissionsPattern: NodeAdapter = {
       return unknownOutcome('missing-source', expected, [unknownFinding('missing-source', slice.missing[0]!.locator), ...slice.missing.map((u) => ({ locator: u.locator, message: u.message, standard: STANDARD, hint: HINTS['missing-source'] }))]);
     }
 
+    const packet = modelPacket(ctx.packet);
     // CI (C.1): verify the tracked evidence, never call a model.
     if (ciMode()) {
-      if (!ctx.packet) return unknownOutcome('stale', expected, [unknownFinding('stale', 'devai.json:1')]);
-      const v = verifySensor(ctx.root, { packetId: ctx.packet.id, sliceDigest: slice.digest, promptDigest: SENSOR_PROMPT_DIGEST, minConfidence });
-      const hint = HINTS.stale.replace('<p>', ctx.packet.path);
-      if (v.kind === 'stale') return unknownOutcome('stale', expected, [unknownFinding('stale', `${sensorPath(ctx.packet.id)}:1`, hint), { locator: `${sensorPath(ctx.packet.id)}:1`, message: v.message, standard: STANDARD, hint }]);
+      if (!packet) return unknownOutcome('stale', expected, [unknownFinding('stale', 'devai.json:1')]);
+      const v = verifySensor(ctx.root, { packetId: packet.id, sliceDigest: slice.digest, promptDigest: SENSOR_PROMPT_DIGEST, minConfidence });
+      const hint = HINTS.stale.replace('<p>', packet.path);
+      if (v.kind === 'stale') return unknownOutcome('stale', expected, [unknownFinding('stale', `${sensorPath(packet.id)}:1`, hint), { locator: `${sensorPath(packet.id)}:1`, message: v.message, standard: STANDARD, hint }]);
       const e = v.value;
       const details = { node: 'permissions-pattern' as const, sliceDigest: slice.digest, model: e.model, inputTokens: e.inputTokens, outputTokens: e.outputTokens, seconds: e.seconds, proxyTokens: proxyTokens(renderSlice(slice) + QUESTION) };
       const o = judge(slice, e.output, minConfidence, details);
@@ -156,9 +157,9 @@ export const permissionsPattern: NodeAdapter = {
       return unknownOutcome(r.reason, expected, [unknownFinding(r.reason, 'devai.json:1', hint), { locator: 'devai.json:1', message: r.message, standard: STANDARD, hint }], details);
     }
     writeVerdict(ctx.root, 'permissions-pattern', slice.digest, { sliceDigest: slice.digest, promptDigest: SENSOR_PROMPT_DIGEST, model, output: r.output });
-    if (ctx.packet?.full) {
+    if (packet?.full) {
       writeSensor(ctx.root, {
-        packetId: ctx.packet.id, sliceDigest: slice.digest, promptDigest: SENSOR_PROMPT_DIGEST, model, output: r.output,
+        packetId: packet.id, sliceDigest: slice.digest, promptDigest: SENSOR_PROMPT_DIGEST, model, output: r.output,
         inputTokens: usage.input, outputTokens: usage.output, seconds: r.seconds, minConfidence,
       });
     }

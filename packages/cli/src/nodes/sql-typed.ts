@@ -1,8 +1,8 @@
-// 08 B.10 `sql-typed`, static phase (R6 W2; the DB phase is W3): the TypeScript library over each
-// `defineQuery({...})` site of the changed repositories. Checks: `text` is a `sql` tagged template
-// with zero expressions; `$n` contiguous from 1 and as many as `z.tuple([...])` elements; `name`
+// 08 B.10 `sql-typed`, static phase (R6 W2) and DB phase (R6 W3, sql-typed-db.ts): the TypeScript library
+// over each `defineQuery({...})` site of the changed repositories. Checks: `text` is a `sql` tagged
+// template with zero expressions; `$n` contiguous from 1 and as many as `z.tuple([...])` elements; `name`
 // unique workspace-wide (every `*.repository.ts` is read); in a generated module, each parameter's
-// zod bounds equal the spec's `data` bounds (UTF-16 units, D-054).
+// zod bounds equal the spec's `data` bounds (UTF-16 units, D-054). The DB phase adds the describe checks.
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { sha256 } from '../candidate/digest.js';
@@ -10,6 +10,7 @@ import type { NodeAdapter, NodeOutcome, RunContext } from '../runner/run.js';
 import { type Finding, outcome } from '../ts/outcome.js';
 import { callsNamed, lineOf, literal, NOT_LITERAL, parseFile, ts } from '../ts/program.js';
 import { column, type Spec, specById, type SpecColumn } from '../ts/spec.js';
+import { dbPhase } from './sql-typed-db.js';
 
 export interface QuerySite {
   path: string;
@@ -20,6 +21,7 @@ export interface QuerySite {
   /** The `z.tuple([...])` element expressions, or null when `params` is not a tuple literal. */
   params: ts.Expression[] | null;
   sf: ts.SourceFile;
+  call: ts.CallExpression;
 }
 
 const prop = (o: ts.ObjectLiteralExpression, key: string): ts.Expression | undefined => {
@@ -44,7 +46,7 @@ export function querySites(root: string, path: string): QuerySite[] | null {
       const a = paramsE.arguments[0];
       if (a && ts.isArrayLiteralExpression(a) && !a.elements.some(ts.isSpreadElement)) params = [...a.elements];
     }
-    return { path, line: lineOf(sf, call), name: typeof nameV === 'string' ? nameV : null, text, params, sf };
+    return { path, line: lineOf(sf, call), name: typeof nameV === 'string' ? nameV : null, text, params, sf, call };
   });
 }
 
@@ -119,7 +121,7 @@ export const sqlTyped: NodeAdapter = {
     return [...repositories(ctx), ...paths.filter((p) => /^domain\/[^/]+\/generation-manifest\.json$/.test(p) || /^specs\/.+\.md$/.test(p))].sort();
   },
   async run(ctx): Promise<NodeOutcome> {
-    if (ctx.plan.sqlTypedPhase === 'db') throw new Error('sql-typed DB phase arrives in R6 W3'); // the runner reports runner-crashed
+    const phase = ctx.plan.sqlTypedPhase;
     const changed = changedRepositories(ctx);
     const findings: Finding[] = [];
     // Name uniqueness sees every repository (08 Part B preamble, rule f).
@@ -133,6 +135,7 @@ export const sqlTyped: NodeAdapter = {
     let expected = 0;
     let observed = 0;
     let evaluated = 0;
+    const staticDone: QuerySite[] = [];
     for (const path of changed) {
       const sites = all.get(path) ?? null;
       if (sites === null) continue;
@@ -145,6 +148,7 @@ export const sqlTyped: NodeAdapter = {
           continue;
         }
         evaluated++;
+        staticDone.push(s);
         if (s.text === null) findings.push({ locator: at, message: `${s.name} text is not a sql template without expressions`, standard: 'S-21', hint: 'write the SQL as one sql`…` literal with $n parameters' });
         else queries.push({ name: s.name, path: s.path, textSha256: sha256(s.text) });
         const ns = s.text === null ? [] : [...new Set([...s.text.matchAll(/\$(\d+)/g)].map((m) => Number(m[1])))].sort((a, b) => a - b);
@@ -169,6 +173,10 @@ export const sqlTyped: NodeAdapter = {
         }
       }
     }
-    return outcome({ expected, observed, evaluated }, findings, [], { node: 'sql-typed', phase: 'static', queries });
+    if (phase === 'static') return outcome({ expected, observed, evaluated }, findings, [], { node: 'sql-typed', phase, queries });
+    // DB part: evaluated = sites whose static and describe checks both ran.
+    const db = await dbPhase(ctx, staticDone);
+    const dbEvaluated = staticDone.filter((s) => db.described.has(s)).length;
+    return outcome({ expected, observed, evaluated: dbEvaluated }, [...findings, ...db.findings], db.unknowns, { node: 'sql-typed', phase, queries });
   },
 };

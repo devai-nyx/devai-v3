@@ -14,7 +14,7 @@ import type { Reason } from '../main.js';
 import { proxyTokens, REVIEW_INPUT_BOUND, REVIEW_OUTPUT_BOUND, REVIEW_TIMEOUT_MS, REVIEW_TOOL_CALLS } from '../model/budget.js';
 import { callModel, modelIdOf, type ModelResult } from '../model/cli.js';
 import { ciMode, reviewPath, type ReviewFile, verifyReview, writeReview, writeVerdict } from '../model/evidence.js';
-import { dispositions, harnessOf, type PacketFacts, PINNING_KINDS, rangeFamily, reviewerFor, trailerFamily, workerTrailers, type WorkerFamily } from '../model/packet.js';
+import { dispositions, harnessOf, modelPacket, type PacketFacts, PINNING_KINDS, rangeFamily, reviewerFor, trailerFamily, workerTrailers, type WorkerFamily } from '../model/packet.js';
 import { fill, PHASE1, PHASE2, promptDigest, SETPOINT } from '../model/prompts.js';
 import type { StreamSummary } from '../model/stream.js';
 import { ReviewModelOutput, ReviewPhase1 } from '../report.js';
@@ -112,7 +112,7 @@ async function scratchWorktree(ctx: RunContext, digest: string): Promise<string>
 /** The `report.json` the reviewer reads as fact: every result so far (review's prerequisites). */
 function currentReport(ctx: RunContext): string {
   const nodes = [...(ctx.rows?.values() ?? [])].filter((r) => r.id !== 'review' && r.id !== 'accept');
-  return JSON.stringify({ schemaVersion: '3', packetId: ctx.packet?.id ?? null, head: ctx.head, nodes }, null, 2);
+  return JSON.stringify({ schemaVersion: '3', packetId: modelPacket(ctx.packet)?.id ?? null, head: ctx.head, nodes }, null, 2);
 }
 
 async function diffOf(ctx: RunContext, base: string): Promise<string> {
@@ -204,16 +204,16 @@ export const review: NodeAdapter = {
   id: 'review',
   contract: 1,
   configFiles: () => ['devai.json'],
-  inputs: (ctx) => [ctx.packet?.path, ctx.packet?.specPath].filter((p): p is string => typeof p === 'string').sort(),
+  inputs: (ctx) => [modelPacket(ctx.packet)?.path, modelPacket(ctx.packet)?.specPath].filter((p): p is string => typeof p === 'string').sort(),
   // C.4 (D-076): the general key (every prerequisite's resultDigest, toolchainDigest, configDigest) plus
   // candidate digest, specSha256, packet digest (dispositions included), prompt digest, model id.
   async keyExtra(ctx) {
-    const p = ctx.packet;
+    const p = modelPacket(ctx.packet);
     const prefix = p ? (await workerOf(ctx, p)).prefix : null;
     return [digestOf(ctx.listing), p?.specSha256 ?? '', p ? sha256(p.text) : '', REVIEW_PROMPT_DIGEST, prefix ? modelIdOf(prefix) : 'none'];
   },
   async run(ctx: RunContext): Promise<NodeOutcome> {
-    const p = ctx.packet;
+    const p = modelPacket(ctx.packet);
     if (!p) return unknown('runner-crashed', 0, 'devai.json:1', 'review runs under --packet --full only (A.3)');
     const locator = `${p.path}:1`;
     const m = await material(ctx, p);

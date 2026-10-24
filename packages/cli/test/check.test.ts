@@ -78,7 +78,7 @@ describe('devai check refusals (W1)', () => {
   };
   it('a node without an adapter: exit 2 usage "node <id> arrives in a later wave"', () => {
     const dir = templateWorkspace();
-    expect(usage(dir, '--only', 'unit')).toMatchObject({ reason: 'usage', message: 'node unit arrives in a later wave' });
+    expect(usage(dir, '--only', 'generated')).toMatchObject({ reason: 'usage', message: 'node generated arrives in a later wave' });
   });
   it('A.3 (D-084 item 19): --only on a packet-bound node without --packet is exit 2 usage "<node> needs --packet"', () => {
     const dir = templateWorkspace();

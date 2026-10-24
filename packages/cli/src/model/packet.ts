@@ -28,6 +28,12 @@ export interface PacketFacts {
   full: boolean;
 }
 
+/** The model nodes' view of `RunContext.packet`: present only when W4 filled the facts they need. */
+export function modelPacket(packet: Partial<PacketFacts> | undefined): PacketFacts | undefined {
+  if (!packet || packet.kind === undefined || packet.id === undefined || packet.path === undefined || packet.base === undefined || packet.text === undefined) return undefined;
+  return { specPath: null, specSha256: null, sources: [], deliverables: [], full: false, ...packet } as PacketFacts;
+}
+
 export type WorkerFamily = 'claude' | 'gpt' | 'unknown' | 'mixed';
 export type Harness = 'claude' | 'codex';
 

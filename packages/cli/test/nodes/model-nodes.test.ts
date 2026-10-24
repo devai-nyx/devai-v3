@@ -10,6 +10,7 @@ import { CacheStore } from '../../src/cache/store.js';
 import { CODEX_CONFINE } from '../../src/model/cli.js';
 import { reviewPath, sensorPath } from '../../src/model/evidence.js';
 import type { PacketFacts } from '../../src/model/packet.js';
+import type { PacketView } from '../../src/nodes/spec-tests.js';
 import { runInventory } from '../../src/nodes/inventory.js';
 import { permissionsPattern } from '../../src/nodes/permissions-pattern.js';
 import { fingerprint, review } from '../../src/nodes/review.js';
@@ -106,7 +107,8 @@ function workspace(trailers: string[] = [CLAUDE], opts: { mount?: boolean } = {}
   return { dir, base };
 }
 
-const facts = (ws: Ws, over: Partial<PacketFacts> = {}): PacketFacts => ({
+const facts = (ws: Ws, over: Partial<PacketFacts> = {}): PacketFacts & PacketView => ({
+  unimplemented: [], specText: SPEC_TEXT,
   id: 'PKT-DEMO-004', kind: 'code', path: PACKET, base: ws.base, text: readFileSync(resolve(ws.dir, PACKET), 'utf8'),
   specPath: SPEC, specSha256: sha256(SPEC_TEXT), sources: [], deliverables: ['- R-1, R-2 of SPEC-DEMO-001.'], full: true, ...over,
 });
