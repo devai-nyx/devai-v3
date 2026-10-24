@@ -23,7 +23,7 @@ devai: <reason> — <hint>               ← a command-level reason
 
 `permissions-pattern` prints `permissions-pattern UNKNOWN (<reason>): <hint>` ([08 B.24](../framework/08-cli-and-nodes.md), [10 §4](../framework/10-agent-surface.md)).
 
-Some node blocks attach detail to a code, for example `unsupported-oid <oid>`, `tooling-missing: LINT010–013 context`, or `postgres-unreachable (bare) — start PostgreSQL for the declared runtime; …`. The code is still the enum value ([08 Part B](../framework/08-cli-and-nodes.md)).
+Some node blocks attach detail to a code, for example `unsupported-oid <oid>`, `tooling-missing — openapi: install @stynx-nyx/cli ≥ <v> with the write pair` ([D-088](../../decisions.md)), or `postgres-unreachable (bare) — start PostgreSQL for the declared runtime; …`. The code is still the enum value ([08 Part B](../framework/08-cli-and-nodes.md)).
 
 "Raised by" below comes from the Part A command blocks, the Part B node blocks and the C.1 runner steps of [08](../framework/08-cli-and-nodes.md). "Exit" is the exit code the code leads to when it is the only problem.
 

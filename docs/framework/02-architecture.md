@@ -343,7 +343,7 @@ blueprint, and 06's zod definition (D-056) validates that block, carrying STYNX'
 business behaviour is not filled with plausible CRUD defaults; it stays a red acceptance test.
 
 **Outputs.** Exactly 04-layout §2, including `api/test/acceptance/.gitkeep` and `web/**` with `--web`.
-Emitted code uses `defineQuery` (§3), `parseDto` with zod DTOs, `@RequireRoles(roles, 'all')` (06 maps `roles` to it; S-28 allows either role decorator, the generator and `route-contract` must agree),
+Emitted code uses `defineQuery` (§3), `parseDto` with zod DTOs, `@Permission(…)` or `@Public()` imported from `@stynx-nyx/auth` (D-087: `list-routes` accepts auth markers only from `@stynx-nyx/auth`, `@stynx-nyx/backend` or STYNX's own decorators path, so the generator and `route-contract` agree on it; `@RequireRoles` stays legal in hand-written code but does not role-bind a route for `route-contract`; how 06 §2 `roles` maps onto `@Permission`'s argument is open),
 `@Idempotent/@NoIdempotent`, `@ErrorContract`, `@UseCase`, `@Slo` on every write route,
 `ENABLE`+`FORCE ROW LEVEL SECURITY` with `app.tenant_id` policies in the same file (LINT001, S-17),
 `-- @pii` annotations when `lgpd: true`, i18n keys in every configured locale, UUIDv7 request-id
