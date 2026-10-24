@@ -1,6 +1,6 @@
 // The host `git` (07 §2 row git; no isomorphic-git, 07 §7), through the one spawner. Only the
-// invocations 08 names: ls-files, ls-tree, cat-file --batch, show, rev-parse, merge-base
-// --is-ancestor, diff --name-status --no-renames, log. Paths are raw bytes in git's -z output and are
+// invocations 08 names: ls-files, ls-tree, cat-file --batch, show, rev-parse, merge-base [--is-ancestor],
+// diff --name-status --no-renames, log, checkout-index (A.7 staged snapshot). Paths are raw bytes in git's -z output and are
 // decoded as UTF-8 (git's own default for path names on the hosts 12 pins).
 import { spawn } from '../proc/spawn.js';
 
@@ -134,4 +134,10 @@ export async function diffNameStatus(root: string, range: { cached?: boolean; fr
 /** `git log <args>`: stdout as text (format and range are the caller's). */
 export async function log(root: string, args: readonly string[]): Promise<string> {
   return (await git(root, ['log', ...args])).toString('utf8');
+}
+
+/** `git merge-base <a> <b>`: the best common ancestor, or null when there is none or a side does not resolve. */
+export async function mergeBase(root: string, a: string, b: string): Promise<string | null> {
+  const out = await gitMaybe(root, ['merge-base', a, b], undefined, true);
+  return out === null ? null : out.toString('utf8').trim() || null;
 }

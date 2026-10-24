@@ -7,9 +7,11 @@ import type { Listing } from '../candidate/digest.js';
 import { cacheKey, configDigest, inputDigest, nodeVersion } from '../cache/key.js';
 import { type NodeRow, resultDigest } from '../cache/result-digest.js';
 import type { CacheStore } from '../cache/store.js';
+import type { Packet } from '../packet/packet.js';
+import type { Introduced } from '../packet/rules.js';
 import type { MountCensus } from '../ts/mounts.js';
 import { isEditLoopClass, lane, needsOf, type NodeId } from './edges.js';
-import type { Plan } from './plan.js';
+import type { HookStage, Plan } from './plan.js';
 
 /** What a node returns; the runner adds id, durationMs, cached, cacheKey and needs. */
 export type NodeOutcome = Omit<NodeRow, 'id' | 'durationMs' | 'cached' | 'cacheKey' | 'needs'>;
@@ -43,10 +45,18 @@ export interface RunContext {
   cliVersion: string;
   /** The candidate at step 4; inputs and config files are hashed from it. */
   listing: Listing;
-  /** The packet's base commit, or null without `--packet`. */
+  /** The packet's base commit (or the fetched base under `--hook pre-push`), or null. */
   base: string | null;
   head: string;
   plan: Plan;
+  /** `--packet`: the packet (pre-DAG rules passed) and its introducing commit (05 §5). */
+  packet?: { packet: Packet; intro: Introduced | null };
+  /** `--hook <stage>` (A.7). */
+  hook?: HookStage;
+  /** `--hook commit-msg`: the message file, repo-relative or absolute. */
+  messageFile?: string;
+  /** `--hook pre-push` whose fetched base could not be resolved (A.7: `protected-paths` base-unreadable). */
+  baseUnresolved?: boolean;
   /** Set by step 5. */
   inventory?: InventoryData;
 }
@@ -60,6 +70,8 @@ export interface NodeAdapter {
   /** Declared inputs (Part B "Inputs"), repo-relative paths at the candidate. */
   inputs(ctx: RunContext): string[];
   run(ctx: RunContext): Promise<NodeOutcome>;
+  /** Key components beyond the declared path inputs (C.4 "node-specific trailing components"), e.g. the commits a node reads. */
+  keyExtra?(ctx: RunContext): string[];
 }
 
 export interface Timing { id: NodeId; start: number; end: number }
@@ -216,7 +228,7 @@ export function keyOf(ctx: RunContext, adapter: NodeAdapter, rows: ReadonlyMap<N
     runtimeOrSchema: ctx.runtime, // DB-backed nodes key on db-apply's schemaDigest instead (W3)
     inputDigests: adapter.inputs(ctx).map((p) => inputDigest(p, hashes.get(p) ?? null)),
     dependencyResultDigests: deps,
-    ...(adapter.id === 'sql-typed' ? { extra: [ctx.plan.sqlTypedPhase] } : {}),
+    extra: [...(adapter.id === 'sql-typed' ? [ctx.plan.sqlTypedPhase] : []), ...(adapter.keyExtra?.(ctx) ?? [])],
   });
 }
 

@@ -3,6 +3,9 @@
 // the commit-msg hook (A.7, wired by W4 through `lintMessageFile`). commitlint 21.2.2 exits 1 for a
 // violation and also for a missing config, a missing message file and a cwd outside git (D-086), so
 // those three are pre-flighted and the verdict is read from the parsed text output only.
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { sha256 } from '../candidate/digest.js';
 import type { NodeAdapter, NodeOutcome, RunContext } from '../runner/run.js';
 import { log } from '../git/git.js';
 import { type Finding, preflight, runTool, unknown, unknownOutcome } from '../proc/tool.js';
@@ -71,6 +74,15 @@ const run = (root: string, args: readonly string[]) =>
 const outcome = (expected: number, findings: Finding[]): NodeOutcome =>
   ({ status: findings.length > 0 ? 'FAIL' : 'PASS', expected, observed: expected, evaluated: expected, findings });
 
+/** sha256 of the message file, or `unreadable` (the run pre-flights it: `io`). */
+function messageDigest(root: string, file: string): string {
+  try {
+    return sha256(readFileSync(resolve(root, file)));
+  } catch {
+    return 'unreadable';
+  }
+}
+
 /** The commit-msg form (A.7 `--hook commit-msg`): one message, locator = the message file. */
 export async function lintMessageFile(ctx: RunContext, messageFile: string): Promise<NodeOutcome> {
   const pre = await preflightAll(ctx.root, messageFile);
@@ -84,8 +96,11 @@ export const commitlint: NodeAdapter = {
   id: 'commitlint',
   contract: 1,
   configFiles: () => [COMMITLINT_CONFIG],
-  inputs: () => [], // the messages are commits, keyed through `head` and `base` (C.4); no path input
+  inputs: () => [], // the messages are commits or the message file, keyed through `keyExtra` (C.4); no path input
+  // Range form: the commits `base..HEAD`; commit-msg form: the message file's bytes.
+  keyExtra: (ctx) => (ctx.messageFile !== undefined ? [`msg:${messageDigest(ctx.root, ctx.messageFile)}`] : [ctx.base ?? 'none', ctx.head]),
   async run(ctx: RunContext): Promise<NodeOutcome> {
+    if (ctx.messageFile !== undefined) return lintMessageFile(ctx, ctx.messageFile);
     if (ctx.base === null) return outcome(0, []);
     const pre = await preflightAll(ctx.root);
     if (pre) return unknownOutcome(pre, { expected: ctx.inventory?.populations.commitlint.count ?? 0 });
