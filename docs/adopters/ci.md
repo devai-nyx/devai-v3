@@ -41,10 +41,12 @@ PR branch as two tracked files:
 | File | Bound to | Written by |
 |---|---|---|
 | `.devai/review/<packet-id>.json` | the candidate digest | `review` |
-| `.devai/review/<packet-id>.permissions.json` | the slice digest | `permissions-pattern` |
+| `.devai/review/<packet-id>.permissions.json` | the slice digest and the `minConfidence` in force | `permissions-pattern` |
 
 CI recomputes each digest from the PR head. A match is reported as the recorded verdict; a mismatch
-is `review: UNKNOWN (stale)` or `permissions-pattern: UNKNOWN (stale)`
+is `review: UNKNOWN (stale)` or `permissions-pattern: UNKNOWN (stale)`. The sensor file is also
+`stale` when its `minConfidence` differs from the PR head's `devai.json` or its `confidence` is below
+it ([D-083](../../decisions.md))
 ([08 B.24, B.27, C.4](../framework/08-cli-and-nodes.md), [D-058](../../decisions.md)). Both files are
 excluded from the candidate digest, so committing them does not invalidate them
 ([D-054](../../decisions.md), [08 C.6](../framework/08-cli-and-nodes.md)).

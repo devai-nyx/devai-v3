@@ -87,7 +87,7 @@ Some node blocks attach detail to a code, for example `unsupported-oid <oid>`, `
 | 45 | `budget-exhausted` | `review` | 2 | new | re-run once; if it repeats, split the packet |
 | 46 | `review-incomplete` | `review` | 2 | new | re-run once; the unexamined R-n are listed; if it repeats, split the packet |
 | 47 | `tool-use-observed` | `permissions-pattern` | 2 | new | the sensor CLI used a tool; install the CLI version 12 pins, then re-run |
-| 48 | `capability-missing` | `permissions-pattern`, `review` | 2 | new | the reviewer CLI cannot show read-only, no-network isolation; install the version 12 pins |
+| 48 | `capability-missing` | `permissions-pattern`, `review` | 2 | new | the reviewer CLI cannot enforce read-only, no-network isolation (sandbox or flag missing); install the version 12 pins |
 | 49 | `schema-invalid` | `permissions-pattern`, `review` | 2 | new | re-run once; a repeat goes under ## Notes |
 | 50 | `verdict-unknown` | `permissions-pattern`, `review` | 2 | new | re-run once; a repeat goes to the pilot under ## Notes |
 | 51 | `model-error` | `permissions-pattern`, `review` | 2 | new | check that `<reviewer command>` is logged in, then re-run |

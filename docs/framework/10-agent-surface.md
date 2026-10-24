@@ -462,7 +462,7 @@ kept = 08's remedy is actionable; rewritten = it is not, or is wrong. All ≤ 16
 | `budget-exhausted` | new | re-run once; if it repeats, split the packet |
 | `review-incomplete` | new | re-run once; the unexamined R-n are listed; if it repeats, split the packet |
 | `tool-use-observed` | new | the sensor CLI used a tool; install the CLI version 12 pins, then re-run |
-| `capability-missing` | new | the reviewer CLI cannot show read-only, no-network isolation; install the version 12 pins |
+| `capability-missing` | new | the reviewer CLI cannot enforce read-only, no-network isolation (sandbox or flag missing); install the version 12 pins |
 | `schema-invalid` | new | re-run once; a repeat goes under ## Notes |
 | `verdict-unknown` | new | re-run once; a repeat goes to the pilot under ## Notes |
 | `model-error` | new | check that <reviewer command> is logged in, then re-run |

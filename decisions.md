@@ -481,7 +481,8 @@ Orchestrator rulings (both reviews agree unless noted):
 - Query-text digests have a slot: `nodes[sql-typed].details.queries[].textSha256` (02 §3 step 5).
 - `typecheck` invokes `tsc -b --pretty false` without a trailing `--` (TS 6.0.3 rejects it, TS5072).
 - Reviewer isolation is not established by a scratch cwd: read-only repository and no-network are
-  capability checks; unsupported → UNKNOWN (07 §6).
+  capability checks; unsupported → UNKNOWN (07 §6). (Since D-082 the capability is the host CLI's
+  enforcement, sandbox and tool denial, checked in the stream as a second signal.)
 - `boundary`: missing `.stynxrc.json` is FAIL (04 §1 ships one), never SKIPPED. `init` and `new
   module` write product files per 02 §1/§7 (02 §11 lists runtime state only). `packet-scope` and
   `review` without a packet are deferred, not SKIPPED (D-044).
@@ -961,6 +962,41 @@ cannot. Consequence, stated so it is not discovered later: S-64's issue referenc
 run or delete the case`, so a deferred case lives in an issue, not in a skipped test. Amends 08 B.11
 (Observation, Status, Findings), B.22 (Observation), C.5 (adapter note); docs/reference/nodes.md;
 adds fixture N18 (09 §4). Chosen: (a). Source: Owner (ROADMAP G1 panel, 2026-10-24).
+
+## D-082 · 2026-10-24 · Reviewer and sensor isolation is enforced by the host CLI and then checked in its stream (devai-v3#47)
+08 B.24/B.27 and C.4 made isolation a property the runner *observes* in the CLI event stream: zero
+tool items in phase 1 and the sensor; no write outside the scratch copy and no network item other
+than the model API in phase 2. Both host CLIs document *enforcement* the law did not use, and a
+stream cannot show what a `node` or `psql` child process does with sockets or files. Options: (a)
+enforce on both CLIs and keep the stream as a second signal: Claude phase 2 runs with the sandbox
+enabled (`allowUnsandboxedCommands: false`, `network.allowedDomains: []`, `strictAllowlist: true`;
+Claude Code ≥ 2.1.219) and `--disallowedTools Edit,Write,NotebookEdit,WebFetch,WebSearch`; Codex
+runs under its sandbox (`workspace-write` confined to the scratch `--cd`, network denied), and 07 §6
+records that network isolation there is the sandbox's, not DEVAI's; the sensor keeps `--tools ""` /
+`--sandbox read-only`; `capability-missing` means "the CLI cannot enforce" (flag rejected, sandbox
+unavailable) and no longer "the stream cannot show"; the stream still counts the tool-call budget
+and must show no write or network item; (b) enforce on Claude only; (c) keep stream-observed and
+say so in D-058. Recommended: (a); the enforcement is free in both CLIs, (b) leaves the gap open
+for every `gpt`-reviewed packet, and (c) makes 08's claim mean less than it says. No node, command,
+state or field is added; the change is flags and one fixture (N19). Amends 07 §6, 08 B.24 (Invokes),
+B.27 (Invokes), C.4 prose, 02 §9 (Access), 10 §4 and docs hints for `capability-missing`, D-058 note.
+Chosen: (a). Source: Owner (ROADMAP G2 panel, 2026-10-24).
+
+## D-083 · 2026-10-24 · The sensor evidence records the threshold it was judged by, and CI re-applies the PR head's (devai-v3#36)
+`SensorEvidence` carried `output.confidence` but not `minConfidence`; CI compared the slice digest
+only, so a committed `.permissions.json` with `verdict: compliant, confidence: 0` validated and was
+reported `cached: true`, and raising the threshold after calibration changed nothing for evidence
+already committed (D-076 covers only the local verdict cache). Options: (a) `SensorEvidence` gains
+`minConfidence`, the value in force when the sensor ran; CI requires, besides the digest match, that
+it equal the PR head's `devai.json` value and that `output.confidence ≥` it, else
+`permissions-pattern: UNKNOWN (stale)`, reusing the code; (b) a `configDigest` of the
+`agentic.permissionsPattern` object instead, plus the same confidence check; (c) defer to the
+pilot. Recommended: (a): one field, one rule, readable in the file; (b) is more general and opaque,
+and any sensor setting change forces a local re-run; (c) leaves fabricated evidence invisible to
+CI, which is the issue's point. Amends 08 B.24 (Status), C.2 `SensorEvidence`, `report.ts`, C.4
+`.devai/review/` row, 02 §4; adds fixture N20; docs. #36's calibration corpus and the "0.7 is
+provisional" wording stay open for the pilot. Chosen: (a). Source: Owner (ROADMAP G3 panel,
+2026-10-24).
 
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.

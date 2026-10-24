@@ -112,6 +112,7 @@ export const SensorOutput = z.strictObject({                                   /
 export const SensorEvidence = z.strictObject({                                 // .devai/review/<packet-id>.permissions.json (D-058)
   packetId: z.string().regex(/^PKT-[A-Z0-9]+-\d{3}$/), sliceDigest: Sha256, promptDigest: Sha256, model: Text,
   output: SensorOutput, inputTokens: Count, outputTokens: Count, seconds: z.number().nonnegative(),
+  minConfidence: z.number().min(0).max(1),                                      // the threshold in force when judged; CI re-applies the PR head's (D-083)
 });
 const ReviewShape = {                                                          // .devai/review/<packet-id>.json, 02 §9 shape
   packetId: z.string().regex(/^PKT-[A-Z0-9]+-\d{3}$/), head: Sha1, candidateDigest: Sha256, specSha256: Sha256.nullable(),

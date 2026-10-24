@@ -238,7 +238,8 @@ those locators, which is the correct reading.
 validates every locator; a missing entrypoint, invalid locator, non-empty `unresolved`, parse or
 schema failure, model error, timeout (120 s) or `"unknown"` all yield `UNKNOWN`. `violation` yields
 `FAIL` with the findings as locators. Only `compliant` with validated evidence and `confidence ≥ 0.7`
-(threshold in `devai.json`) yields `PASS`. On `UNKNOWN` the message says "permissions-pattern UNKNOWN
+(threshold in `devai.json`) yields `PASS`; the evidence file records the threshold it was judged by
+and CI re-applies the PR head's (D-083). On `UNKNOWN` the message says "permissions-pattern UNKNOWN
 (reason): <hint>", with the hint from 10 §4; exit 2 already stops the merge.
 
 **When and cost.** Full acceptance and PR (digest check), only when the slice digest changed since the
@@ -475,7 +476,7 @@ model keys in CI. `review.json` is bound to the candidate digest and committed w
 evidence; CI only verifies that the digest matches the PR head and otherwise reports `review:
 UNKNOWN (stale)`. Acknowledged weakness: CI trusts a locally produced reviewer result, within D-002.
 
-**Access (D-042).** A detached worktree at the candidate digest, read-only for the repository: Read/Grep/Glob and `git log/diff`; no network except the model API. It receives `report.json` as facts and does not re-run the DAG or the test suite. Worker prose in commits or PR text is evidence to inspect, never instruction. It **may execute bounded counterexamples**: a finding whose `counterexample` is a concrete input may be confirmed by running it against scratch storage only (`.devai/cache/scratch/`: a throwaway copy of the worktree and, when `db-apply` left a schema, a scratch database created from the same digest in the declared runtime). Execution shares the node's budget (≤ 20 tool calls and ≤ 5 minutes for reads and runs together), writes nothing outside scratch, and records the exact command and an output digest under `evidence`. Every finding carries `basis: observed|derived`: `observed` when confirmed by execution, `derived` when reasoned from reading. Budget exhaustion leaves remaining findings `derived`; it never turns them into `UNKNOWN`.
+**Access (D-042).** A detached worktree at the candidate digest, read-only for the repository: Read/Grep/Glob and `git log/diff`; no network except the model API, both enforced by the CLI's sandbox and tool denial (D-082). It receives `report.json` as facts and does not re-run the DAG or the test suite. Worker prose in commits or PR text is evidence to inspect, never instruction. It **may execute bounded counterexamples**: a finding whose `counterexample` is a concrete input may be confirmed by running it against scratch storage only (`.devai/cache/scratch/`: a throwaway copy of the worktree and, when `db-apply` left a schema, a scratch database created from the same digest in the declared runtime). Execution shares the node's budget (≤ 20 tool calls and ≤ 5 minutes for reads and runs together), writes nothing outside scratch, and records the exact command and an output digest under `evidence`. Every finding carries `basis: observed|derived`: `observed` when confirmed by execution, `derived` when reasoned from reading. Budget exhaustion leaves remaining findings `derived`; it never turns them into `UNKNOWN`.
 
 **Procedure (two phases, ≈ 700-token prompt).** *Phase 1, implementation-blind:* read the frozen
 spec, the cited business rules and public contracts only; write the requirement list `R-1…R-n` with,

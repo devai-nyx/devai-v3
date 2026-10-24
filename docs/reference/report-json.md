@@ -149,6 +149,7 @@ A discriminated union on `node`; 8 nodes carry details.
 | `inputTokens` | Count |
 | `outputTokens` | Count |
 | `seconds` | number ≥ 0 |
+| `minConfidence` | 0–1 — the threshold in force when judged; CI re-applies the PR head's ([D-083](../../decisions.md)) |
 
 ### `Review` — `.devai/review/<packet-id>.json`
 
