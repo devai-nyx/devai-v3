@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { lint } from '../../src/nodes/lint.js';
 import { Report } from '../../src/report.js';
-import { contextOf, devaiCheck, fakeTool, toolModules, workspace } from './helpers.js';
+import { contextOf, devaiCheck, fakeTool, toolModules, workspace } from './tools.js';
 
 const overlay = pathToFileURL(resolve(import.meta.dirname, '../../dist/nodes/lint-overlay/index.js')).href;
 export const ESLINT_CONFIG = `import { createNestConfig } from '@stynx-nyx/eslint-config';

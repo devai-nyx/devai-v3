@@ -9,7 +9,7 @@ import { commitlint, lintMessageFile } from '../../src/nodes/commitlint.js';
 import { Report } from '../../src/report.js';
 import type { RunContext } from '../../src/runner/run.js';
 import { commitAll, gitIn } from '../repo.js';
-import { contextOf, devaiCheck, fakeTool, toolModules, workspace, write } from './helpers.js';
+import { contextOf, devaiCheck, fakeTool, toolModules, workspace, write } from './tools.js';
 
 const CONFIG = { 'tools/commitlint.config.mjs': "export default { extends: ['@commitlint/config-conventional'] };\n" };
 

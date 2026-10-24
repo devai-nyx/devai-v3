@@ -2,7 +2,7 @@
 // required set, applies PL-15 (PL-12/PL-16 need the packet: R6 W4), records `editLoopMs` (D-047) and
 // lists the deferred nodes without a status (D-058). Always runs, never cached, never blocked.
 import type { NodeRow } from '../cache/result-digest.js';
-import type { NodeId } from '../runner/edges.js';
+import { byDag, type NodeId } from '../runner/edges.js';
 import { gates } from '../runner/gating.js';
 import { editLoopMs, type NodeOutcome, type RunContext, type Timing } from '../runner/run.js';
 
@@ -61,21 +61,22 @@ export function acceptOutcome(ctx: RunContext, rows: readonly NodeRow[], timings
       });
     }
   }
+  // B.28 Findings (D-084 item 3): one per gating FAIL and one per gating UNKNOWN, locator = the node id,
+  // in DAG order (the order of `rows`); the UNKNOWN status carries the first gating UNKNOWN's reason.
   const gating = rows.filter((r) => gates(r, ctx.config, rows));
-  for (const r of gating.filter((g) => g.status === 'FAIL')) {
-    findings.push({ locator: r.id, message: `${r.id} FAIL (${r.findings.length} finding${r.findings.length === 1 ? '' : 's'})`, standard: 'S-65', hint: `fix the findings of ${r.id}` });
+  for (const r of gating) {
+    if (r.status === 'FAIL') findings.push({ locator: r.id, message: `${r.id} FAIL (${r.findings.length} finding${r.findings.length === 1 ? '' : 's'})`, standard: 'S-65', hint: `fix the findings of ${r.id}` });
+    if (r.status === 'UNKNOWN') findings.push({ locator: r.id, message: `${r.id} UNKNOWN (${r.reason})`, standard: 'S-65', hint: `fix ${r.id} first` });
   }
   const missing = planned.filter((id) => !byId.has(id));
-  const unknown = gating.filter((g) => g.status === 'UNKNOWN');
+  for (const id of missing) findings.push({ locator: id, message: `${id} has no status`, standard: 'S-65', hint: 'the tool exited abnormally; re-run once, then put the output under ## Notes' });
+  const firstUnknown = gating.filter((g) => g.status === 'UNKNOWN').sort((a, b) => byDag(a.id, b.id))[0];
   const observed = planned.length - missing.length;
   const details = { node: 'accept' as const, requiredSet: required, deferred: [...ctx.plan.deferred], editLoopMs: editLoopMs(timings) };
   const counts = { expected: planned.length, observed, evaluated: observed };
-  if (findings.length > 0) return { status: 'FAIL', ...counts, findings, details };
-  if (missing.length > 0) {
-    return { status: 'UNKNOWN', reason: 'runner-crashed', ...counts, findings: missing.map((id) => ({ locator: id, message: `${id} has no status`, standard: 'S-65', hint: 'the tool exited abnormally; re-run once, then put the output under ## Notes' })), details };
-  }
-  if (unknown.length > 0) {
-    return { status: 'UNKNOWN', reason: 'prerequisite-failed', ...counts, findings: unknown.map((r) => ({ locator: r.id, message: `${r.id} UNKNOWN (${r.reason})`, standard: 'S-65', hint: `fix ${r.id} first` })), details };
-  }
+  const failed = findings.some((f) => f.standard === '05 PL-15') || gating.some((g) => g.status === 'FAIL');
+  if (failed) return { status: 'FAIL', ...counts, findings, details };
+  if (firstUnknown) return { status: 'UNKNOWN', reason: firstUnknown.reason ?? 'runner-crashed', ...counts, findings, details };
+  if (missing.length > 0) return { status: 'UNKNOWN', reason: 'runner-crashed', ...counts, findings, details };
   return { status: 'PASS', ...counts, findings: [], details };
 }

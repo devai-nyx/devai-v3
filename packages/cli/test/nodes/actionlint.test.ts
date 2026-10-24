@@ -2,7 +2,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { actionlint } from '../../src/nodes/actionlint.js';
 import { Report } from '../../src/report.js';
-import { contextOf, devaiCheck, fakeTool, toolModules, workspace } from './helpers.js';
+import { contextOf, devaiCheck, fakeTool, toolModules, workspace } from './tools.js';
 
 const run = async (dir: string) => actionlint.run(await contextOf(dir, 'actionlint'));
 const GOOD = 'on: push\njobs:\n  a:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: echo hi\n';

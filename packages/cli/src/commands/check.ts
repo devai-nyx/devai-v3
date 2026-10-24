@@ -9,12 +9,22 @@ import { GitFailed, GitMissing, revParse, topLevel } from '../git/git.js';
 import { CommandRefusal, cliVersion, type Format, loadConfig, resolveRuntime } from '../main.js';
 import { acceptOutcome } from '../nodes/accept.js';
 import { actionlint } from '../nodes/actionlint.js';
+import { boundary } from '../nodes/boundary.js';
 import { commitlint } from '../nodes/commitlint.js';
+import { deadcode } from '../nodes/deadcode.js';
 import { format } from '../nodes/format.js';
 import { i18n } from '../nodes/i18n.js';
 import { runInventory } from '../nodes/inventory.js';
+import { layout } from '../nodes/layout.js';
 import { lint } from '../nodes/lint.js';
 import { lintTests } from '../nodes/lint-tests.js';
+import { openapi } from '../nodes/openapi.js';
+import { routeContract } from '../nodes/route-contract.js';
+import { specLint } from '../nodes/spec-lint.js';
+import { sqlLint } from '../nodes/sql-lint.js';
+import { sqlTyped } from '../nodes/sql-typed.js';
+import { testIntegrity } from '../nodes/test-integrity.js';
+import { typecheck } from '../nodes/typecheck.js';
 import { Report } from '../report.js';
 import { type NodeId, NODE_IDS } from '../runner/edges.js';
 import { exitCodeOf } from '../runner/gating.js';
@@ -32,15 +42,28 @@ export interface CheckFlags {
   prune?: boolean;
 }
 
-/** Node adapters by id (Part D: the closed enum, no registry); inventory and accept run outside it. */
+/** Node adapters by id (Part D: the closed enum, no registry); inventory and accept are the runner's. */
 export const ADAPTERS: Partial<Record<NodeId, NodeAdapter>> = {
   format,
   lint,
   'lint-tests': lintTests,
+  typecheck,
+  layout,
+  'sql-lint': sqlLint,
+  'spec-lint': specLint,
+  'route-contract': routeContract,
+  'sql-typed': sqlTyped,
+  'test-integrity': testIntegrity,
   i18n,
   actionlint,
   commitlint,
+  boundary,
+  deadcode,
+  openapi,
 };
+
+/** A.3: the packet-bound nodes `--only` refuses without `--packet` (D-084 item 19). */
+const PACKET_ONLY: readonly string[] = ['review', 'permissions-pattern', 'packet-scope', 'spec-tests'];
 
 /** W1: flags whose behaviour arrives with a later R6 wave. */
 const LATER: [keyof CheckFlags, string, string][] = [
@@ -73,8 +96,10 @@ export async function check(argv: readonly string[], flags: CheckFlags, format: 
   if (flags.prune && (flags.packet || flags.full || only.length > 0 || flags.hook || flags.expectRed || flags.summary)) {
     throw new CommandRefusal('usage', '--prune combines with nothing else (A.3)');
   }
-  for (const [key, flag, wave] of LATER) if (flags[key]) throw new CommandRefusal('usage', `${flag} arrives in a later wave (${wave})`);
   for (const n of only) if (!(NODE_IDS as readonly string[]).includes(n)) throw new CommandRefusal('usage', `--only ${n}: not one of the 28 nodes of 02 §2`);
+  // A.3 (D-084 item 19): `--only` on a packet-bound node needs `--packet`.
+  for (const n of only) if (PACKET_ONLY.includes(n) && !flags.packet) throw new CommandRefusal('usage', `${n} needs --packet`);
+  for (const [key, flag, wave] of LATER) if (flags[key]) throw new CommandRefusal('usage', `${flag} arrives in a later wave (${wave})`);
 
   try {
     const { root, head } = await repositoryRoot(cwd);

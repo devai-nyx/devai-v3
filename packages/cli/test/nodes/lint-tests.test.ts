@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { lintTests } from '../../src/nodes/lint-tests.js';
 import { Report } from '../../src/report.js';
-import { contextOf, devaiCheck, fakeTool, toolModules, workspace } from './helpers.js';
+import { contextOf, devaiCheck, fakeTool, toolModules, workspace } from './tools.js';
 
 const run = async (dir: string) => lintTests.run(await contextOf(dir, 'lint-tests'));
 const GOOD = "import { expect, it } from 'vitest';\nit('adds', () => {\n  expect(1 + 1).toBe(2);\n});\n";

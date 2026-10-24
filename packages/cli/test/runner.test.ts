@@ -23,7 +23,7 @@ function setup(only: NodeId[], adapters: Partial<Record<NodeId, NodeAdapter>>, o
   const populations = Object.fromEntries(NODE_IDS.map((id) => [id, { predicate: `no ${id} population`, count: opts.counts?.[id] ?? 1, skippable: id !== 'inventory' && id !== 'accept' } satisfies Population])) as Record<NodeId, Population>;
   const store = new CacheStore(root);
   const deps: RunnerDeps = {
-    inventory: async () => ({ outcome: opts.inventory ?? pass(), data: { toolchainDigest: SHA256, populations, changed: [] } }),
+    inventory: async () => ({ outcome: opts.inventory ?? pass(), data: { toolchainDigest: SHA256, populations, changed: [], mounts: { apps: [], controllers: [], read: [], unresolved: [] }, projects: [], packageDirs: [] } }),
     adapters,
     accept: (c, rows, timings) => acceptOutcome(c, rows, timings, null),
     redigest: opts.redigest ?? (async () => 'd0'),
@@ -81,7 +81,8 @@ describe('runner (C.1 5–11)', () => {
     });
     const out = await runPlan(ctx, deps, 'd0');
     expect(out.rows.find((r) => r.id === 'format')).toMatchObject({ status: 'UNKNOWN', reason: 'prerequisite-failed' });
-    expect(out.rows.find((r) => r.id === 'accept')).toMatchObject({ status: 'UNKNOWN', reason: 'prerequisite-failed' });
+    // B.28 (D-084 item 3): accept carries the first gating UNKNOWN's reason in DAG order, here inventory's.
+    expect(out.rows.find((r) => r.id === 'accept')).toMatchObject({ status: 'UNKNOWN', reason: 'engines-mismatch' });
     expect(exitCodeOf(out.rows, ctx.config, false)).toBe(2);
   });
 

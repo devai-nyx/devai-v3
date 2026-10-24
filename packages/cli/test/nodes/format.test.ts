@@ -2,7 +2,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { format } from '../../src/nodes/format.js';
 import { Report } from '../../src/report.js';
-import { contextOf, devaiCheck, fakeTool, toolModules, workspace } from './helpers.js';
+import { contextOf, devaiCheck, fakeTool, toolModules, workspace } from './tools.js';
 
 const PRETTIER = JSON.stringify({ name: 'demo', private: true, type: 'module', engines: { node: '>=24 <25', pnpm: '>=9 <10' }, packageManager: 'pnpm@9.15.0', prettier: { printWidth: 100, singleQuote: true, trailingComma: 'all', semi: true } }, null, 2) + '\n';
 const run = async (dir: string) => format.run(await contextOf(dir, 'format'));

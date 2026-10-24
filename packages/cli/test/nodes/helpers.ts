@@ -1,105 +1,97 @@
-// Fixtures for the W2a tool adapters: the 07 §2 pins installed once from the registry into a shared
-// temp folder (one install for every test file, under a mkdir lock), temp workspaces that link it as
-// `node_modules`, fake binaries for the crash cases, and a RunContext built the way `devai check` does.
-import { execFileSync, spawnSync } from 'node:child_process';
-import { chmodSync, cpSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+// Node-adapter fixtures (R6 W2c): the pinned tools from the registry (07 §2) installed once per tool
+// set into the OS temp dir and linked into each temp workspace as `node_modules`, and a RunContext
+// built the way `devai check` builds it (candidate listing, then `inventory` for the changed set).
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
+import { appendFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
+import { expect } from 'vitest';
 import { workingTree } from '../../src/candidate/digest.js';
 import type { DevaiConfig } from '../../src/config.js';
+import { revParse } from '../../src/git/git.js';
 import { runInventory } from '../../src/nodes/inventory.js';
-import { plan } from '../../src/runner/plan.js';
+import { NodeResult } from '../../src/report.js';
 import type { NodeId } from '../../src/runner/edges.js';
-import type { RunContext } from '../../src/runner/run.js';
+import { plan } from '../../src/runner/plan.js';
+import { type NodeAdapter, type NodeOutcome, rewriteNoObservations, type RunContext } from '../../src/runner/run.js';
 import { templateConfig } from '../fixtures.js';
-import { commitAll, gitIn, tempRepo, write } from '../repo.js';
 
-/** 07 §2 pins for format, lint, lint-tests, i18n, actionlint, commitlint (and `tsc` for inventory). */
-export const PINS = [
-  'prettier@3.9.6', 'eslint@10.10.0', '@stynx-nyx/eslint-config@3.0.0', 'typescript@6.0.3',
-  '@angular-eslint/eslint-plugin-template@22.0.0', '@angular-eslint/template-parser@22.0.0',
-  'github-actionlint@1.7.12', '@commitlint/cli@21.2.2', '@commitlint/config-conventional@21.2.2',
-];
-
-export const templateDir = resolve(import.meta.dirname, '../../template');
 const repoRoot = resolve(import.meta.dirname, '../../../..');
-const sleep = (ms: number) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
 
-/** The shared install, created on first use; returns its `node_modules`. */
-export function toolModules(): string {
-  const dir = resolve(tmpdir(), `devai-w2a-tools-${createHash('sha256').update(PINS.join(' ')).digest('hex').slice(0, 12)}`);
-  const done = resolve(dir, '.done');
-  const lock = `${dir}.lock`;
-  for (let waited = 0; !existsSync(done); waited += 500) {
-    try {
-      mkdirSync(lock);
-    } catch {
-      if (waited > 300_000) throw new Error(`timed out waiting for ${lock}`);
-      sleep(500);
-      continue;
-    }
-    try {
-      if (!existsSync(done)) {
-        rmSync(dir, { recursive: true, force: true });
-        mkdirSync(dir, { recursive: true });
-        writeFileSync(resolve(dir, 'package.json'), JSON.stringify({ name: 'devai-w2a-tools', private: true, type: 'module' }));
-        writeFileSync(resolve(dir, '.npmrc'), readFileSync(resolve(repoRoot, '.npmrc')));
-        execFileSync('pnpm', ['add', '-D', '--save-exact', ...PINS], { cwd: dir, stdio: 'pipe', env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: '0' } });
-        writeFileSync(done, '');
-      }
-    } finally {
-      rmSync(lock, { recursive: true, force: true });
-    }
-  }
-  return resolve(dir, 'node_modules');
-}
+/** 07 §2 pins (and the STYNX 3.0.0 deliverables) the W2c nodes invoke. */
+export const PINS = {
+  stynx: { '@stynx-nyx/cli': '3.0.0' },
+  migrationLinter: { '@stynx-nyx/migration-linter': '3.0.0' },
+  deadcode: { knip: '6.35.1', depcheck: '1.4.7', madge: '8.0.0', typescript: '6.0.3' },
+} as const;
 
-export const ROOT_PACKAGE = JSON.stringify({ name: 'demo', private: true, type: 'module', engines: { node: '>=24 <25', pnpm: '>=9 <10' }, packageManager: 'pnpm@9.15.0' }, null, 2) + '\n';
+/** 09 §1.1 row `.stynxrc.json` (D-087); the template file in this repository predates it. */
+export const STYNXRC_09 = '{ "boundary": { "roots": ["apps","domain"], "allowedPackages": ["@stynx-nyx/"], "forbiddenImports": [] }, "apiCoverage": { "sourceRoots": ["apps/api/src"] }, "publicApi": { "packageRoots": [] } }\n';
 
 /**
- * A committed workspace with `base` files, then `changes` written (uncommitted, hence "changed" per
- * A.3's edit-loop base). `modules`: the shared install, a fake `.bin` folder, or none (tooling hidden).
+ * `pnpm install` of `deps` into `<tmp>/devai-w2c-tools/<hash>`, reused while it exists (the cache spans
+ * test files and runs); the registry needs NODE_AUTH_TOKEN for @stynx-nyx/* (repository `.npmrc`).
  */
-export function workspace(base: Record<string, string>, changes: Record<string, string> = {}, modules: string | null = toolModules(), template = false): string {
-  const dir = tempRepo('devai-w2a-');
-  if (template) {
-    cpSync(templateDir, dir, { recursive: true, verbatimSymlinks: true });
-    renameSync(resolve(dir, 'gitignore'), resolve(dir, '.gitignore'));
+export function toolsFor(deps: Record<string, string>): string {
+  const hash = createHash('sha256').update(JSON.stringify(Object.entries(deps).sort())).digest('hex').slice(0, 16);
+  const home = resolve(tmpdir(), 'devai-w2c-tools');
+  const dir = resolve(home, hash);
+  if (existsSync(resolve(dir, 'node_modules/.modules.yaml'))) return dir;
+  mkdirSync(home, { recursive: true });
+  const work = mkdtempSync(resolve(home, `${hash}-`));
+  writeFileSync(resolve(work, 'package.json'), JSON.stringify({ name: 'devai-w2c-tools', private: true, type: 'module', devDependencies: deps }, null, 2));
+  cpSync(resolve(repoRoot, '.npmrc'), resolve(work, '.npmrc'));
+  try {
+    execFileSync('pnpm', ['install', '--no-frozen-lockfile', '--reporter=silent'], { cwd: work, stdio: ['ignore', 'ignore', 'inherit'], env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: '0' } });
+  } catch (e) {
+    rmSync(work, { recursive: true, force: true });
+    throw e;
   }
-  write(dir, 'package.json', ROOT_PACKAGE);
-  write(dir, 'pnpm-workspace.yaml', 'packages: []\n');
-  write(dir, 'devai.json', JSON.stringify(templateConfig(), null, 2) + '\n');
-  for (const [p, c] of Object.entries(base)) write(dir, p, c);
-  writeFileSync(resolve(dir, '.git/info/exclude'), 'node_modules\n');
-  if (modules) symlinkSync(modules, resolve(dir, 'node_modules'));
-  commitAll(dir, 'chore: base');
-  for (const [p, c] of Object.entries(changes)) write(dir, p, c);
+  try {
+    renameSync(work, dir);
+  } catch {
+    rmSync(work, { recursive: true, force: true }); // another test file won the race
+  }
   return dir;
 }
 
-/** A `node_modules/.bin/<bin>` that writes `stderr` and exits `code` with empty stdout. */
-export function fakeTool(bin: string, code = 2, stderr = 'boom: the tool fell over'): string {
-  const dir = resolve(tempRepo('devai-w2a-fake-'), 'node_modules');
-  mkdirSync(resolve(dir, '.bin'), { recursive: true });
-  writeFileSync(resolve(dir, '.bin', bin), `#!/bin/sh\necho '${stderr}' >&2\nexit ${code}\n`);
-  chmodSync(resolve(dir, '.bin', bin), 0o755);
-  return dir;
+/**
+ * Links an installed tool set into the workspace. The template's `node_modules/` ignore line does not
+ * match a symlink, so the link is excluded locally (`.git/info/exclude`), as a real install is ignored.
+ */
+export function linkTools(dir: string, tools: string): void {
+  symlinkSync(resolve(tools, 'node_modules'), resolve(dir, 'node_modules'), 'dir');
+  appendFileSync(resolve(dir, '.git/info/exclude'), '/node_modules\n');
 }
 
-/** The RunContext `devai check --only <id>` builds, with inventory's data from the real node. */
-export async function contextOf(dir: string, id: NodeId, base: string | null = null, config: DevaiConfig = templateConfig()): Promise<RunContext> {
+export interface CtxOptions {
+  config?: Partial<DevaiConfig>;
+  base?: string | null;
+  only?: NodeId;
+  /** Runs after the candidate is listed and before the adapter (an edit the listing must not see). */
+  beforeRun?: () => void;
+}
+
+export async function contextOf(dir: string, opts: CtxOptions = {}): Promise<RunContext> {
+  const listing = await workingTree(dir, opts.base ?? null);
+  const head = (await revParse(dir, 'HEAD'))!;
   const ctx: RunContext = {
-    root: dir, config, runtime: 'bare', cliVersion: '3.0.0', listing: await workingTree(dir, base), base,
-    head: gitIn(dir, 'rev-parse', 'HEAD').trim(), plan: plan({ packet: false, full: false, only: [id] }),
+    root: dir, config: { ...templateConfig(), ...opts.config }, runtime: 'bare', cliVersion: '3.0.0', listing,
+    base: opts.base ?? null, head, plan: plan({ packet: false, full: false, only: opts.only ? [opts.only] : [] }),
   };
   ctx.inventory = (await runInventory(ctx)).data;
   return ctx;
 }
 
-const bin = resolve(import.meta.dirname, '../../dist/main.js');
-/** `devai check --only <id> --format json` on the built binary (D-057). */
-export const devaiCheck = (cwd: string, id: NodeId) =>
-  spawnSync(process.execPath, [bin, 'check', '--only', id, '--format', 'json'], { cwd, encoding: 'utf8', env: { ...process.env, DEVAI_RUNTIME: '' } });
+/** Runs one adapter as the runner does (C.1 step 9 rewrite) and checks the row against C.2. */
+export async function runNode(adapter: NodeAdapter, dir: string, opts: CtxOptions = {}): Promise<NodeOutcome> {
+  const ctx = await contextOf(dir, { ...opts, only: adapter.id });
+  opts.beforeRun?.();
+  const o = rewriteNoObservations(await adapter.run(ctx));
+  NodeResult.parse({ id: adapter.id, ...o, durationMs: 0, cached: false, needs: [] });
+  expect(adapter.inputs(ctx).length).toBeGreaterThanOrEqual(0);
+  return o;
+}
 
-export { write };
+export const lines = (o: NodeOutcome): string[] => o.findings.map((f) => `${f.locator} ${f.message} [${f.standard}] ${f.hint}`);

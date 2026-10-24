@@ -7,7 +7,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { i18n } from '../../src/nodes/i18n.js';
 import { Report } from '../../src/report.js';
 import { templateConfig } from '../fixtures.js';
-import { contextOf, devaiCheck, fakeTool, toolModules, workspace } from './helpers.js';
+import { contextOf, devaiCheck, fakeTool, toolModules, workspace } from './tools.js';
 
 const ptBR = { ...templateConfig(), locales: ['en-US', 'pt-BR'] };
 const DEVAI_PT = { 'devai.json': JSON.stringify(ptBR, null, 2) + '\n' };
