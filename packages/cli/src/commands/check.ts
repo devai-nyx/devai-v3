@@ -8,9 +8,14 @@ import type { DevaiConfig } from '../config.js';
 import { GitFailed, GitMissing, revParse, topLevel } from '../git/git.js';
 import { CommandRefusal, cliVersion, type Format, loadConfig, resolveRuntime } from '../main.js';
 import { acceptOutcome } from '../nodes/accept.js';
+import { boundary } from '../nodes/boundary.js';
+import { deadcode } from '../nodes/deadcode.js';
 import { runInventory } from '../nodes/inventory.js';
 import { layout } from '../nodes/layout.js';
+import { openapi } from '../nodes/openapi.js';
 import { routeContract } from '../nodes/route-contract.js';
+import { specLint } from '../nodes/spec-lint.js';
+import { sqlLint } from '../nodes/sql-lint.js';
 import { sqlTyped } from '../nodes/sql-typed.js';
 import { testIntegrity } from '../nodes/test-integrity.js';
 import { typecheck } from '../nodes/typecheck.js';
@@ -35,9 +40,14 @@ export interface CheckFlags {
 export const ADAPTERS: Partial<Record<NodeId, NodeAdapter>> = {
   typecheck,
   layout,
+  'sql-lint': sqlLint,
+  'spec-lint': specLint,
   'route-contract': routeContract,
   'sql-typed': sqlTyped,
   'test-integrity': testIntegrity,
+  boundary,
+  deadcode,
+  openapi,
 };
 
 /** A.3: the packet-bound nodes `--only` refuses without `--packet` (D-084 item 19). */

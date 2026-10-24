@@ -9,7 +9,7 @@ import { plan } from '../../src/runner/plan.js';
 import type { RunContext } from '../../src/runner/run.js';
 import { templateConfig } from '../fixtures.js';
 import { templateWorkspace, write } from '../repo.js';
-import { linkToolchain, runOnly } from './helpers.js';
+import { linkToolchain, runOnly } from './w2b.js';
 
 const TSCONFIG = (refs: string[] = []) => JSON.stringify({ extends: '@stynx-nyx/tsconfig/node24.json', compilerOptions: { rootDir: 'src', outDir: 'dist', composite: true }, include: ['src'], ...(refs.length ? { references: refs.map((path) => ({ path })) } : {}) });
 

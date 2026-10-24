@@ -5,11 +5,13 @@ import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { z } from 'zod';
 import { DevaiConfig } from './config.js';
+import { UseCase } from './spec/machine-block.js';
 
-/** Committed path (relative to the package root) → projected JSON Schema. The use-case schema joins when 06 §2's zod definition lands (W2, spec-lint). */
+/** Committed path (relative to the package root) → projected JSON Schema (07 §3: `devai.json` and the 06 §3 use case). */
 export function projections(): Record<string, unknown> {
   return {
     'schema/devai.schema.json': z.toJSONSchema(DevaiConfig, { target: 'draft-2020-12', io: 'input' }),
+    'schema/use-case.schema.json': z.toJSONSchema(UseCase, { target: 'draft-2020-12', io: 'input' }),
   };
 }
 

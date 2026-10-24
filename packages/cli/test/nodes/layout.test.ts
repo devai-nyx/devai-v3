@@ -5,7 +5,7 @@ import { ddlBand, layout, tierGlobs } from '../../src/nodes/layout.js';
 import { plan } from '../../src/runner/plan.js';
 import { templateConfig } from '../fixtures.js';
 import { templateWorkspace } from '../repo.js';
-import { runOnly } from './helpers.js';
+import { runOnly } from './w2b.js';
 
 describe('B.6 layout', () => {
   it('PASS on the template workspace; never SKIPPED (the root is the population)', async () => {

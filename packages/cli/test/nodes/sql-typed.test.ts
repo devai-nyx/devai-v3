@@ -2,7 +2,7 @@
 import { describe, expect, it } from 'vitest';
 import { sha256 } from '../../src/candidate/digest.js';
 import { commitAll, templateWorkspace, write } from '../repo.js';
-import { runOnly } from './helpers.js';
+import { runOnly } from './w2b.js';
 
 export const REPOSITORY = `import { defineQuery, sql } from '@stynx-nyx/data';
 import { z } from 'zod';

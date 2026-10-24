@@ -7,7 +7,7 @@ import { factsOf, testIntegrity } from '../../src/nodes/test-integrity.js';
 import { plan } from '../../src/runner/plan.js';
 import { templateConfig } from '../fixtures.js';
 import { templateWorkspace, write } from '../repo.js';
-import { runOnly } from './helpers.js';
+import { runOnly } from './w2b.js';
 
 const UNIT = 'domain/notes/api/test/notes.controller.spec.ts';
 const ACC = 'domain/notes/api/test/acceptance/spec-demo-001.acceptance.spec.ts';

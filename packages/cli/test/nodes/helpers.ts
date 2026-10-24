@@ -1,58 +1,97 @@
-// W2b node fixtures: run one node through the real runner (inventory first, SKIPPED from its
-// populations, the no-observations rewrite) in a temp workspace, and give the workspace the product's
-// `node_modules` toolchain (TypeScript 6.0.3, `@stynx-nyx/tsconfig` and `@stynx-nyx/cli` 3.0.0, as
-// published) through wrappers, since only `<root>/node_modules/.bin` is consulted (08 B.1, D-057).
-import { chmodSync, mkdirSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { dirname, resolve } from 'node:path';
-import type { NodeRow } from '../../src/cache/result-digest.js';
-import { CacheStore } from '../../src/cache/store.js';
+// Node-adapter fixtures (R6 W2c): the pinned tools from the registry (07 §2) installed once per tool
+// set into the OS temp dir and linked into each temp workspace as `node_modules`, and a RunContext
+// built the way `devai check` builds it (candidate listing, then `inventory` for the changed set).
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import { appendFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { resolve } from 'node:path';
+import { expect } from 'vitest';
 import { workingTree } from '../../src/candidate/digest.js';
-import { acceptOutcome } from '../../src/nodes/accept.js';
+import type { DevaiConfig } from '../../src/config.js';
+import { revParse } from '../../src/git/git.js';
 import { runInventory } from '../../src/nodes/inventory.js';
+import { NodeResult } from '../../src/report.js';
 import type { NodeId } from '../../src/runner/edges.js';
 import { plan } from '../../src/runner/plan.js';
-import { type NodeAdapter, runPlan } from '../../src/runner/run.js';
-import { ADAPTERS } from '../../src/commands/check.js';
-import { NodeResult } from '../../src/report.js';
+import { type NodeAdapter, type NodeOutcome, rewriteNoObservations, type RunContext } from '../../src/runner/run.js';
 import { templateConfig } from '../fixtures.js';
-import { gitIn } from '../repo.js';
 
-const require = createRequire(import.meta.url);
-const cliDir = resolve(import.meta.dirname, '../..');
-const repoRoot = resolve(cliDir, '../..');
+const repoRoot = resolve(import.meta.dirname, '../../../..');
 
-/** Install wrappers for `tsc` and `stynx` and links for the tsconfig chain into `<dir>/node_modules`. */
-export function linkToolchain(dir: string, which: { tsc?: boolean; stynx?: boolean } = { tsc: true, stynx: true }): void {
-  const nm = resolve(dir, 'node_modules');
-  mkdirSync(resolve(nm, '.bin'), { recursive: true });
-  mkdirSync(resolve(nm, '@stynx-nyx'), { recursive: true });
-  mkdirSync(resolve(nm, '@types'), { recursive: true });
-  const wrap = (name: string, js: string) => {
-    const p = resolve(nm, '.bin', name);
-    writeFileSync(p, `#!/bin/sh\nexec "${process.execPath}" "${js}" "$@"\n`);
-    chmodSync(p, 0o755);
+/** 07 §2 pins (and the STYNX 3.0.0 deliverables) the W2c nodes invoke. */
+export const PINS = {
+  stynx: { '@stynx-nyx/cli': '3.0.0' },
+  migrationLinter: { '@stynx-nyx/migration-linter': '3.0.0' },
+  deadcode: { knip: '6.35.1', depcheck: '1.4.7', madge: '8.0.0', typescript: '6.0.3' },
+} as const;
+
+/** 09 §1.1 row `.stynxrc.json` (D-087); the template file in this repository predates it. */
+export const STYNXRC_09 = '{ "boundary": { "roots": ["apps","domain"], "allowedPackages": ["@stynx-nyx/"], "forbiddenImports": [] }, "apiCoverage": { "sourceRoots": ["apps/api/src"] }, "publicApi": { "packageRoots": [] } }\n';
+
+/**
+ * `pnpm install` of `deps` into `<tmp>/devai-w2c-tools/<hash>`, reused while it exists (the cache spans
+ * test files and runs); the registry needs NODE_AUTH_TOKEN for @stynx-nyx/* (repository `.npmrc`).
+ */
+export function toolsFor(deps: Record<string, string>): string {
+  const hash = createHash('sha256').update(JSON.stringify(Object.entries(deps).sort())).digest('hex').slice(0, 16);
+  const home = resolve(tmpdir(), 'devai-w2c-tools');
+  const dir = resolve(home, hash);
+  if (existsSync(resolve(dir, 'node_modules/.modules.yaml'))) return dir;
+  mkdirSync(home, { recursive: true });
+  const work = mkdtempSync(resolve(home, `${hash}-`));
+  writeFileSync(resolve(work, 'package.json'), JSON.stringify({ name: 'devai-w2c-tools', private: true, type: 'module', devDependencies: deps }, null, 2));
+  cpSync(resolve(repoRoot, '.npmrc'), resolve(work, '.npmrc'));
+  try {
+    execFileSync('pnpm', ['install', '--no-frozen-lockfile', '--reporter=silent'], { cwd: work, stdio: ['ignore', 'ignore', 'inherit'], env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: '0' } });
+  } catch (e) {
+    rmSync(work, { recursive: true, force: true });
+    throw e;
+  }
+  try {
+    renameSync(work, dir);
+  } catch {
+    rmSync(work, { recursive: true, force: true }); // another test file won the race
+  }
+  return dir;
+}
+
+/**
+ * Links an installed tool set into the workspace. The template's `node_modules/` ignore line does not
+ * match a symlink, so the link is excluded locally (`.git/info/exclude`), as a real install is ignored.
+ */
+export function linkTools(dir: string, tools: string): void {
+  symlinkSync(resolve(tools, 'node_modules'), resolve(dir, 'node_modules'), 'dir');
+  appendFileSync(resolve(dir, '.git/info/exclude'), '/node_modules\n');
+}
+
+export interface CtxOptions {
+  config?: Partial<DevaiConfig>;
+  base?: string | null;
+  only?: NodeId;
+  /** Runs after the candidate is listed and before the adapter (an edit the listing must not see). */
+  beforeRun?: () => void;
+}
+
+export async function contextOf(dir: string, opts: CtxOptions = {}): Promise<RunContext> {
+  const listing = await workingTree(dir, opts.base ?? null);
+  const head = (await revParse(dir, 'HEAD'))!;
+  const ctx: RunContext = {
+    root: dir, config: { ...templateConfig(), ...opts.config }, runtime: 'bare', cliVersion: '3.0.0', listing,
+    base: opts.base ?? null, head, plan: plan({ packet: false, full: false, only: opts.only ? [opts.only] : [] }),
   };
-  if (which.tsc !== false) wrap('tsc', resolve(dirname(require.resolve('typescript/package.json')), 'bin/tsc'));
-  if (which.stynx !== false) wrap('stynx', resolve(realpathSync(resolve(cliDir, 'node_modules/@stynx-nyx/cli')), 'dist/cli/src/main.js'));
-  symlinkSync(realpathSync(resolve(repoRoot, 'node_modules/@stynx-nyx/tsconfig')), resolve(nm, '@stynx-nyx/tsconfig'));
-  symlinkSync(realpathSync(resolve(repoRoot, 'node_modules/@types/node')), resolve(nm, '@types/node'));
+  ctx.inventory = (await runInventory(ctx)).data;
+  return ctx;
 }
 
-/** `devai check --only <id>` through the runner, in process, against the working tree of `dir`. */
-export async function runOnly(dir: string, id: NodeId, adapters: Partial<Record<NodeId, NodeAdapter>> = ADAPTERS): Promise<{ row: NodeRow; rows: NodeRow[] }> {
-  const head = gitIn(dir, 'rev-parse', 'HEAD').trim();
-  const listing = await workingTree(dir, null);
-  const p = plan({ packet: false, full: false, only: [id] });
-  const ctx = { root: dir, config: templateConfig(), runtime: 'bare' as const, cliVersion: '3.0.0', listing, base: null, head, plan: p };
-  const out = await runPlan(ctx, {
-    inventory: runInventory,
-    adapters,
-    accept: (c, rows, timings) => acceptOutcome(c, rows, timings, null),
-    redigest: async () => 'same',
-    store: new CacheStore(dir),
-    diagnostic: (l) => process.stderr.write(l + '\n'),
-  }, 'same');
-  for (const r of out.rows) NodeResult.parse(r); // every row is C.2-valid (hint ≤ 160, PASS invariants)
-  return { row: out.rows.find((r) => r.id === id)!, rows: out.rows };
+/** Runs one adapter as the runner does (C.1 step 9 rewrite) and checks the row against C.2. */
+export async function runNode(adapter: NodeAdapter, dir: string, opts: CtxOptions = {}): Promise<NodeOutcome> {
+  const ctx = await contextOf(dir, { ...opts, only: adapter.id });
+  opts.beforeRun?.();
+  const o = rewriteNoObservations(await adapter.run(ctx));
+  NodeResult.parse({ id: adapter.id, ...o, durationMs: 0, cached: false, needs: [] });
+  expect(adapter.inputs(ctx).length).toBeGreaterThanOrEqual(0);
+  return o;
 }
+
+export const lines = (o: NodeOutcome): string[] => o.findings.map((f) => `${f.locator} ${f.message} [${f.standard}] ${f.hint}`);

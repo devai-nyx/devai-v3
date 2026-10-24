@@ -8,7 +8,7 @@ import { workingTree } from '../../src/candidate/digest.js';
 import { plan } from '../../src/runner/plan.js';
 import { templateConfig } from '../fixtures.js';
 import { commitAll, templateWorkspace, write } from '../repo.js';
-import { linkToolchain, runOnly } from './helpers.js';
+import { linkToolchain, runOnly } from './w2b.js';
 
 export const CONTROLLER = `import { Body, Controller, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
 import { NoIdempotent } from '@stynx-nyx/core';
