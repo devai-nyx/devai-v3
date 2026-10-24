@@ -7,6 +7,8 @@ import type { Listing } from '../candidate/digest.js';
 import { cacheKey, configDigest, inputDigest, nodeVersion } from '../cache/key.js';
 import { type NodeRow, resultDigest } from '../cache/result-digest.js';
 import type { CacheStore } from '../cache/store.js';
+import type { Scratch } from '../db/scratch.js';
+import type { PacketView } from '../nodes/spec-tests.js';
 import type { MountCensus } from '../ts/mounts.js';
 import { isEditLoopClass, lane, needsOf, type NodeId } from './edges.js';
 import type { Plan } from './plan.js';
@@ -49,6 +51,10 @@ export interface RunContext {
   plan: Plan;
   /** Set by step 5. */
   inventory?: InventoryData;
+  /** Set by `db-apply` (B.20), run or reused: the scratch database its consumers use. */
+  scratch?: Scratch;
+  /** The packet the run is bound to (`--packet`, W4); `spec-tests` reads its kind, observations and pin. */
+  packet?: PacketView;
 }
 
 export interface NodeAdapter {
@@ -60,6 +66,8 @@ export interface NodeAdapter {
   /** Declared inputs (Part B "Inputs"), repo-relative paths at the candidate. */
   inputs(ctx: RunContext): string[];
   run(ctx: RunContext): Promise<NodeOutcome>;
+  /** C.4 Reuse beyond the key: a stored PASS is re-emitted only when this agrees (`db-apply`: its database still exists). */
+  reuse?(ctx: RunContext, hit: NodeRow): Promise<boolean>;
 }
 
 export interface Timing { id: NodeId; start: number; end: number }
@@ -148,7 +156,7 @@ export async function runPlan(ctx: RunContext, deps: RunnerDeps, digest0: string
     const key = UNCACHED.includes(id) ? undefined : keyOf(ctx, adapter, rows);
     if (key) {
       const hit = deps.store.lookup(id, key);
-      if (hit) return void rows.set(id, { ...hit, durationMs: Date.now() - start, cached: true, cacheKey: key });
+      if (hit && (!adapter.reuse || (await adapter.reuse(ctx, hit)))) return void rows.set(id, { ...hit, durationMs: Date.now() - start, cached: true, cacheKey: key });
     }
     let o: NodeOutcome;
     try {
@@ -213,11 +221,18 @@ export function keyOf(ctx: RunContext, adapter: NodeAdapter, rows: ReadonlyMap<N
     nodeVersion: nodeVersion(ctx.cliVersion, adapter.contract),
     toolchainDigest: ctx.inventory?.toolchainDigest ?? '',
     configDigest: configDigest(adapter.configFiles(ctx).map((path) => ({ path, sha256: hashes.get(path) ?? null }))),
-    runtimeOrSchema: ctx.runtime, // DB-backed nodes key on db-apply's schemaDigest instead (W3)
+    runtimeOrSchema: schemaOrRuntime(ctx, adapter.id, rows),
     inputDigests: adapter.inputs(ctx).map((p) => inputDigest(p, hashes.get(p) ?? null)),
     dependencyResultDigests: deps,
     ...(adapter.id === 'sql-typed' ? { extra: [ctx.plan.sqlTypedPhase] } : {}),
   });
+}
+
+/** C.4: DB-backed nodes key on `db-apply`'s `schemaDigest` instead of the runtime mode (mode-independent, 02 §2). */
+function schemaOrRuntime(ctx: RunContext, id: NodeId, rows: ReadonlyMap<NodeId, NodeRow>): string {
+  if (id === 'db-apply' || !needsOf(id, ctx.plan.sqlTypedPhase).includes('postgres')) return ctx.runtime;
+  const d = rows.get('db-apply')?.details;
+  return d?.node === 'db-apply' ? d.schemaDigest : ctx.runtime;
 }
 
 /** D-047: wall time from the first class A/B node's start to the last one's end. */

@@ -5,15 +5,20 @@ import { realpathSync } from 'node:fs';
 import { CandidateIo, commitTree, digestOf, workingTree } from '../candidate/digest.js';
 import { CacheStore, prune } from '../cache/store.js';
 import type { DevaiConfig } from '../config.js';
+import { reachable, running } from '../db/provide.js';
+import { pruneScratch } from '../db/scratch.js';
 import { GitFailed, GitMissing, revParse, topLevel } from '../git/git.js';
 import { CommandRefusal, cliVersion, type Format, loadConfig, resolveRuntime } from '../main.js';
 import { acceptOutcome } from '../nodes/accept.js';
 import { actionlint } from '../nodes/actionlint.js';
 import { boundary } from '../nodes/boundary.js';
 import { commitlint } from '../nodes/commitlint.js';
+import { dbApply } from '../nodes/db-apply.js';
 import { deadcode } from '../nodes/deadcode.js';
+import { e2e } from '../nodes/e2e.js';
 import { format } from '../nodes/format.js';
 import { i18n } from '../nodes/i18n.js';
+import { integration } from '../nodes/integration.js';
 import { runInventory } from '../nodes/inventory.js';
 import { layout } from '../nodes/layout.js';
 import { lint } from '../nodes/lint.js';
@@ -21,10 +26,12 @@ import { lintTests } from '../nodes/lint-tests.js';
 import { openapi } from '../nodes/openapi.js';
 import { routeContract } from '../nodes/route-contract.js';
 import { specLint } from '../nodes/spec-lint.js';
+import { specTests } from '../nodes/spec-tests.js';
 import { sqlLint } from '../nodes/sql-lint.js';
 import { sqlTyped } from '../nodes/sql-typed.js';
 import { testIntegrity } from '../nodes/test-integrity.js';
 import { typecheck } from '../nodes/typecheck.js';
+import { unit } from '../nodes/unit.js';
 import { Report } from '../report.js';
 import { type NodeId, NODE_IDS } from '../runner/edges.js';
 import { exitCodeOf } from '../runner/gating.js';
@@ -60,6 +67,11 @@ export const ADAPTERS: Partial<Record<NodeId, NodeAdapter>> = {
   boundary,
   deadcode,
   openapi,
+  'db-apply': dbApply,
+  'spec-tests': specTests,
+  integration,
+  e2e,
+  unit,
 };
 
 /** A.3: the packet-bound nodes `--only` refuses without `--packet` (D-084 item 19). */
@@ -104,13 +116,14 @@ export async function check(argv: readonly string[], flags: CheckFlags, format: 
   try {
     const { root, head } = await repositoryRoot(cwd);
     if (flags.prune) {
+      await pruneScratch(root, await running(root, config, runtime), (line) => process.stderr.write(line + '\n')); // B.20: descriptor-named databases only
       const removed = prune(root);
       return format === 'json'
         ? { stdout: JSON.stringify({ pruned: removed, accepted: false, exitCode: 0 }) + '\n', exitCode: 0 }
         : { stdout: `pruned ${removed} cache entries\nexit 0\n`, exitCode: 0 };
     }
 
-    const p = plan({ packet: false, full: false, only: only as NodeId[] });
+    const p = plan({ packet: false, full: false, only: only as NodeId[], postgresReachable: (only.length === 0 || only.includes('sql-typed')) && (await reachable(root, config, runtime)) });
     const missing = p.nodes.find((n) => n !== 'inventory' && n !== 'accept' && !ADAPTERS[n]);
     if (missing) throw new CommandRefusal('usage', `node ${missing} arrives in a later wave`);
 
