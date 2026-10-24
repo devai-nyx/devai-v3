@@ -117,7 +117,7 @@ Count: 28 rows; 4 nodes need `postgres` (`sql-typed` DB part, `db-apply`, `spec-
 | `spec-lint` | any SL01–SL08/SL12 violation, incl. malformed readable YAML | `io` |
 | `route-contract` | a pair on one side only; any of the five contract fields mismatched; a non-literal decorator argument; boundary input without `parseDto`/typed pipe; a route neither role-bound nor `@Public()`; an unknown `@UseCase` id; an app root module without request-id middleware | `tooling-missing`, `mount-unresolved`, `prerequisite-failed` |
 | `sql-typed` | any static or DB mismatch; a prepare error (SQLSTATE + server message) | `unsupported-oid`, `unsupported-binding`, `adapter-unbound`, `postgres-unreachable`, `prerequisite-failed`, `parser-unavailable` |
-| `unit` | ≥ 1 failed case; a test module that fails to import | `runner-crashed`, `timeout`, `tooling-missing` |
+| `unit` | ≥ 1 failed case; a test module that fails to import; a skipped or pending case (collected, not observed; [D-081](../../decisions.md)) | `runner-crashed`, `timeout`, `tooling-missing` |
 | `test-integrity` | `.skip/.only/.todo` without issue reference; literal verdicts; assertion count below 80 % of base without annotation; any change to a base-present acceptance file without `// @acceptance-change: approved-by=`, or any such edit while `kind ∉ {test}`; an `acceptance: yes` case removed | `base-unreadable` |
 | `i18n` | a key missing in a locale; a spec key absent from `en-US`; any template i18n message | `catalog-unresolved`, `io`, `tooling-missing` |
 | `actionlint` | ≥ 1 entry | `tooling-missing`, `runner-crashed` |

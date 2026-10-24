@@ -885,9 +885,8 @@ is derived from `devai.json` and `protected-paths` (D-028, D-058), which the sch
 only. Recommended: (a); each clause restates prose already in 08 §0, A.3, C.4, B.27 and 02 §8, and
 D-056's projection is untouched because refinements do not project. (b) makes `Report.parse` depend
 on files outside the report. Lands with R6's first test file: the seven reproductions as negative
-cases, the 09 §6 fixture report as the positive case. Open: 08 B.11/B.22 let skipped or pending
-Vitest cases lower `evaluated` without a finding, which under (a) is no longer a `PASS`; the status
-such a run takes needs a ruling before R6 implements `unit` (see Open). Amends 08 C.2 and
+cases, the 09 §6 fixture report as the positive case. 08 B.11/B.22 let skipped or pending Vitest
+cases lower `evaluated` without a finding, which under (a) is no longer a `PASS`; ruled in D-081. Amends 08 C.2 and
 `packages/cli/src/report.ts` together. Chosen: (a). Source: Owner (packet §3).
 
 ## D-078 · 2026-10-24 · `protected:unplanned` is computed against the packet's `protected` at its introducing commit (devai-v3#42)
@@ -943,8 +942,27 @@ until #45 lands 11 and 12 in this repository), docs/adopters/ci.md, docs/dev/con
 Host act (Owner): the ruleset on devai-v3 before H5 makes `matrix` required. Chosen: (c).
 Source: Owner (packet §6).
 
+## D-081 · 2026-10-24 · A skipped or pending test case is collected but not observed: `unit` and `integration` report a shortfall `FAIL` (closes the D-077 open item)
+08 B.11 counted `skipped` and `pending` cases as observed but not evaluated and said they are "not a
+`unit` finding (S-64 is `test-integrity`'s)", so a run with one skipped case was neither `PASS`
+(D-077: `evaluated = observed = expected`), nor `FAIL` (no finding), nor `UNKNOWN` (no reason).
+Options: (a) redefine `observed` as cases that ran to `passed` or `failed`, so `observed = evaluated`
+always; a skipped or pending case is in `expected` (collected) and not in `observed`, and 02 §2 rule
+(b) already makes `observed < expected` a shortfall `FAIL` naming the missing units; (b) keep the
+counts and add a `unit` finding per skipped case; (c) a new reason code `cases-skipped` → `UNKNOWN`;
+(d) relax D-077's refinement for `unit`/`integration` when the gap is skipped cases, relying on
+`test-integrity`. Recommended: (a). It uses a rule the law already has and adds no code, no finding
+class and no schema exception; (b) reaches the same verdict with two count definitions that differ
+for no reader; (c) adds a code and reports a standards violation as a tooling condition; (d) keeps
+the half-state and lets `devai check --only unit` print `PASS` on a run that skipped tests. The
+static check stays `test-integrity`'s; `unit` catches runtime skips (`skipIf`, `pending`) the parser
+cannot. Consequence, stated so it is not discovered later: S-64's issue reference satisfies
+`test-integrity`, not `unit`; a referenced `.skip` still fails `unit` with `skipped [S-64] make it
+run or delete the case`, so a deferred case lives in an issue, not in a skipped test. Amends 08 B.11
+(Observation, Status, Findings), B.22 (Observation), C.5 (adapter note); docs/reference/nodes.md;
+adds fixture N18 (09 §4). Chosen: (a). Source: Owner (ROADMAP G1 panel, 2026-10-24).
+
 ## Open
-- D-077 and 08 B.11/B.22: a Vitest run with skipped or pending cases has `evaluated < observed` and no finding; under D-077 it is no longer a `PASS`, and the law does not say which status it takes. Rule before R6 implements `unit`.
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
 - Mutation testing's home (D-004: outside the cycle or not at all) — not blocking v3.0.
