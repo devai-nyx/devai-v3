@@ -53,7 +53,11 @@ describe('devai check --only <W2c node> --format json on the template workspace'
     expect(check(dir, 'boundary').row).toMatchObject({ status: 'PASS', expected: 1, observed: 1 });
   });
 
-  it('deadcode: a workspace without packages observes nothing (UNKNOWN no-observations)', () => {
-    expect(check(workspace(), 'deadcode').row).toMatchObject({ status: 'UNKNOWN', reason: 'no-observations', expected: 0 });
+  // D-084 item 7 (W2b): a package-less workspace is an inventory FAIL, so the fixture carries `apps/api`; without
+  // the template's `tools/knip.config.ts` (W7) knip exits 2 without a report, which D-086 makes runner-crashed.
+  it('deadcode: apps/api without tools/knip.config.ts is UNKNOWN runner-crashed with knip\'s message', () => {
+    const { row } = check(workspace(), 'deadcode');
+    expect(row).toMatchObject({ status: 'UNKNOWN', reason: 'runner-crashed' });
+    expect(row.findings[0]).toMatchObject({ locator: 'apps/api/package.json:1', message: 'knip (apps/api) exited 2: ERROR: Unable to find tools/knip.config.ts or package.json#knip' });
   });
 });
