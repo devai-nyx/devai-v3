@@ -7,7 +7,7 @@ import ignore from 'ignore';
 import { parse as parseYaml } from 'yaml';
 import { sha256 } from '../candidate/digest.js';
 import { frame } from '../cache/key.js';
-import { diffNameStatus } from '../git/git.js';
+import { diffNameStatus, log } from '../git/git.js';
 import { spawn } from '../proc/spawn.js';
 import { type NodeId, NODE_IDS } from '../runner/edges.js';
 import type { InventoryData, NodeOutcome, Population, RunContext } from '../runner/run.js';
@@ -302,13 +302,18 @@ export async function runInventory(ctx: RunContext): Promise<{ outcome: NodeOutc
   const toolchainDigest = sha256(Buffer.concat([frame(nodeV ?? ''), frame(pnpmV ?? ''), frame(lock)]));
 
   // Base diff plus working-tree changes (adds, deletes, untracked; --no-renames).
-  const changedSet = new Set<string>([
-    ...(await diffNameStatus(root, { from: 'HEAD' })).map((d) => d.path),
-    ...listing.untracked,
-    ...(ctx.base ? (await diffNameStatus(root, { from: ctx.base, to: 'HEAD' })).map((d) => d.path) : []),
-  ]);
+  // Under `--hook pre-commit` the change set is the index against HEAD (A.7).
+  const changedSet = new Set<string>(ctx.hook === 'pre-commit'
+    ? (await diffNameStatus(root, { cached: true, diffFilter: 'ACMRD' })).map((d) => d.path)
+    : [
+      ...(await diffNameStatus(root, { from: 'HEAD' })).map((d) => d.path),
+      ...listing.untracked,
+      ...(ctx.base ? (await diffNameStatus(root, { from: ctx.base, to: 'HEAD' })).map((d) => d.path) : []),
+    ]);
   const changed = [...changedSet].sort();
-  const commitsSinceBase = 0; // `git log <base>..HEAD` counts arrive with `--packet` (R6 W4)
+  // B.1 table: commits in `base..HEAD` under `--packet`, the one message under `--hook commit-msg`, else 0.
+  const commitsSinceBase = ctx.hook === 'commit-msg' ? 1
+    : ctx.packet && ctx.base ? (await log(root, ['--format=%H', `${ctx.base}..HEAD`])).split('\n').filter((l) => l !== '').length : 0;
   // The affected `tsc -b` closure (B.1 side product; B.5 builds it): package tsconfigs as projects.
   const projectRoots = packageDirs.map((d) => `${d}/tsconfig.json`).filter((t) => present.has(t));
   if (present.has('tsconfig.json')) projectRoots.unshift('tsconfig.json');
@@ -321,7 +326,7 @@ export async function runInventory(ctx: RunContext): Promise<{ outcome: NodeOutc
     packageDirs,
     populations: populations({
       paths, changed, changedPresent: changed.filter((p) => present.has(p)), packageDirs: ['.', ...packageDirs], manifests,
-      locales: ctx.config.locales.length, commitsSinceBase, packet: ctx.base !== null,
+      locales: ctx.config.locales.length, commitsSinceBase, packet: ctx.packet !== undefined,
     }),
   };
   const details = {

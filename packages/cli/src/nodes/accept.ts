@@ -1,6 +1,7 @@
 // 08 B.28 `accept`: aggregates every other planned node's result (never its own), derives the 05 §3
-// required set, applies PL-15 (PL-12/PL-16 need the packet: R6 W4), records `editLoopMs` (D-047) and
-// lists the deferred nodes without a status (D-058). Always runs, never cached, never blocked.
+// required set, applies PL-15 and the packet's PL-12/PL-16 findings (read from git by the command
+// before the run), records `editLoopMs` (D-047) and lists the deferred nodes without a status (D-058).
+// Always runs, never cached, never blocked.
 import type { NodeRow } from '../cache/result-digest.js';
 import { byDag, type NodeId } from '../runner/edges.js';
 import { gates } from '../runner/gating.js';
@@ -16,6 +17,8 @@ export interface AcceptPacket {
   spec: { routes: number; queries: number } | null;
   /** The changed paths of `base..candidate`. */
   diff: readonly string[];
+  /** PL-12 (`--full` only) and PL-16 findings, 05 §5's messages. */
+  findings?: readonly NodeOutcome['findings'][number][];
 }
 
 const touchesPackageJson = (diff: readonly string[]) => diff.some((p) => p === 'package.json' || p.endsWith('/package.json'));
@@ -48,7 +51,7 @@ export function acceptOutcome(ctx: RunContext, rows: readonly NodeRow[], timings
   const planned = ctx.plan.nodes.filter((n) => n !== 'accept');
   const byId = new Map(rows.map((r) => [r.id, r]));
   const required = packet ? requiredSet(packet.kind, packet.spec, packet.diff) : [];
-  const findings: NodeOutcome['findings'] = [];
+  const findings: NodeOutcome['findings'] = [...(packet?.findings ?? [])];
 
   for (const id of required) {
     const r = byId.get(id);
@@ -74,7 +77,7 @@ export function acceptOutcome(ctx: RunContext, rows: readonly NodeRow[], timings
   const observed = planned.length - missing.length;
   const details = { node: 'accept' as const, requiredSet: required, deferred: [...ctx.plan.deferred], editLoopMs: editLoopMs(timings) };
   const counts = { expected: planned.length, observed, evaluated: observed };
-  const failed = findings.some((f) => f.standard === '05 PL-15') || gating.some((g) => g.status === 'FAIL');
+  const failed = findings.some((f) => f.standard.startsWith('05 PL-')) || gating.some((g) => g.status === 'FAIL');
   if (failed) return { status: 'FAIL', ...counts, findings, details };
   if (firstUnknown) return { status: 'UNKNOWN', reason: firstUnknown.reason ?? 'runner-crashed', ...counts, findings, details };
   if (missing.length > 0) return { status: 'UNKNOWN', reason: 'runner-crashed', ...counts, findings, details };

@@ -86,12 +86,15 @@ describe('devai check refusals (W1)', () => {
       expect(usage(dir, '--only', n)).toMatchObject({ reason: 'usage', message: `${n} needs --packet` });
     }
   });
-  it('flags of later waves refuse naming the wave', () => {
+  it('flags of later waves refuse naming the wave; W4 flags refuse their misuse', () => {
     const dir = templateWorkspace();
-    expect(usage(dir, '--packet', 'packets/CMP-DEMO-001/PKT-DEMO-004.md')).toMatchObject({ reason: 'usage', message: '--packet arrives in a later wave (R6 W4)' });
-    expect(usage(dir, '--hook', 'pre-commit')).toMatchObject({ reason: 'usage', message: '--hook arrives in a later wave (R6 W4)' });
-    expect(usage(dir, '--summary')).toMatchObject({ reason: 'usage' });
-    expect(usage(dir, '--full')).toMatchObject({ reason: 'usage' });
+    expect(usage(dir, '--full')).toMatchObject({ reason: 'usage', message: '--full arrives in a later wave (R6 W2–W5, with the nodes it selects)' });
+    expect(usage(dir, '--hook', 'pre-merge')).toMatchObject({ reason: 'usage', message: '--hook pre-merge: expected pre-commit, pre-push or commit-msg' });
+    expect(usage(dir, '--hook', 'commit-msg')).toMatchObject({ reason: 'usage', message: '--hook commit-msg needs the message file' });
+    expect(usage(dir, '--hook', 'pre-commit', '--only', 'format')).toMatchObject({ reason: 'usage', message: '--hook combines with --format only (A.7)' });
+    expect(usage(dir, '--summary')).toMatchObject({ reason: 'usage', message: '--summary needs --packet' });
+    expect(usage(dir, '--expect-red')).toMatchObject({ reason: 'expect-red-nothing-named' });
+    expect(usage(dir, 'stray')).toMatchObject({ reason: 'usage', message: 'unexpected argument stray' });
     expect(usage(dir, '--only', 'bogus')).toMatchObject({ reason: 'usage' });
     expect(usage(dir, '--prune', '--only', 'inventory')).toMatchObject({ reason: 'usage', message: '--prune combines with nothing else (A.3)' });
   });

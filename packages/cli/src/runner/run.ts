@@ -10,9 +10,11 @@ import type { CacheStore } from '../cache/store.js';
 import type { Scratch } from '../db/scratch.js';
 import type { PacketFacts } from '../model/packet.js';
 import type { PacketView } from '../nodes/spec-tests.js';
+import type { Packet } from '../packet/packet.js';
+import type { Introduced } from '../packet/rules.js';
 import type { MountCensus } from '../ts/mounts.js';
 import { isEditLoopClass, lane, needsOf, type NodeId } from './edges.js';
-import type { Plan } from './plan.js';
+import type { HookStage, Plan } from './plan.js';
 
 /**
  * What a node returns; the runner adds id, durationMs, cached, cacheKey and needs. `fromEvidence` marks a
@@ -49,19 +51,26 @@ export interface RunContext {
   cliVersion: string;
   /** The candidate at step 4; inputs and config files are hashed from it. */
   listing: Listing;
-  /** The packet's base commit, or null without `--packet`. */
+  /** The packet's base commit (or the fetched base under `--hook pre-push`), or null. */
   base: string | null;
   head: string;
   plan: Plan;
+  /** `--hook <stage>` (A.7). */
+  hook?: HookStage;
+  /** `--hook commit-msg`: the message file, repo-relative or absolute. */
+  messageFile?: string;
+  /** `--hook pre-push` whose fetched base could not be resolved (A.7: `protected-paths` base-unreadable). */
+  baseUnresolved?: boolean;
   /** Set by step 5. */
   inventory?: InventoryData;
   /** Set by `db-apply` (B.20), run or reused: the scratch database its consumers use. */
   scratch?: Scratch;
   /**
-   * The packet the run is bound to (`--packet`, W4): `spec-tests` reads its kind, observations and pin;
-   * the model nodes read the `PacketFacts` part (`modelPacket` in model/packet.ts).
+   * The packet the run is bound to (`--packet`): `spec-tests` reads its kind, observations and pin; the
+   * model nodes read the `PacketFacts` part (`modelPacket` in model/packet.ts); `packet-scope` and
+   * `protected-paths` read the parsed packet (pre-DAG rules passed) and its introducing commit (05 §5).
    */
-  packet?: PacketView & Partial<PacketFacts>;
+  packet?: PacketView & Partial<PacketFacts> & { packet?: Packet; intro?: Introduced | null };
   /** Results so far, by node (B.27 phase 2 reads the current report). */
   rows?: ReadonlyMap<NodeId, NodeRow>;
 }
@@ -74,7 +83,7 @@ export interface NodeAdapter {
   configFiles(ctx: RunContext): string[];
   /** Declared inputs (Part B "Inputs"), repo-relative paths at the candidate. */
   inputs(ctx: RunContext): string[];
-  /** Trailing key components after the general C.4 key (the model components of B.24, B.27; D-076). */
+  /** Trailing key components after the general C.4 key: the model components of B.24, B.27 (D-076), or the commits a node reads (W4). */
   keyExtra?(ctx: RunContext): Promise<string[]>;
   run(ctx: RunContext): Promise<NodeOutcome>;
   /** C.4 Reuse beyond the key: a stored PASS is re-emitted only when this agrees (`db-apply`: its database still exists). */

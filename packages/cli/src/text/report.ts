@@ -2,6 +2,7 @@
 // (07 §3); no colour, no TTY detection (Part D).
 import type { DevaiConfig } from '../config.js';
 import type { NodeRow } from '../cache/result-digest.js';
+import { touchedLine } from '../packet/rules.js';
 import type { Report } from '../report.js';
 import { gates } from '../runner/gating.js';
 import { HINTS } from './hints.js';
@@ -59,7 +60,10 @@ export function renderText(report: Report, opts: TextOptions): string[] {
   const accept = order.find((n) => n.id === 'accept');
   const deferred = accept?.details?.node === 'accept' ? accept.details.deferred : [];
 
-  const tail = [`PASS  ${plural(pass.length, 'node')} (${pass.filter((n) => n.cached).length} cached, ${Math.round(report.durationMs / 1000)} s)`];
+  // B.25: one notice line per protected class touched (02 §5's hook line); never a finding.
+  const pp = order.find((n) => n.id === 'protected-paths');
+  const notices = pp?.details?.node === 'protected-paths' ? pp.details.touched.map(touchedLine) : [];
+  const tail = [...notices, `PASS  ${plural(pass.length, 'node')} (${pass.filter((n) => n.cached).length} cached, ${Math.round(report.durationMs / 1000)} s)`];
   if (skipped.length > 0) tail.push(`SKIPPED ${plural(skipped.length, 'node')}: ${skipped.map((n) => `${n.id}[${n.evidence}]`).join(', ')}`);
   if (deferred.length > 0) tail.push(`deferred: ${deferred.join(', ')}`);
   tail.push(reviewLine(report, opts.config));
