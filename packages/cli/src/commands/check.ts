@@ -24,6 +24,8 @@ import { layout } from '../nodes/layout.js';
 import { lint } from '../nodes/lint.js';
 import { lintTests } from '../nodes/lint-tests.js';
 import { openapi } from '../nodes/openapi.js';
+import { permissionsPattern } from '../nodes/permissions-pattern.js';
+import { review } from '../nodes/review.js';
 import { routeContract } from '../nodes/route-contract.js';
 import { specLint } from '../nodes/spec-lint.js';
 import { specTests } from '../nodes/spec-tests.js';
@@ -72,6 +74,8 @@ export const ADAPTERS: Partial<Record<NodeId, NodeAdapter>> = {
   integration,
   e2e,
   unit,
+  'permissions-pattern': permissionsPattern,
+  review,
 };
 
 /** A.3: the packet-bound nodes `--only` refuses without `--packet` (D-084 item 19). */

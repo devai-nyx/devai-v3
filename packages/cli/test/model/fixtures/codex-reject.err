@@ -1,0 +1,8 @@
+error: unexpected argument '--sandbox-nope' found
+
+  tip: a similar argument exists: '--sandbox'
+
+Usage: codex exec [OPTIONS] [PROMPT]
+       codex exec [OPTIONS] <COMMAND> [ARGS]
+
+For more information, try '--help'.

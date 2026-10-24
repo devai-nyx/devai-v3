@@ -39,6 +39,8 @@ export interface Spec {
   queries: SpecQuery[];
   tables: { name: string; columns: SpecColumn[] }[];
   requirements: { id: string; acceptance: string }[];
+  /** `sources[].path`: the business sources the spec quotes (B.27 phase 1). */
+  sources: string[];
 }
 
 const FENCE = /^## Contract\s*$[\s\S]*?^```yaml\s*$\n([\s\S]*?)^```\s*$/m;
@@ -91,6 +93,7 @@ export function readSpecText(path: string, text: string): Spec | null {
       }),
     })),
     requirements: arr(js['requirements']).map((r) => ({ id: str(obj(r)['id']), acceptance: str(obj(r)['acceptance']) })),
+    sources: arr(js['sources']).map((x) => str(obj(x)['path'])).filter((x) => x !== ''),
   };
 }
 
