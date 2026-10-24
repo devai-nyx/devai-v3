@@ -66,8 +66,8 @@ describe('devai check refusals (W1)', () => {
   };
   it('a node without an adapter: exit 2 usage "node <id> arrives in a later wave"', () => {
     const dir = templateWorkspace();
-    expect(usage(dir, '--only', 'format')).toMatchObject({ reason: 'usage', message: 'node format arrives in a later wave' });
-    expect(usage(dir)).toMatchObject({ reason: 'usage', message: 'node format arrives in a later wave' });
+    expect(usage(dir, '--only', 'typecheck')).toMatchObject({ reason: 'usage', message: 'node typecheck arrives in a later wave' });
+    expect(usage(dir)).toMatchObject({ reason: 'usage', message: 'node typecheck arrives in a later wave' });
     expect(usage(dir, '--only', 'route-contract')).toMatchObject({ reason: 'usage', message: 'node typecheck arrives in a later wave' });
   });
   it('flags of later waves refuse naming the wave', () => {

@@ -8,7 +8,13 @@ import type { DevaiConfig } from '../config.js';
 import { GitFailed, GitMissing, revParse, topLevel } from '../git/git.js';
 import { CommandRefusal, cliVersion, type Format, loadConfig, resolveRuntime } from '../main.js';
 import { acceptOutcome } from '../nodes/accept.js';
+import { actionlint } from '../nodes/actionlint.js';
+import { commitlint } from '../nodes/commitlint.js';
+import { format } from '../nodes/format.js';
+import { i18n } from '../nodes/i18n.js';
 import { runInventory } from '../nodes/inventory.js';
+import { lint } from '../nodes/lint.js';
+import { lintTests } from '../nodes/lint-tests.js';
 import { Report } from '../report.js';
 import { type NodeId, NODE_IDS } from '../runner/edges.js';
 import { exitCodeOf } from '../runner/gating.js';
@@ -26,8 +32,15 @@ export interface CheckFlags {
   prune?: boolean;
 }
 
-/** Node adapters by id (Part D: the closed enum, no registry). W1 has none beyond inventory and accept. */
-export const ADAPTERS: Partial<Record<NodeId, NodeAdapter>> = {};
+/** Node adapters by id (Part D: the closed enum, no registry); inventory and accept run outside it. */
+export const ADAPTERS: Partial<Record<NodeId, NodeAdapter>> = {
+  format,
+  lint,
+  'lint-tests': lintTests,
+  i18n,
+  actionlint,
+  commitlint,
+};
 
 /** W1: flags whose behaviour arrives with a later R6 wave. */
 const LATER: [keyof CheckFlags, string, string][] = [
