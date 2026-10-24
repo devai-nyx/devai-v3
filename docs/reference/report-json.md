@@ -10,7 +10,7 @@ description: The report.json schema, node result, finding and details shapes, th
 
 `devai check` has **one report shape** ([08 C.2](../framework/08-cli-and-nodes.md), [D-056](../../decisions.md)). The text report and the JSON report come from the same `Report` object; there is no second reporter format ([08 Part D](../framework/08-cli-and-nodes.md)). The zod definitions are in 08 C.2; `packages/cli/src/report.ts` holds the same text.
 
-**Counts:** `Report` 16 fields and 6 invariants; `NodeResult` 13 fields and 7 invariants; `Finding` 4 fields; `Details` 8 variants; 28 `NodeId` values; 4 `Status` values; 54 `ReasonCode` values ([Reason codes](./reason-codes.md)); plus 5 evidence and model-output schemas (`SensorOutput`, `SensorEvidence`, `Review`, `ReviewPhase1`, `ReviewModelOutput`).
+**Counts:** `Report` 16 fields and 9 invariants; `NodeResult` 13 fields and 9 invariants; `Finding` 4 fields; `Details` 8 variants; 28 `NodeId` values; 4 `Status` values; 54 `ReasonCode` values ([Reason codes](./reason-codes.md)); plus 5 evidence and model-output schemas (`SensorOutput`, `SensorEvidence`, `Review`, `ReviewPhase1`, `ReviewModelOutput`).
 
 ## Where it is written
 
@@ -61,6 +61,11 @@ description: The report.json schema, node result, finding and details shapes, th
 4. Exit 2 needs a `reason` or an `UNKNOWN` row.
 5. Exit 1 needs a `FAIL` row.
 6. A command-level `reason` means exit 2.
+7. `accepted` needs a non-empty `nodes`, an `accept` row that is `PASS`, every node other than `review` `PASS` or `SKIPPED`, and every id in `accept.details.requiredSet` present and not `SKIPPED` (PL-15; [D-077](../../decisions.md)).
+8. Exit 0 needs no `FAIL` or `UNKNOWN` row other than `review`.
+9. Exit 1 needs a `FAIL` row other than `review`, or a `review` `FAIL` with `accepted` false (a gating review).
+
+`review` is exempt from 7–9 because its gating is derived from `devai.json` and `protected-paths` ([D-028](../../decisions.md), [D-058](../../decisions.md)), which the schema cannot read; the runner enforces it.
 
 ## `NodeResult`
 
@@ -89,6 +94,8 @@ description: The report.json schema, node result, finding and details shapes, th
 5. `SKIPPED` needs `evidence` and `expected` = `observed` = 0.
 6. Only `PASS` may be `cached`.
 7. `details.node` equals `id`.
+8. `PASS` needs `evaluated` = `observed` = `expected` ([08 §0](../framework/08-cli-and-nodes.md), [D-077](../../decisions.md)).
+9. `cached` needs `cacheKey`.
 
 ## `Finding`
 
@@ -158,6 +165,10 @@ A discriminated union on `node`; 8 nodes carry details.
 | `outputTokens` | Count |
 | `seconds` | number ≥ 0 |
 | `model` | Text |
+| `workerFamily` | `claude` \| `gpt` \| `unknown` — the worker's declaration the reviewer was selected from ([D-079](../../decisions.md)) |
+| `workerTrailers` | `Text[]` — the `Co-Authored-By` lines it was derived from |
+
+Invariant: `verdict: blockers` iff a finding has `severity: blocker` ([D-077](../../decisions.md)).
 
 `fingerprint = sha256(requirement ‖ locator path ‖ normalised statement)` ([08 B.27](../framework/08-cli-and-nodes.md)). Dispositions in the packet bind to it (PL-09).
 

@@ -80,7 +80,7 @@ The E1–E5 classification makes the draft's module-format evidence explicit: **
 
 [opinion] Source the consumer compatibility pins from `S:scripts/check-engines.mjs:13–24`: Angular build 22.2.1, Nest peer ^11.1.19, TypeScript 6.0.3 and Node typings 24.13.4. Resolve exact consumer locks from the table; `~6.0.3` is DEVAI's D-057 TypeScript choice, not the checker's current `^6.0.3`. Emit only required STYNX imports, with verified published versions rather than `workspace:*`. Keep pg transitive through data where the consumer does not import it (`S:packages/data/package.json:37`).
 
-[opinion] Core's backend/test UUIDv7 helper is retained, but current missing-ID synthesis must become rejection (`S:packages/core/src/core.module.ts:42`; `F:06-spec-format.md:422–426`). Browser production belongs in 09 because core imports `node:crypto` (`S:packages/core/src/request-id.ts:1`). Not adding: every STYNX package by default, browser UUID dependency yet, universal coverage thresholds or another DAG runner.
+[opinion] Core's backend/test UUIDv7 helper is retained, but current missing-ID synthesis must become rejection (`S:packages/core/src/core.module.ts:42`; `F:06-spec-format.md:422–426`). Browser production belongs in 09 because core imports `node:crypto` (`S:packages/core/src/request-id.ts:1`). Not adding: every STYNX package by default, browser UUID dependency yet, universal coverage thresholds or another DAG runner (Turborepo, Nx; D-075, §7).
 
 ## 6. Agent harness interfaces
 
@@ -116,6 +116,7 @@ codex exec --json --output-schema <schema-file> --model <model> --ephemeral
 - OpenTelemetry: no named mechanism needs traces; S-71 does not ban later adoption.
 - isomorphic-git: installed git supplies snapshot semantics.
 - Plugin system, config DSL, task queue, DEVAI database and web UI: existing nodes, inert JSON, external harnesses, cache/git and PR summary suffice.
+- Turborepo or Nx as the node scheduler (D-075): a task-level cache over package globs cannot express result-digest dependencies, staged snapshots, the shared scratch database or PASS-only verdict reuse without a runner above it; 08 Part C stays DEVAI's, and an adopter's own `turbo` graph caches different objects (02 §2).
 - Mutation tooling, signed receipts and attestations: D-004 and D-002 exclude them here.
 - Second package manager or runtime: no mechanism needs another resolution/execution authority.
 

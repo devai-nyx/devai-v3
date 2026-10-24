@@ -56,7 +56,8 @@ class therefore cannot hide the touch ([02 §5](../framework/02-architecture.md)
 ## Declared and unplanned
 
 Each packet lists the classes it *plans* to touch in `protected:` (may be `[]`). The pilot writes
-this field ([05 §2](../framework/05-task-packet.md)). Rule PL-08 compares it with what was touched and
+this field ([05 §2](../framework/05-task-packet.md)), and it is read **as of the packet's introducing
+commit**: widening it inside the branch does not declare the class for that PR ([D-078](../../decisions.md)). Rule PL-08 compares it with what was touched and
 prints, for example,
 `protected:acceptance — domain/notes/api/test/acceptance/spec-demo-001.acceptance.spec.ts (packet declares: no)`
 ([05 §5](../framework/05-task-packet.md)).

@@ -55,7 +55,14 @@ sortedInputDigests, dependencyResultDigests)`; `toolchainDigest` = node/pnpm ver
 hand-written input selectors: inputs are the changed files' project closure from `tsc -b` references
 and the workspace graph `inventory` produces [inference]. DB-backed results are keyed by the schema
 digest `db-apply` emits, reproducible in both modes, so bare mode is never penalised. Model results
-are keyed by slice or candidate digest + prompt digest + model.
+use the same key plus their model components (prompt digest, model id; for `review` also the
+candidate digest, `specSha256` and the packet digest), so a `review` PASS is bound to the
+`report.json` it read and falls with any prerequisite's result (D-076).
+
+An adopter that runs Turborepo (STYNX does) keeps two graphs on purpose: `turbo` caches package
+builds and test runs by declared task outputs; `.devai/cache` caches node verdicts bound to a
+candidate digest, PASS only, with dependency *result* digests in the key. They hold different
+objects and neither replaces the other; DEVAI does not schedule nodes through Turborepo (D-075, 07 §7).
 
 | Node | Standards | Mechanism (inputs in italics) | Lat. | Where |
 |---|---|---|---|---|
@@ -267,7 +274,9 @@ Prints one line per class touched: `protected:infra — database/ddl/21-est-rls.
 yes)`. It never exits non-zero for this reason.
 
 **Action (PR).** Recomputes from the diff, applies the labels, reconciles only its own, and adds
-`protected:unplanned` when the packet's `protected:` field does not list the class.
+`protected:unplanned` when the packet's `protected:` field **as of the packet's introducing commit**
+does not list the class; a `protected` widened inside the branch leaves the class undeclared for
+this PR, and the pilot pre-declares a class on `main` or in a successor packet (D-078).
 `protected:unplanned` makes `review` **mandatory** for that PR (it enters `must-run` even during the
 D-028 shadow period) and is the one case where the pilot's attention is explicitly requested; still
 no refusal. A labelling API failure is its own visible line, never an admission requirement.
@@ -457,8 +466,8 @@ confirmed; nothing in §8 depends on the outcome except the `--expect-red` switc
 
 **Who.** A model of a different family than the worker. The worker family is read from the
 `Co-Authored-By` trailers of the candidate's commits; `devai.json` maps families to reviewer
-commands. Equal or unknown family → `UNKNOWN (family)`; none configured → `UNKNOWN (no reviewer
-configured)`; both exit 2.
+commands. Equal, unknown or mixed family (a range whose trailers resolve to more than one family,
+D-079) → `UNKNOWN (family)`; none configured → `UNKNOWN (no reviewer configured)`; both exit 2.
 
 **Where (D-037).** On the pilot's machine, inside `devai check --packet <p> --full`, after every
 deterministic node and `permissions-pattern` have passed (no review of a known broken build). No

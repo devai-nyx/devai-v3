@@ -53,10 +53,12 @@ export const NodeResult = z.strictObject({
   const bad = (m: string) => ctx.addIssue({ code: 'custom', message: `${n.id}: ${m}` });
   if (n.evaluated > n.observed) bad('evaluated > observed');
   if (n.status === 'PASS' && (n.observed === 0 || n.findings.length > 0)) bad('PASS needs observed > 0 and no findings');
+  if (n.status === 'PASS' && (n.evaluated !== n.observed || n.observed !== n.expected)) bad('PASS needs evaluated = observed = expected');   // 08 §0 (D-077)
   if (n.status === 'FAIL' && n.findings.length === 0) bad('FAIL needs a finding');
   if (n.status === 'UNKNOWN' && !n.reason) bad('UNKNOWN needs a reason');
   if (n.status === 'SKIPPED' && (!n.evidence || n.observed !== 0 || n.expected !== 0)) bad('SKIPPED needs evidence and zero counts');
   if (n.cached && n.status !== 'PASS') bad('only PASS is reusable');
+  if (n.cached && !n.cacheKey) bad('cached needs cacheKey');                                                            // C.4 (D-077)
   if (n.details && n.details.node !== n.id) bad('details belong to another node');
 });
 export const Report = z.strictObject({
@@ -81,6 +83,23 @@ export const Report = z.strictObject({
   if (r.exitCode === 2 && !r.reason && !r.nodes.some((n) => n.status === 'UNKNOWN')) bad('exit 2 needs a reason or an UNKNOWN row');
   if (r.exitCode === 1 && !r.nodes.some((n) => n.status === 'FAIL')) bad('exit 1 needs a FAIL row');
   if (r.reason && r.exitCode !== 2) bad('a command-level reason is exit 2');
+  // D-077: candidate-independent acceptance invariants (08 §0, A.3, PL-15). `review` is exempt here because its gating is
+  // derived from devai.json and protected-paths (D-028, D-058), which this schema cannot read; the runner enforces it.
+  const other = r.nodes.filter((n) => n.id !== 'review');
+  const accept = r.nodes.find((n) => n.id === 'accept');
+  if (r.accepted) {
+    if (r.nodes.length === 0) bad('accepted needs nodes');
+    if (!accept || accept.status !== 'PASS') bad('accepted needs accept PASS');
+    if (other.some((n) => n.status !== 'PASS' && n.status !== 'SKIPPED')) bad('accepted needs every node other than review PASS or SKIPPED');
+    if (accept?.details?.node === 'accept') {
+      for (const id of accept.details.requiredSet) {
+        const row = r.nodes.find((n) => n.id === id);
+        if (!row || row.status === 'SKIPPED') bad(`accepted needs required node ${id} present and not SKIPPED`);
+      }
+    }
+  }
+  if (r.exitCode === 0 && other.some((n) => n.status === 'FAIL' || n.status === 'UNKNOWN')) bad('exit 0 needs no FAIL or UNKNOWN row other than review');
+  if (r.exitCode === 1 && !other.some((n) => n.status === 'FAIL') && !(r.nodes.some((n) => n.id === 'review' && n.status === 'FAIL') && !r.accepted)) bad('exit 1 needs a FAIL row other than review, or a gating review FAIL');
 });
 export type Report = z.infer<typeof Report>;
 
@@ -94,12 +113,18 @@ export const SensorEvidence = z.strictObject({                                 /
   packetId: z.string().regex(/^PKT-[A-Z0-9]+-\d{3}$/), sliceDigest: Sha256, promptDigest: Sha256, model: Text,
   output: SensorOutput, inputTokens: Count, outputTokens: Count, seconds: z.number().nonnegative(),
 });
-export const Review = z.strictObject({                                         // .devai/review/<packet-id>.json, 02 §9 shape
+const ReviewShape = {                                                          // .devai/review/<packet-id>.json, 02 §9 shape
   packetId: z.string().regex(/^PKT-[A-Z0-9]+-\d{3}$/), head: Sha1, candidateDigest: Sha256, specSha256: Sha256.nullable(),
   requirements: z.array(z.strictObject({ id: Text, implemented: z.enum(['yes','no','partial']), tested: z.enum(['yes','no','weak']), locators: z.array(Text) })),
   findings: z.array(z.strictObject({ fingerprint: Sha256, severity: z.enum(['blocker','major','minor']), requirement: Text, locator: Text,
     statement: Text, evidence: Text, counterexample: Text.optional(), basis: z.enum(['observed','derived']), confidence: z.number().min(0).max(1) })),
   verdict: z.enum(['no-blockers','blockers','unknown']), inputTokens: Count, outputTokens: Count, seconds: z.number().nonnegative(), model: Text,
+  workerFamily: z.enum(['claude','gpt','unknown']), workerTrailers: z.array(Text),                                       // the declaration the reviewer was selected from (D-079)
+};
+export const Review = z.strictObject(ReviewShape).superRefine((v, ctx) => {                                                   // D-077: verdict ⇔ findings
+  const blocker = v.findings.some((f) => f.severity === 'blocker');
+  if (v.verdict === 'blockers' && !blocker) ctx.addIssue({ code: 'custom', message: 'verdict blockers needs a blocker finding' });
+  if (v.verdict === 'no-blockers' && blocker) ctx.addIssue({ code: 'custom', message: 'verdict no-blockers with a blocker finding' });
 });
 export const ReviewPhase1 = z.strictObject({ requirements: z.array(z.strictObject({ id: Text, observable: Text, falsifier: Text })).min(1) });   // phase-1 model output (10 §3.1)
-export const ReviewModelOutput = Review.pick({ requirements: true, verdict: true }).extend({ findings: z.array(Review.shape.findings.element.omit({ fingerprint: true })) });   // phase-2 model output (10 §3.2); the runner adds fingerprint, digests, usage
+export const ReviewModelOutput = z.strictObject({ requirements: ReviewShape.requirements, verdict: ReviewShape.verdict, findings: z.array(ReviewShape.findings.element.omit({ fingerprint: true })) });   // phase-2 model output (10 §3.2); the runner adds fingerprint, digests, usage

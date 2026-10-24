@@ -64,12 +64,32 @@ D-002's rule that CI is the only consumer of evidence ([D-037](../../decisions.m
 ([D-028](../../decisions.md), [08 C.2](../framework/08-cli-and-nodes.md)). During the shadow period
 the summary prints `mustRun: false` and `tallied`.
 
-## Branch protection
+## Branch protection and the required workflow
 
-Require the `devai` job as the status check. The succession plan's step for each adopter is
+Require the `devai` job as the status check, **and** require the workflow itself through a
+repository ruleset that runs `.github/workflows/devai.yml` from `main` ([D-080](../../decisions.md)).
+Without the ruleset, GitHub computes a pull request's checks from the PR's own copy of the workflow,
+so a PR could rewrite the check it must pass. The ruleset runs the `main` copy regardless of what the
+PR changes under `.github/**`; the PR's own copy still runs and is informational. Required workflows
+are available on public repositories and on paid plans; a private repository on a free plan cannot
+add the rule and carries the residual risk D-003 states.
+
+```sh
+gh api -X POST repos/<owner>/<repo>/rulesets --input - <<'JSON'
+{ "name": "devai", "target": "branch", "enforcement": "active",
+  "conditions": { "ref_name": { "include": ["~DEFAULT_BRANCH"], "exclude": [] } },
+  "rules": [ { "type": "workflows", "parameters": { "workflows": [
+    { "path": ".github/workflows/devai.yml", "repository_id": <id>, "ref": "refs/heads/main" } ] } } ] }
+JSON
+```
+
+`<id>` is `gh api repos/<owner>/<repo> --jq .id`. `devai init` prints both host lines, protection and
+ruleset, at the end of its output ([08 A.1](../framework/08-cli-and-nodes.md)). The succession plan's step for each adopter is
 "protection requires the `devai.yml` job" (12 §6, bootstrap history). Required human reviews are not
 the control: acceptance authority rests on deterministic checks plus the independent reviewer, and
-a pilot reading diffs is not an observation ([D-003](../../decisions.md)). Merging remains the
+a pilot reading diffs is not an observation ([D-003](../../decisions.md)). No CODEOWNERS file ships
+with the template; a code-owner rule is viable only once agent PRs are opened by an identity that is
+not the owner, and the law leaves it to the pilot ([D-080](../../decisions.md)). Merging remains the
 pilot's act or branch protection's; a reviewer `PASS` is never authorization
 ([02 §9](../framework/02-architecture.md)).
 

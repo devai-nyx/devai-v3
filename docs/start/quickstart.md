@@ -108,7 +108,7 @@ cannot be reached is `UNKNOWN` with its start command, never a silent switch to 
 
 Let an agent make the commits. The reviewer and the permissions sensor are chosen as the *other*
 model family, read from the `Co-Authored-By` trailers of the candidate's commits. For the reviewer an
-equal or unknown family is `UNKNOWN (family)`; the sensor, with no agent trailer, runs the first
+equal, unknown or mixed family is `UNKNOWN (family)`; the sensor, with no agent trailer, runs the first
 configured reviewer ([D-074](../../decisions.md)) ([02 §9](../framework/02-architecture.md), [08 A.8, B.24, B.27](../framework/08-cli-and-nodes.md)).
 
 ## 5. Read the exit code

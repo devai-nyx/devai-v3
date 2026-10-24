@@ -18,6 +18,9 @@ what CI needs to accept a locally produced result.
 Fact: a few percent of 319 merged PR diffs were read. Consequence for v3: acceptance authority
 rests on deterministic checks plus an independent reviewer with repository access; the pilot's
 attention is reserved for intentions, business rules, specs and the error state, not for diffs.
+Amended 2026-10-24 (D-080): the control-defining paths (`.github/**`, `scripts/hooks/**`,
+`devai.json`) are the one place where the merge gate must not be definable by the PR it gates;
+that is enforced by a ruleset-required workflow pinned to `main`, not by human review.
 Source: adjudications 2, 11.
 
 ## D-004 · 2026-10-17 · Mutation testing is outside the development cycle
@@ -258,8 +261,11 @@ Options: (a) pilot's machine pre-push + CI re-run on PR; (b) CI only; (c) pilot'
 Chosen: (c). No model keys in CI. `devai check --full` runs `review` locally with whichever CLI is
 the other family; the PR carries `review.json` as evidence; CI verifies the candidate digest the
 review was bound to matches the PR head, and otherwise reports `review: UNKNOWN (stale)`.
-Acknowledged weakness: CI trusts a locally produced reviewer result (within D-002: CI is the only
-consumer). Source: Owner.
+Acknowledged weakness (reworded by D-079, 2026-10-24): CI trusts two locally produced,
+worker-committed files (`.devai/review/<id>.json`, `<id>.permissions.json`) whose digests it can
+verify and whose provenance it cannot; the worker family that selected the reviewer is the worker's
+own declaration, recorded in `review.json` as `workerFamily` and `workerTrailers`. Accepted within
+D-002: CI is the only consumer, and attestation is excluded (07 §7). Source: Owner.
 
 ## D-038 · 2026-10-18 · SLO measurement is a release gate only (closes O-012)
 Options: (a) nightly + release gate; (b) release gate only (STYNX INV-PERF-001 practice); (c) per
@@ -823,7 +829,122 @@ framework amendments named under each item are applied.
   applied lines stay guarded by its hash and LINT013 (09 §3, D-043). Amends 08 A.4. Chosen: (a).
 Source: Owner, 2026-10-21 (all seven recommendations adopted).
 
+## D-075 · 2026-10-24 · The DAG runner and the verdict cache are DEVAI's; Turborepo is not the scheduler (devai-v3#48)
+Options: (a) DEVAI-owned runner and cache exactly as 08 Part C (Kahn order, class concurrency,
+PASS-only reuse, the 02 §2 key); 07 records Turborepo as rejected; 02 §2 says why an adopter that
+runs `turbo` keeps two caches; (b) nodes as Turborepo tasks in a template `turbo.json`, DEVAI owning
+node adapters and `accept`, 08 Part C rewritten over the runner, Turborepo a runtime dependency of
+every adopter; (c) the same with Nx. Recommended: (a). Six 08 contracts have no Turborepo
+equivalent and would need DEVAI code under (b) anyway: the staged-snapshot hook run (A.7), the shared
+scratch database keyed by `schemaDigest`, `dependencyResultDigests` (Turborepo hashes a dependency's
+inputs, not its result), the `observed = 0 → UNKNOWN` rewrite, the candidate re-digest
+(`candidate-changed`) and the model-node keys; what remained for Turborepo (topological order, a
+glob hash, `.turbo/` storage) is the smaller part of C.1/C.4, so (b) adds a dependency under the
+runner rather than removing it. (b) also ships a file, a dependency and a binary to adopters that do
+not use Turborepo (09 §1.1 has no `turbo.json`; 07 §5 "another DAG runner"). Second-system brake:
+02 §2 already fixed the key, v2's `cache.ts:111-177` did the scheme in under 200 lines, and R6's cost
+is the 28 adapters, not the scheduler. The "two overlapping caches" of #48 exist only in STYNX,
+where `turbo run test` and `devai check --only unit` would both run Vitest; that is an S10 adoption
+item (STYNX's `test` script calls `devai check --only unit`, 02 §10), not a DEVAI design flaw.
+Amends 02 §2 (two-caches paragraph) and 07 §5/§7 (Turborepo and Nx named as rejected). Chosen: (a).
+Source: Owner (decision packet `devai3/agents/decisions-3/PACKET-2026-10-24.md` §1).
+
+## D-076 · 2026-10-24 · Cache inputs are computable sets; model nodes use the general key; stray files are gitignored, not excluded (devai-v3#46)
+Three items. **Inputs** of `unit`, `spec-tests`, `integration`: (i) the selected test files plus
+their `tsc -b` project closure as `inventory` computes it (02 §2 (f)), plus `apps/*/src/**`,
+`test/support/**`, `vitest.config.ts`, and `db-apply`'s `schemaDigest` for the two DB-backed
+nodes; (ii) keep the prose and let R6 decide; (iii) hash the whole repository. **`review` key**:
+(i) model nodes use the general C.4 key (which brings `toolchainDigest`, `configDigest` and every
+prerequisite's `resultDigest`) plus their model components; (ii) add only `toolchainDigest` to
+B.27's key. **Untracked files in the candidate digest**: (i) the template `.gitignore` gains
+`.DS_Store` and `Thumbs.db`, C.6 unchanged, and the text report prints the first untracked path
+when the working-tree digest differs from HEAD's tree; (ii) C.6 excludes the two names; (iii) both.
+Recommended and chosen: **1(i), 2(i), 3(i)**. 1(i) is what 02 §2 promised and reuses the closure
+`typecheck` already needs; the acceptance cases assert the rail envelope from `apps/api/src/**` and
+`test/support/**`, none under `domain/<m>/`, so a module-only input set is unsound. 2(i) binds a
+`review` PASS to the `report.json` it read: any deterministic node's result change invalidates it,
+which is the intended semantics at the price of more cold reviews; it also covers the sensor's
+`minConfidence` through `configDigest` with one rule instead of two special keys. 3(ii) would be a
+second ignore mechanism diverging from `git ls-files --others --exclude-standard`; 3(i) keeps "the
+digest is what git sees" and makes the common stray visible with a remedy. Amends 08 B.11, B.21,
+B.22, B.24, B.27 (Inputs, key), C.3 (one diagnostic line), C.4 (Key row); 09 §1.1 `.gitignore` row,
+§4 fixtures N14–N16; `packages/cli/template/gitignore`. Source: Owner (packet §2).
+
+## D-077 · 2026-10-24 · The report schema enforces the candidate-independent acceptance invariants; `review` gating stays plan-aware (devai-v3#34)
+`report.ts` (byte-identical to 08 C.2) accepted seven inconsistent reports the issue reproduces:
+PASS with `expected 10, observed 1, evaluated 0`; `accepted: true` with `nodes: []`; `accepted: true`
+beside a FAIL row; `accepted: true` with a gating UNKNOWN; exit 0 with an `accept` FAIL; `cached`
+without `cacheKey`; `verdict: blockers` without a blocker finding. Options: (a) minimal refinement
+set in the schema: `PASS ⇒ evaluated = observed = expected`; `cached ⇒ cacheKey`; `accepted ⇒`
+nodes non-empty ∧ `accept` PASS ∧ every node other than `review` ∈ {PASS, SKIPPED} ∧ every id in
+`accept.details.requiredSet` present and not SKIPPED (PL-15); `exitCode 0 ⇒` no FAIL and no UNKNOWN
+other than `review`; `exitCode 1 ⇒` a FAIL other than `review`, or a `review` FAIL with `accepted`
+false; `Review.verdict = blockers ⇔ ∃ severity: blocker`; `review` schema-exempt because its gating
+is derived from `devai.json` and `protected-paths` (D-028, D-058), which the schema cannot read;
+(b) plan-aware validation that parses `devai.json` and the packet alongside the report; (c) runner
+only. Recommended: (a); each clause restates prose already in 08 §0, A.3, C.4, B.27 and 02 §8, and
+D-056's projection is untouched because refinements do not project. (b) makes `Report.parse` depend
+on files outside the report. Lands with R6's first test file: the seven reproductions as negative
+cases, the 09 §6 fixture report as the positive case. Open: 08 B.11/B.22 let skipped or pending
+Vitest cases lower `evaluated` without a finding, which under (a) is no longer a `PASS`; the status
+such a run takes needs a ruling before R6 implements `unit` (see Open). Amends 08 C.2 and
+`packages/cli/src/report.ts` together. Chosen: (a). Source: Owner (packet §3).
+
+## D-078 · 2026-10-24 · `protected:unplanned` is computed against the packet's `protected` at its introducing commit (devai-v3#42)
+By construction a worker touching an undeclared class and widening `protected` in the same branch
+produced `declared: true`, no label, `review` tallied, exit 0, `accepted: true`: the shadow period's
+only gate was worker-controlled. Options: (a) `declared` is evaluated against the packet's
+`protected` list at its introducing commit (the blob B.26 already reads for PL-13), so an in-branch
+widening leaves the class undeclared for this PR → `protected:unplanned` → `review` gates; nothing
+is refused (D-019); the pilot pre-declares on `main` or in a successor packet; (b) add `protected`
+to PL-13's frozen set, making a widening a `packet-scope` FAIL; (c) record in D-028 that the gate
+protects against accidental touches only. Recommended: (a). It costs the pilot nothing when
+`protected` was written correctly up front (05 §2: the pilot writes it) and otherwise costs one
+mandatory review, which is what the label is for; (b) turns a notice into a refusal against D-019;
+(c) leaves the gate off on exactly the PRs (CI, hooks, `devai.json`) where it matters. A packet
+introduced and amended in one PR uses its first version. Amends 02 §5, 05 §2, §4, PL-08, 08 B.25;
+adds fixture N13 (09 §4). Chosen: (a). Source: Owner (packet §4).
+
+## D-079 · 2026-10-24 · Mixed worker family is `UNKNOWN (family)`; D-037 reworded; the evidence files carry no label (devai-v3#43)
+Four items. 1. A commit range whose `Co-Authored-By` trailers resolve to more than one family is
+`UNKNOWN (family)`, like equal or unknown: adopt / reject. 2. A protected label on
+`.devai/review/**`: adopt / reject. 3. D-037's weakness reworded to what CI actually verifies:
+adopt / reject. 4. `review.json` records `workerFamily` and the trailer lines it was derived from:
+adopt / reject. Recommended and chosen: **adopt 1, 3, 4; reject 2**. 1 closes the one case the
+regexes decided by implementation order; its cost, a human fix-up commit with its own trailer making
+the range mixed, is remedied by squashing or carrying the agent's trailer, already campaign practice
+(02 §8). 2 adds no information: both files appear in every accepted PR, so the label would be on
+every PR and distinguish nothing; the fabrication risk is D-037's weakness and the honest fix is 3.
+4 makes the declaration auditable after the fact (`git log` trailers against `review.json`) and
+gives #36's calibration a record of who reviewed whom; two additive fields on an evidence file 02 §11
+already lists (D-055 respected). Provenance beyond the digest check would be attestation, which
+D-002 and 07 §7 exclude. Amends 02 §9, 08 B.27 (Inputs, Status, Findings), C.2 `Review`,
+`report.ts`, 10 §2.4 (`devai-review`), 01 (cross-reference), D-037 text; adds fixture N17.
+Source: Owner (packet §5).
+
+## D-080 · 2026-10-24 · The required check runs from `main` through a ruleset; CODEOWNERS deferred until agent PRs have their own GitHub identity (devai-v3#44)
+For `pull_request` events GitHub runs the workflow from the PR's merge ref, so the required `devai`
+context on an agent PR was computed by the PR's own copy of `.github/workflows/devai.yml`. All nine
+devai-v3 PRs to date were opened by the Owner's account (`aarusso-nyx`) while the commits carry the
+agent identity, and a PR author cannot approve their own PR. Options: (a) CODEOWNERS for
+`.github/**`, `scripts/hooks/**`, `devai.json` with "require review from code owners" — today it
+would block every agent PR touching those paths; (b) keep the policy and record the residual risk;
+(c) a repository ruleset **requiring the workflow from `main`** (`devai` for adopters; `build`, then
+`matrix`, for devai-v3), so the check a PR must pass cannot be rewritten by that PR; no human step;
+label-only locally (D-019); CODEOWNERS left as a later option once agent PRs are opened by a machine
+user or GitHub App (a new 12 §5 host step, not an R6 item); (d) (a) + (c). Recommended: (c). It
+removes the mechanism #44 names without a human gate and leaves hook and `devai.json` changes to
+`protected:ci`/`protected:standards` plus, with D-078, a gating `review` whenever the packet did not
+pre-declare the class. Rulesets with required workflows are available on public repositories and
+paid plans; devai-v3 and the adopters named in 12 §1 are public; a private free-plan adopter falls
+back to (b)'s statement, which docs/adopters/ci.md says. The template ships no CODEOWNERS. Amends
+D-003, 08 A.1 (Output), 09 §1.1 (`devai.yml` row), 12 §5 H3/H5 (in `devai3/foundation/12-succession.md`
+until #45 lands 11 and 12 in this repository), docs/adopters/ci.md, docs/dev/contributing.md.
+Host act (Owner): the ruleset on devai-v3 before H5 makes `matrix` required. Chosen: (c).
+Source: Owner (packet §6).
+
 ## Open
+- D-077 and 08 B.11/B.22: a Vitest run with skipped or pending cases has `evaluated < observed` and no finding; under D-077 it is no longer a `PASS`, and the law does not say which status it takes. Rule before R6 implements `unit`.
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
 - Mutation testing's home (D-004: outside the cycle or not at all) — not blocking v3.0.

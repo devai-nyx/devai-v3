@@ -22,7 +22,7 @@ condition ([01](../framework/01-charter.md)).
 
 **Who.** A model of a different family from the worker. The worker's family is read from the
 `Co-Authored-By` trailers of the candidate's commits; `devai.json` `review.reviewers` maps each family to a
-reviewer command. An equal or unknown family is `UNKNOWN (family)`, and no configured reviewer is
+reviewer command. An equal, unknown or mixed family is `UNKNOWN (family)` (D-079), and no configured reviewer is
 `UNKNOWN (no reviewer configured)` ([02 §9](../framework/02-architecture.md), [08 A.8](../framework/08-cli-and-nodes.md)).
 The worker family is never a packet field ([05 §2](../framework/05-task-packet.md)).
 

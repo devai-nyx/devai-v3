@@ -278,7 +278,8 @@ when it has one, before acting.
 A disposition never silences a deterministic node. Re-run `--full` after a change,
 or once for `model-error`/`timeout`; never to reroll a verdict. Never run the
 reviewer CLI yourself. Any commit except one adding `.devai/review/` makes the
-review stale.
+review stale. The reviewer was chosen from your `Co-Authored-By` trailers; a range
+with two families is `UNKNOWN (family)`: squash, or keep one trailer.
 ````
 
 [opinion] Grammar: 05 §2, PL-09. "Check it" mirrors the reviewer's evidence rule; obedience would make
@@ -496,7 +497,7 @@ kept = 08's remedy is actionable; rewritten = it is not, or is wrong. All ≤ 16
 | `devai-task` (whole file) | on invocation, every task | worker | 1,204 | 344 | ≈ 400 |
 | `devai-spec` | on invocation, spec task | spec agent | 1,531 | 438 | ≈ 600 (02 §10), ≈ 400 (brief) |
 | `devai-test` | on invocation, test task | test agent | 1,821 | 521 | ≈ 400 |
-| `devai-review` | on invocation, after a review | worker | 1,218 | 348 | (none; ≈ 400 by analogy) |
+| `devai-review` | on invocation, after a review | worker | 1,357 | 388 | (none; ≈ 400 by analogy) |
 | packet | per task | worker | — | 400–800 | 400–800 (PL-14 ≤ 200 lines) |
 | spec | per task | worker | — | 1.5k–4k | excluded |
 | `context` ranges (C) | per task, when listed | worker | actual | T(actual) | inside < 3k (01) |

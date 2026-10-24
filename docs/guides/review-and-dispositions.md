@@ -16,7 +16,7 @@ second condition ([01 Charter](../framework/01-charter.md), [D-028](../../decisi
 
 - **Who.** The worker family is read from the `Co-Authored-By` trailers of `base..HEAD`: `claude`
   or `gpt`. `devai.json` `review.reviewers` maps each worker family to the other family's CLI. An
-  equal or unknown family is `UNKNOWN (family)`; none configured is
+  equal, unknown or mixed family (two families in one range) is `UNKNOWN (family)`; none configured is
   `UNKNOWN (no-reviewer-configured)` ([02 §9](../framework/02-architecture.md),
   [08 B.27](../framework/08-cli-and-nodes.md)).
 - **Where.** On your machine, inside `--full`, before push. CI holds no model keys; it only checks
