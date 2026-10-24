@@ -178,7 +178,7 @@ describe('devai check --packet (A.3, B.25, B.26)', () => {
       { class: 'ci', paths: ['.github/workflows/ci.yml'], declared: false },
     ] });
     // D-078: an undeclared class makes `review` gating while mustRun is false
-    const review = { id: 'review', status: 'PASS', expected: 1, observed: 1, evaluated: 1, findings: [], durationMs: 0, cached: false, needs: ['model'] } as const;
+    const review: Parameters<typeof gates>[0] = { id: 'review', status: 'PASS', expected: 1, observed: 1, evaluated: 1, findings: [], durationMs: 0, cached: false, needs: ['model'] };
     expect(gates(review, templateConfig(), report.nodes)).toBe(true);
     const text = devai(dir, 'check', '--packet', PACKET, '--only', 'protected-paths').stdout;
     expect(text).toContain('protected:ci — .github/workflows/ci.yml (packet declares: no)\n');

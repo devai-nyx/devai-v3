@@ -34,7 +34,7 @@ async function preDagError(dir: string, text: string): Promise<{ rule: string; r
 }
 
 /** A workspace with the packet committed at a real base pinning the shipped spec. */
-function ready(f: PacketFields = {}) {
+function ready(f: PacketFields & { sha?: string } = {}) {
   const ws = packetWorkspace();
   const intro = commitPacket(ws.dir, packetText({ base: ws.base, sha: ws.sha, ...f }));
   return { ...ws, intro };
