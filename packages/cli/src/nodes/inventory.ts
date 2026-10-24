@@ -96,6 +96,16 @@ interface PopulationFacts {
 const packageOf = (dirs: readonly string[], path: string): string =>
   [...dirs].filter((d) => d !== '.' && path.startsWith(`${d}/`)).sort((a, b) => b.length - a.length)[0] ?? '.';
 
+const tsInput = (p: string) => ext(p, '.ts', '.mts', '.cts') || /(^|\/)tsconfig[^/]*\.json$/.test(p);
+/** B.1 population table, `unit`: `*.spec.ts` outside the tier suffixes in a `typecheck`-affected package (the node runs these). */
+export function unitFiles(paths: readonly string[], changed: readonly string[], packageDirs: readonly string[]): string[] {
+  const affected = new Set(changed.filter(tsInput).map((p) => packageOf(packageDirs, p)));
+  return paths.filter((p) => p.endsWith('.spec.ts') && !TEST_TIER.test(p) && affected.has(packageOf(packageDirs, p)));
+}
+/** B.1 population table, `integration` and `e2e`. */
+export const INTEGRATION_FILE = /(^|\/)test\/integration\/.*\.integration\.spec\.ts$|(^|\/)test\/db\/.*\.db\.spec\.ts$/;
+export const E2E_FILE = /(^|\/)test\/e2e\/.*(\.e2e\.spec\.ts|\.playwright\.ts)$/;
+
 /**
  * Every population Part B names, with its predicate string and count. Counts are path-based; the
  * TypeScript-backed ones (mounted routes, `tsc -b` project closure, test census per tier) arrive with
@@ -105,14 +115,12 @@ export function populations(f: PopulationFacts): Record<NodeId, Population> {
   const n = (predicate: string, count: number, skippable = true): Population => ({ predicate, count, skippable });
   const always = (predicate = 'always applies', count = 1) => n(predicate, count, false);
   const cp = f.changedPresent;
-  const ts = (p: string) => ext(p, '.ts', '.mts', '.cts') || /(^|\/)tsconfig[^/]*\.json$/.test(p);
-  const affected = new Set(f.changed.filter(ts).map((p) => packageOf(f.packageDirs, p)));
+  const affected = new Set(f.changed.filter(tsInput).map((p) => packageOf(f.packageDirs, p)));
   const controllers = f.paths.filter((p) => /^(domain\/[^/]+\/api\/src|apps\/[^/]+\/src)\/.*\.controller\.ts$/.test(p));
   const angular = f.manifests.filter((m) => {
     const deps = { ...(m.json?.['dependencies'] as object | undefined), ...(m.json?.['devDependencies'] as object | undefined) };
     return '@angular/core' in deps;
   }).length;
-  const unitFiles = f.paths.filter((p) => p.endsWith('.spec.ts') && !TEST_TIER.test(p) && affected.has(packageOf(f.packageDirs, p)));
   const surface = f.changed.filter((p) => /\.controller\.ts$|\/dto\/|(^|\/)index\.ts$|^apps\/[^/]+\/src\/.*\.module\.ts$/.test(p));
   const testPath = (p: string) => /^(test\/|apps\/[^/]+\/test\/|domain\/[^/]+\/(api|web)\/test\/)/.test(p);
   return {
@@ -126,7 +134,7 @@ export function populations(f: PopulationFacts): Record<NodeId, Population> {
     'spec-lint': n('no changed specs/** or product/**', f.changed.filter((p) => p.startsWith('specs/') || p.startsWith('product/')).length),
     'route-contract': n('no mounted routes in domain/<m>', controllers.filter((p) => p.startsWith('domain/')).length),
     'sql-typed': n('no *.repository.ts changed', cp.filter((p) => p.endsWith('.repository.ts')).length),
-    unit: n('no unit test files in affected projects', unitFiles.length),
+    unit: n('no unit test files in affected projects', unitFiles(f.paths, f.changed, f.packageDirs).length),
     'test-integrity': n('no changed test/**', f.changed.filter(testPath).length),
     i18n: n('no opted-in locale beyond en-US and no Angular app', f.locales - 1 + angular),
     actionlint: n('no changed .github/**', cp.filter((p) => p.startsWith('.github/') && ext(p, '.yml', '.yaml')).length),
@@ -137,8 +145,8 @@ export function populations(f: PopulationFacts): Record<NodeId, Population> {
     openapi: n('no app binding changed and no public-API surface changed', surface.length),
     'db-apply': n('no database/', f.paths.filter((p) => p.startsWith('database/')).length),
     'spec-tests': n('no acceptance file for <spec id>', f.paths.filter((p) => p.endsWith('.acceptance.spec.ts')).length),
-    integration: n('no test/integration or test/db files affected', f.paths.filter((p) => /(^|\/)test\/integration\/.*\.integration\.spec\.ts$|(^|\/)test\/db\/.*\.db\.spec\.ts$/.test(p)).length),
-    e2e: n('no test/e2e files', f.paths.filter((p) => /(^|\/)test\/e2e\/.*(\.e2e\.spec\.ts|\.playwright\.ts)$/.test(p)).length),
+    integration: n('no test/integration or test/db files affected', f.paths.filter((p) => INTEGRATION_FILE.test(p)).length),
+    e2e: n('no test/e2e files', f.paths.filter((p) => E2E_FILE.test(p)).length),
     'permissions-pattern': n('no mounted routes', controllers.length),
     'protected-paths': always(),
     'packet-scope': always('always applies under --packet', f.packet ? 1 : 0),
