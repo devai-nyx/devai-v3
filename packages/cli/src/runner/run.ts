@@ -7,12 +7,16 @@ import type { Listing } from '../candidate/digest.js';
 import { cacheKey, configDigest, inputDigest, nodeVersion } from '../cache/key.js';
 import { type NodeRow, resultDigest } from '../cache/result-digest.js';
 import type { CacheStore } from '../cache/store.js';
+import type { PacketFacts } from '../model/packet.js';
 import type { MountCensus } from '../ts/mounts.js';
 import { isEditLoopClass, lane, needsOf, type NodeId } from './edges.js';
 import type { Plan } from './plan.js';
 
-/** What a node returns; the runner adds id, durationMs, cached, cacheKey and needs. */
-export type NodeOutcome = Omit<NodeRow, 'id' | 'durationMs' | 'cached' | 'cacheKey' | 'needs'>;
+/**
+ * What a node returns; the runner adds id, durationMs, cached, cacheKey and needs. `fromEvidence` marks a
+ * PASS read from a tracked evidence file whose digests matched (B.24: reported as `cached: true`).
+ */
+export type NodeOutcome = Omit<NodeRow, 'id' | 'durationMs' | 'cached' | 'cacheKey' | 'needs'> & { fromEvidence?: boolean };
 
 /** `inventory`'s population verdict per node (B.1 "every population Part B names"). */
 export interface Population {
@@ -49,6 +53,10 @@ export interface RunContext {
   plan: Plan;
   /** Set by step 5. */
   inventory?: InventoryData;
+  /** The packet under `--packet` (W4 fills it); the model nodes read it. */
+  packet?: PacketFacts;
+  /** Results so far, by node (B.27 phase 2 reads the current report). */
+  rows?: ReadonlyMap<NodeId, NodeRow>;
 }
 
 export interface NodeAdapter {
@@ -59,6 +67,8 @@ export interface NodeAdapter {
   configFiles(ctx: RunContext): string[];
   /** Declared inputs (Part B "Inputs"), repo-relative paths at the candidate. */
   inputs(ctx: RunContext): string[];
+  /** Trailing key components after the general C.4 key (the model components of B.24, B.27; D-076). */
+  keyExtra?(ctx: RunContext): Promise<string[]>;
   run(ctx: RunContext): Promise<NodeOutcome>;
 }
 
@@ -94,9 +104,13 @@ export async function runPlan(ctx: RunContext, deps: RunnerDeps, digest0: string
   const { plan } = ctx;
   const phase = plan.sqlTypedPhase;
   const rows = new Map<NodeId, NodeRow>();
+  ctx.rows = rows;
   const timings: Timing[] = [];
-  const row = (id: NodeId, o: NodeOutcome, durationMs: number, extra: Partial<Pick<NodeRow, 'cached' | 'cacheKey'>> = {}): NodeRow =>
-    ({ id, ...o, durationMs, cached: false, needs: needsOf(id, phase), ...extra }) as NodeRow;
+  const row = (id: NodeId, outcome: NodeOutcome, durationMs: number, extra: Partial<Pick<NodeRow, 'cached' | 'cacheKey'>> = {}): NodeRow => {
+    const { fromEvidence, ...o } = outcome;
+    const cached = fromEvidence === true && o.status === 'PASS' && extra.cacheKey !== undefined;
+    return ({ id, ...o, durationMs, cached, needs: needsOf(id, phase), ...extra }) as NodeRow;
+  };
   const timed = async <T>(id: NodeId, f: () => Promise<T>): Promise<T> => {
     const start = Date.now();
     try {
@@ -145,7 +159,13 @@ export async function runPlan(ctx: RunContext, deps: RunnerDeps, digest0: string
     if (pre2) return void rows.set(id, row(id, pre2, 0));
     const adapter = deps.adapters[id];
     if (!adapter) throw new Error(`no adapter for planned node ${id}`); // the command refuses such plans (W1: later waves)
-    const key = UNCACHED.includes(id) ? undefined : keyOf(ctx, adapter, rows);
+    let key: string | undefined;
+    try {
+      key = UNCACHED.includes(id) ? undefined : keyOf(ctx, adapter, rows, (await adapter.keyExtra?.(ctx)) ?? []);
+    } catch (e) {
+      deps.diagnostic?.(`devai: ${id} key crashed: ${(e as Error).stack ?? String(e)}`);
+      return void rows.set(id, row(id, { status: 'UNKNOWN', reason: 'runner-crashed', expected: 0, observed: 0, evaluated: 0, findings: [] }, Date.now() - start));
+    }
     if (key) {
       const hit = deps.store.lookup(id, key);
       if (hit) return void rows.set(id, { ...hit, durationMs: Date.now() - start, cached: true, cacheKey: key });
@@ -205,7 +225,7 @@ export async function runPlan(ctx: RunContext, deps: RunnerDeps, digest0: string
 }
 
 /** C.4 key of a node at this candidate. */
-export function keyOf(ctx: RunContext, adapter: NodeAdapter, rows: ReadonlyMap<NodeId, NodeRow>): string {
+export function keyOf(ctx: RunContext, adapter: NodeAdapter, rows: ReadonlyMap<NodeId, NodeRow>, extra: readonly string[] = []): string {
   const hashes = new Map(ctx.listing.entries.map((e) => [e.path, e.hash]));
   const deps = (ctx.plan.prerequisites.get(adapter.id) ?? []).map((p) => resultDigest(rows.get(p)!));
   return cacheKey({
@@ -216,7 +236,7 @@ export function keyOf(ctx: RunContext, adapter: NodeAdapter, rows: ReadonlyMap<N
     runtimeOrSchema: ctx.runtime, // DB-backed nodes key on db-apply's schemaDigest instead (W3)
     inputDigests: adapter.inputs(ctx).map((p) => inputDigest(p, hashes.get(p) ?? null)),
     dependencyResultDigests: deps,
-    ...(adapter.id === 'sql-typed' ? { extra: [ctx.plan.sqlTypedPhase] } : {}),
+    extra: [...(adapter.id === 'sql-typed' ? [ctx.plan.sqlTypedPhase] : []), ...extra],
   });
 }
 

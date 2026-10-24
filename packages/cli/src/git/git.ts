@@ -1,6 +1,7 @@
 // The host `git` (07 §2 row git; no isomorphic-git, 07 §7), through the one spawner. Only the
 // invocations 08 names: ls-files, ls-tree, cat-file --batch, show, rev-parse, merge-base
-// --is-ancestor, diff --name-status --no-renames, log. Paths are raw bytes in git's -z output and are
+// --is-ancestor, diff --name-status --no-renames, log; B.27's `diff base..candidate` and its detached
+// scratch worktree (worktree add --detach / remove). Paths are raw bytes in git's -z output and are
 // decoded as UTF-8 (git's own default for path names on the hosts 12 pins).
 import { spawn } from '../proc/spawn.js';
 
@@ -134,4 +135,20 @@ export async function diffNameStatus(root: string, range: { cached?: boolean; fr
 /** `git log <args>`: stdout as text (format and range are the caller's). */
 export async function log(root: string, args: readonly string[]): Promise<string> {
   return (await git(root, ['log', ...args])).toString('utf8');
+}
+
+/** B.27 Inputs: the diff `base..candidate` (tracked paths, working tree against `base`) as patch text. */
+export async function diffText(root: string, base: string): Promise<string> {
+  return (await git(root, ['diff', '--no-color', '--no-ext-diff', '--no-renames', base, '--'])).toString('utf8');
+}
+
+/** B.27 phase 2: a detached worktree at `rev` in `dir` (the scratch copy's starting point). */
+export async function worktreeAdd(root: string, dir: string, rev: string): Promise<void> {
+  await git(root, ['worktree', 'add', '--detach', '--force', '--quiet', dir, rev]);
+}
+
+/** Removes a scratch worktree and its administrative files; a worktree already gone is not an error. */
+export async function worktreeRemove(root: string, dir: string): Promise<void> {
+  await gitMaybe(root, ['worktree', 'remove', '--force', dir], undefined, true);
+  await gitMaybe(root, ['worktree', 'prune'], undefined, true);
 }
