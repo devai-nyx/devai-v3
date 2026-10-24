@@ -75,10 +75,10 @@ Count: 28 rows; 4 nodes need `postgres` (`sql-typed` DB part, `db-apply`, `spec-
 | `inventory` | `git ls-files`, `git diff --name-status --no-renames`, `node`/`corepack`/`pnpm --version`, `tsc --showConfig` per project; TypeScript library for the mount walk | one workspace package manifest. Side products: `toolchainDigest`, every population, the mounted-route population, test census per tier, project closure |
 | `format` | `prettier --list-different -- <files…>` (Prettier 3.9.6) | one file |
 | `lint` | `eslint --format json --max-warnings=0 --no-warn-ignored -- <files…>` (ESLint 10.10.0): published STYNX profiles plus the v3 overlay and `devai/*` rules | one file |
-| `lint-tests` | `eslint --config <@stynx-nyx/eslint-config/test> …`; CW-1 rules | one test file |
+| `lint-tests` | `eslint --config <@stynx-nyx/eslint-config/test> …`; CW-1 (`WAVE-05A/CW-1:`) and `R19-W06:` messages mapped by prefix ([D-086](../../decisions.md)) | one test file |
 | `typecheck` | `tsc -b --verbose --pretty false <tsconfigs…>` (TypeScript 6.0.3; no trailing `--`) | one project |
 | `layout` | Nothing; path predicates with `ignore` 7.0.5 | one predicate × path |
-| `sql-lint` | `stynx-migration-lint <root> --format=json --lgpd --base-dir <dir> --manifest <path>` per root; imports `pg-query-emscripten` 5.1.0 first | one SQL file |
+| `sql-lint` | `stynx-migration-lint <root>… --format=json --lgpd --base-dir <dir> --manifest <path>`, one invocation over every root ([D-085](../../decisions.md)); imports `pg-query-emscripten` 5.1.0 first | one SQL file across the roots |
 | `spec-lint` | In-process `yaml` 2.9.0 and zod 4.4.3 | one spec file (SL01–SL08, SL12) |
 | `route-contract` | `stynx list-routes --json --roots <…>`; TypeScript library for decorator arguments | one `(method, normalised path)` pair in spec routes ∪ mounted routes |
 | `sql-typed` | Static: TypeScript library over each `defineQuery`. DB: `pg` 8.23.1, one Submittable per query sending parse/describe/close/sync, never bind/execute ([D-068](../../decisions.md)) | one `defineQuery` site |
@@ -110,22 +110,22 @@ Count: 28 rows; 4 nodes need `postgres` (`sql-typed` DB part, `db-apply`, `spec-
 | `inventory` | a manifest without `"type": "module"`; wrong effective `module`/`moduleResolution` (Node `nodenext`, Angular `es2022`/`bundler`); a missing strictness option or `target` ≠ `es2022`; a workspace glob naming no package | `engines-mismatch`, `tooling-missing`, `mount-unresolved` |
 | `format` | stdout lists ≥ 1 path, or a syntax error in a candidate file | `tooling-missing`, `runner-crashed` |
 | `lint` | any message (warnings count); an expected file absent from the JSON | `lint-config-failed`, `tooling-missing` |
-| `lint-tests` | as `lint` | `tooling-missing` (until `@stynx-nyx/eslint-config` exports `./test`), else as `lint` |
+| `lint-tests` | as `lint` | as `lint` (`./test` is exported by `@stynx-nyx/eslint-config` 3.0.0; [D-089](../../decisions.md)) |
 | `typecheck` | ≥ 1 diagnostic; effective `module: commonjs` or a missing strictness option | `tooling-missing`, `runner-crashed` |
 | `layout` | any predicate violation | `io` |
-| `sql-lint` | ≥ 1 issue or `parserIssues` entry naming a candidate file | `tooling-missing` (incl. `LINT010–013 context`), `parser-unavailable`, `runner-crashed` |
+| `sql-lint` | ≥ 1 issue or `parserIssues` entry naming a candidate file (one invocation over every root; [D-085](../../decisions.md)) | `tooling-missing`, `parser-unavailable`, `lint-config-failed` / `io` (exit 2 without JSON, by stderr), `runner-crashed` |
 | `spec-lint` | any SL01–SL08/SL12 violation, incl. malformed readable YAML | `io` |
-| `route-contract` | a pair on one side only; any of the five contract fields mismatched; a non-literal decorator argument; boundary input without `parseDto`/typed pipe; a route neither role-bound nor `@Public()`; an unknown `@UseCase` id; an app root module without request-id middleware | `tooling-missing`, `mount-unresolved`, `prerequisite-failed` |
+| `route-contract` | a pair on one side only; any of the five contract fields mismatched; a non-literal decorator argument; boundary input without `parseDto`/typed pipe; a route neither role-bound nor `@Public()`; an unknown `@UseCase` id; an app root module without request-id middleware | `tooling-missing` (incl. a `@RequireRoles` route while `list-routes` does not read it; [D-087](../../decisions.md)), `mount-unresolved`, `prerequisite-failed`, `runner-crashed` |
 | `sql-typed` | any static or DB mismatch; a prepare error (SQLSTATE + server message) | `unsupported-oid`, `unsupported-binding`, `adapter-unbound`, `postgres-unreachable`, `prerequisite-failed`, `parser-unavailable` |
 | `unit` | ≥ 1 failed case; a test module that fails to import; a skipped or pending case (collected, not observed; [D-081](../../decisions.md)) | `runner-crashed`, `timeout`, `tooling-missing` |
 | `test-integrity` | `.skip/.only/.todo` without issue reference; literal verdicts; assertion count below 80 % of base without annotation; any change to a base-present acceptance file without `// @acceptance-change: approved-by=`, or any such edit while `kind ∉ {test}`; an `acceptance: yes` case removed | `base-unreadable` |
 | `i18n` | a key missing in a locale; a spec key absent from `en-US`; any template i18n message | `catalog-unresolved`, `io`, `tooling-missing` |
 | `actionlint` | ≥ 1 entry | `tooling-missing`, `runner-crashed` |
-| `commitlint` | exit 1 | `tooling-missing`, `lint-config-failed`, `io` |
+| `commitlint` | exit 1 with a parsed violation | `tooling-missing`, `lint-config-failed`, `io` (pre-flighted before invoking), `runner-crashed` ([D-086](../../decisions.md)) |
 | `generated` | byte difference; generated file missing or unlisted; hand-edited `@generated` file outside a manifest; a STYNX pair reporting drift. Never because the spec at HEAD changed status | `generator-version-mismatch`, `generator-unavailable`, `tooling-missing` |
-| `boundary` | any violation line; `.stynxrc.json` missing | `tooling-missing`, `runner-crashed` |
+| `boundary` | any violation line; `.stynxrc.json` missing | `config-invalid` (`.stynxrc.json` fails DEVAI's zod check; [D-087](../../decisions.md)), `tooling-missing`, `runner-crashed` |
 | `deadcode` | any unused file/export/dependency, missing dependency, cycle | `tooling-missing`, `runner-crashed` |
-| `openapi` | any check failure; a breaking baseline without a major changeset | `tooling-missing`, `prerequisite-failed`, `base-unreadable` |
+| `openapi` | any check failure; a breaking baseline without a major changeset | `tooling-missing` (incl. while STYNX publishes no write pair; [D-088](../../decisions.md)), `config-invalid`, `prerequisite-failed`, `base-unreadable`, `runner-crashed` |
 | `db-apply` | `psql` error; `checks.sql` assertion; RLS-negative violation; a role connecting as owner for app checks; `observed < expected` | `shell-missing`, `psql-missing`, `docker-unreachable`, `postgres-unreachable`, `scratch-collision`, `tooling-missing` |
 | `spec-tests` | `observed < expected` (uncovered `R-n`); foreign, duplicate or untagged top-level cases; a non-named case failed; a named expected-red case passed; a non-named case failed before its assertion | `setup-failed`, `expect-red-not-reached`, `assertion-unresolved` |
 | `integration` | as `unit`; a suite that connected as owner for an isolation assertion | as `unit`, plus `postgres-unreachable`, `prerequisite-failed` |
@@ -134,7 +134,7 @@ Count: 28 rows; 4 nodes need `postgres` (`sql-typed` DB part, `db-apply`, `spec-
 | `protected-paths` | never (a notice; `PASS` when evaluated) | `base-unreadable` |
 | `packet-scope` | every PL/SL rule it owns that is not a pre-DAG stop; pre-DAG rules end the command with exit 2 `packet-invalid` / `base-not-ancestor` | `base-unreadable` |
 | `review` | verdict `blockers` | `family`, `no-reviewer-configured`, `model-error`, `schema-invalid`, `verdict-unknown`, `review-incomplete`, `budget-exhausted`, `input-bound-exceeded`, `output-bound-exceeded`, `capability-missing`, `stale` |
-| `accept` | PL-15, PL-12, PL-16, or any gating `FAIL` | any gating `UNKNOWN` and no `FAIL`; `runner-crashed` (a planned node without a status) |
+| `accept` | PL-15, PL-12, PL-16, or any gating `FAIL` | any gating `UNKNOWN` and no `FAIL`, carrying the first such node's reason ([D-084](../../decisions.md)); `runner-crashed` (a planned node without a status) |
 
 `PASS` rules worth noting: `permissions-pattern` passes iff `verdict: compliant`, `unresolved` empty, every locator valid, `observed = expected` and `confidence ≥ minConfidence`; `spec-tests` passes iff every non-named case passed and every named case failed at a reached assertion ([08 B.21, B.24](../framework/08-cli-and-nodes.md)). Any node may additionally be `UNKNOWN: no-observations` (runner rewrite) or `UNKNOWN: prerequisite-failed` (runner, step 8).
 

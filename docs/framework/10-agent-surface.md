@@ -480,6 +480,7 @@ kept = 08's remedy is actionable; rewritten = it is not, or is wrong. All ≤ 16
 |---|---|---|---|
 | 02 §4, 08 B.24 | `permissions-pattern UNKNOWN (<reason>). Re-run, or narrow the slice; do not merge on UNKNOWN.` | `permissions-pattern UNKNOWN (<reason>): <hint>` | A computed slice cannot be narrowed by the agent; "do not merge" addresses the pilot, whom exit 2 already stops |
 | 05 PL-04 | `spec SPEC-… status draft: approve it first` | `spec SPEC-… status draft: the pilot approves it; note it under ## Notes and stop` | An agent must not write `approved-by` (D-016) |
+| 05 PL-15 | `required node skipped for kind: <kind>: <node> (<evidence>)` (no hint) | hint `deliver what the kind requires (05 §3); an empty population means the deliverable is missing` | `Finding.hint` is required (D-084) |
 | 08 B.9 | `… lacks @<Decorator> [S-28]` (no hint) | hint `add @<Decorator>(<value from the spec route>)` | `Finding.hint` is required |
 | 08 B.9 | `… @Slo missing (spec: …) [S-25]` (no hint) | hint `add @Slo(<spec slo>)` | same |
 | 08 B.5 | `TS<code>: <message> [S-32\|S-33]` (no hint) | `S-33: type the value or parse it with zod` · `S-32: fix the type, not the config` | same |

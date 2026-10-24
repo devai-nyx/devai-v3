@@ -113,7 +113,7 @@ Every selection includes `inventory` and `accept`.
 | `--packet <p>` | Adds `packet-scope` and `spec-tests` over the packet's derived acceptance file, with their prerequisite closure (`db-apply`, `sql-typed` DB) |
 | `--packet <p> --full` | Every applicable node, including `permissions-pattern`, `review`, `accept`, over `base..candidate`. The only run that can set `accepted: true` |
 | `--full` (no packet) | Feedback over every applicable node except the packet-bound ones (`packet-scope`, `spec-tests`, `review` deferred); `accepted: false` |
-| `--only <node>` (repeatable) | The named nodes and their prerequisites; feedback only. Also the way to see one node's preflight ([08 A.6](../framework/08-cli-and-nodes.md)) |
+| `--only <node>` (repeatable) | The named nodes and their prerequisites; feedback only. Also the way to see one node's preflight ([08 A.6](../framework/08-cli-and-nodes.md)). A packet-bound node (`review`, `permissions-pattern`, `packet-scope`, `spec-tests`) without `--packet` is exit 2 `usage` ([D-084](../../decisions.md)) |
 | `--hook <stage>` | The hook subsets of [08 A.7](../framework/08-cli-and-nodes.md) (below) |
 
 Nodes outside the plan are **deferred**: they get no row, and `accept` lists them ([D-058](../../decisions.md)).
@@ -124,7 +124,7 @@ Nodes outside the plan are **deferred**: they get no row, and `accept` lists the
 |---|---|
 | `--expect-red` | Accepted only with `--packet` whose `kind: test` and whose `observations.unimplemented` is non-empty (PL-11, [D-051](../../decisions.md)). It restates what the packet already selects and must agree; otherwise exit 2 `expect-red-nothing-named` |
 | `--summary` | Requires `--packet`. After a `--full` run, prints the [08 C.3](../framework/08-cli-and-nodes.md) summary. Without `--full`, prints the summary of the latest report in `.devai/cache/reports/` whose `candidateDigest` equals the current candidate's; else `no acceptance report for head <sha>; run --full` (exit 2 `no-report`) |
-| `--prune` | Keeps the newest 200 entries per node under `.devai/cache/`; drops the scratch databases named in `.devai/cache/scratch/*.json` descriptors (only those); deletes the descriptors; exits 0; combines with nothing else |
+| `--prune` | Keeps the newest 200 entries per node under `.devai/cache/`; drops the scratch databases named in `.devai/cache/scratch/*.json` descriptors (only those); deletes the descriptors; also prunes `agentic/<node>/` and orphan `results/`; prints `pruned <n> cache entries`; exits 0; combines with nothing else ([D-084](../../decisions.md)) |
 | `--format` | `text` (default): the [02 §8](../framework/02-architecture.md) report, failing nodes first, ≤ 40 lines, grammar in [08 C.3](../framework/08-cli-and-nodes.md). `json`: the [report.json](./report-json.md) document on stdout |
 
 ### Reads, writes, exit
@@ -135,7 +135,7 @@ Nodes outside the plan are **deferred**: they get no row, and `accept` lists the
 | Writes | `.devai/cache/{nodes,results}/` (PASS only); `.devai/cache/reports/<candidateDigest>.json` (every `--full` run and every `--format json` run); `.devai/cache/agentic/<node>/<digest>.json`; `.devai/cache/scratch/`; `.devai/review/<packet-id>.json` (by `review`) and `.devai/review/<packet-id>.permissions.json` (by `permissions-pattern`), both `--packet --full` only. Never the packet, the spec or the candidate |
 | Exit | `0` no gating node `FAIL` or `UNKNOWN` (under `--packet --full` this includes `accept` `PASS` and sets `accepted: true`); `1` ≥ 1 gating `FAIL`; `2` ≥ 1 gating `UNKNOWN` and no `FAIL`, or could not run. `FAIL` + `UNKNOWN` → `1`, both preserved |
 | Gating | Every planned node is gating except `review` while `review.mustRun` is false and the candidate touches no undeclared protected class ([D-028](../../decisions.md), [D-058](../../decisions.md)) |
-| Reason codes | `config-invalid`, `not-a-repository`, `packet-invalid`, `base-not-ancestor`, `expect-red-nothing-named`, `no-report`, `candidate-changed` (digest differs before/after the run; result discarded), `io` (candidate unreadable while framing), `tooling-missing` (only when `inventory` itself cannot run) |
+| Reason codes | `config-invalid`, `not-a-repository` (also outside the repository root; [D-084](../../decisions.md)), `usage`, `packet-invalid`, `base-not-ancestor`, `expect-red-nothing-named`, `no-report`, `candidate-changed` (digest differs before/after the run; result discarded), `io` (candidate unreadable while framing), `tooling-missing` (only when `inventory` itself cannot run) |
 
 ### Hook stages
 

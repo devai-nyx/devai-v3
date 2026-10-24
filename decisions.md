@@ -998,6 +998,151 @@ CI, which is the issue's point. Amends 08 B.24 (Status), C.2 `SensorEvidence`, `
 provisional" wording stay open for the pilot. Chosen: (a). Source: Owner (ROADMAP G3 panel,
 2026-10-24).
 
+## D-084 · 2026-10-24 · R6 W1 readings: fifteen adopted as 08 clarifications, three revised, populations and `nodeVersion` ruled (devai-v3#55)
+W1 (#55) implemented the smaller reading wherever 08 was silent and listed 19 of them under "Open". Each
+gets a verdict: **adopt** (one 08 sentence, no code change), **revise** (W2 or an earlier follow-up PR
+changes the code), or **rule** (an option set). Two items needed a choice. **Item 1, populations**:
+(a) W1's path-based counts become 08 B.1's population table, and a node's wave may *tighten* its
+predicate only by a stale-text PR citing the row; (b) each wave changes counts freely; (c) freeze W1's
+counts. (a) names the owner (02 §2 (f): populations come from `inventory`) and keeps the brake, since
+a count change is a visible law edit; (b) lets counts drift per node unreviewed; (c) freezes
+approximations (declared, not mounted, controllers) that later waves must replace. **Item 2,
+`nodeVersion`**: (a) `<cliVersion>+<n>`, `n` kept in each node file, bumped by the PR that changes the
+contract and listed in a C.4 table; (b) `n` = the D-nnn of the last contract change; (c) a hash of the
+node's source file. (a) is readable and passes through review; (b) couples cache keys to the decision
+log; (c) invalidates caches on every refactor.
+
+| # | Item | Verdict | Rule |
+|---|---|---|---|
+| 1 | Population counts per node | rule: **(a)** | 08 B.1 population table, W1's predicates; the root manifest is excluded (item 7); "changed" without a packet = working tree vs `HEAD` + untracked, the A.3 edit-loop base |
+| 2 | `nodeVersion` encoding | rule: **(a)** | `<cliVersion>+<n>`, `n = 1` for every node today; C.4 table |
+| 3 | `accept` findings and UNKNOWN reason | revise | finding form adopted (one per gating FAIL, `locator = <node id>`, `[S-65]`); on a gating UNKNOWN `accept` carries the first gating UNKNOWN node's `reason` verbatim, not `prerequisite-failed` (B.28) |
+| 4 | PL-15 hint | adopt | `deliver what the kind requires (05 §3); an empty population means the deliverable is missing` (05 §5, 10 §4) |
+| 5 | Key list framing, plan order, content sha256 | adopt | C.4 Key row |
+| 6 | `toolchainDigest` framing; missing lock frames empty | adopt | B.1 Observation |
+| 7 | Root manifest as an observation | revise | `expected` = workspace packages the globs match; a workspace whose globs match no package is `FAIL` (`glob <g> matches no package`), never `observed 0` (B.1) |
+| 8 | FAIL + UNKNOWN inside `inventory`; engines; Angular profile; `tsc` path | adopt | B.1 Status |
+| 9 | Mount census stub | revise in W2 | W2's `route-contract` PR removes the stub and lands the static walk 08 already describes; a W2 obligation, not law |
+| 10 | Message texts the law does not give | adopt | B.1 Findings, C.1 step 8, B.28 Findings |
+| 11 | C.6 edges (escaping symlink working-tree only; untracked nested repo; unmerged index entry) | adopt | C.6, three clauses |
+| 12 | `candidate-changed` report printed, not written | adopt | C.1 step 10 |
+| 13 | `devai check` at the repository root only | adopt | A.0 |
+| 14 | JSON refusals use the W0 envelope | adopt | A.0: a `Report` exists only once `inventory` ran |
+| 15 | `--prune` output and scope | adopt | A.3 `--prune` row |
+| 16 | Text report details | adopt | C.3, seven readings |
+| 17 | B–C nodes in the class-C lane; `editLoopMs` | adopt | C.1 step 6, B.28 Observation |
+| 18 | Precedence of `inventory` failure and SKIPPED | adopt | C.1 step 5 |
+| 19 | `--only review` | revise | `--only` naming `review`, `permissions-pattern`, `packet-scope` or `spec-tests` without `--packet` is exit 2 `usage`: `<node> needs --packet` (A.3) |
+
+Code follow-ups (not in this entry's PR): `accept.ts` (3), `inventory.ts` (7; 9 in W2), `commands/check.ts`
+(19). No node, command, state, field or reason code is added (D-055). Amends 08 A.0, A.3, B.1, B.28,
+C.1, C.3, C.4, C.6; 05 §5 PL-15; 10 §4. Chosen: 1 (a), 2 (a), the fifteen adoptions, revisions 3, 7,
+19, and 9 as W2's obligation. Source: Owner (R6 packet, 2026-10-24).
+
+## D-085 · 2026-10-24 · `sql-lint` runs one invocation over every root; LINT010's day prefix is a STYNX defect; DEVAI re-roots locators (R6 W2 fact sheet b1–b3)
+Published `stynx-migration-lint` 3.0.0 lints several targets as one population, reads the LINT010
+prefix as `^(\d+)_` (so `YYYYMMDD_01_…` and `YYYYMMDD_02_…` collide), reports `issues[].file` relative
+to the target root, and exits 2 with no stdout on usage and input errors, the code `parserIssues` also
+uses. **b1**: (a) one invocation over every root, one observation per SQL file across roots; (b) per-root
+calls with DEVAI computing LINT010 across roots itself. (a) is what the tool already does; (b) is a
+second implementation of a STYNX rule, which D-029 forbids. **b2**: (a) a STYNX defect: S10 gains
+"LINT010 reads two prefix groups", and `sql-lint` reports what the tool says meanwhile; (b) DEVAI
+changes 04 §1's name form to one serial prefix; (c) DEVAI filters LINT010 findings whose files share only
+the day. (a) keeps 04 §1 (`YYYYMMDD_NN_snake_case.sql`) and the rule in STYNX; (b) moves the law to fit
+a defect; (c) puts STYNX semantics in DEVAI (D-029). **b3**: (a) DEVAI re-roots each issue by the target
+root it passed (disambiguated by `files[]`); exit 2 with empty stdout is `UNKNOWN`, reason by stderr
+(`does not exist` / `not a directory` → `lint-config-failed`, otherwise `io`); exit 2 with JSON keeps
+B.7's `parserIssues` mapping; (b) ask STYNX for cwd-relative paths and a distinct usage exit code and
+block `sql-lint` until then. (a) unblocks W2 and is temporary where it compensates for a tool defect;
+(b) waits on S10. S10 items filed: LINT010 prefix groups; cwd-relative issue paths and a usage exit
+code. No 04 change; `layout`'s name-form predicate is unchanged. Amends 08 B.7 (Invokes, Observation,
+Status, Findings) and the Part B preamble sentence on LINT010 (08 `:174` at `499b84c7`). Chosen: b1 (a),
+b2 (a), b3 (a). Source: Owner (R6 packet, 2026-10-24).
+
+## D-086 · 2026-10-24 · Exit codes are never trusted alone: pre-flight what DEVAI controls, read verdicts from parsed output (R6 W2 fact sheet b5, b6, b9)
+`@commitlint/cli` 21.2.2 exits 1 for a rule violation and also for a missing config, a missing
+message file and a `cwd` outside git; the `stynx` binaries exit 1 with no stdout on a usage error, the
+`FAIL` code of D-071's contract; the published `./test` ESLint profile emits `no-restricted-syntax`
+with `WAVE-05A/CW-1:` messages and `no-restricted-imports` with `R19-W06:` messages, while 08 B.4
+printed `CW-1` as a rule id. Options: (a) a pre-flight and output-shape rule stated once as 08 §0's
+fifth convention and applied in each adapter: inputs DEVAI controls (config file, message file, git
+root) are checked before invoking and reported with the 08 reason; a non-zero exit without the
+expected machine-readable stdout is `UNKNOWN: runner-crashed` with stderr's first line as the finding
+message; findings come from parsed stdout only; ESLint findings map by `ruleId` and, for
+`no-restricted-*`, by message prefix, printed `<path>:<line>:<col> <prefix>: <message> [S-60]`;
+(b) ask STYNX and commitlint upstream for distinct exit codes and block the three adapters; (c)
+per-tool special cases in each B row only. (a) decides now what DEVAI can decide; (b) waits on others;
+(c) repeats one rule five times. No reason code is added (`runner-crashed`, `lint-config-failed`,
+`io` are reused). Amends 08 §0 and one sentence each in B.4, B.9, B.15, B.17, B.19. Chosen: (a).
+Source: Owner (R6 packet, 2026-10-24).
+
+## D-087 · 2026-10-24 · Config contracts: template `.stynxrc.json` names the 04 roots and is validated by DEVAI; generated routes keep `@RequireRoles` from `@stynx-nyx/backend` (R6 W2 fact sheet b7, b8, b10)
+Three items. **b7**: `verify-api-coverage` scans `apiCoverage.sourceRoots` (literal paths, default
+STYNX's layout) and `verify-public-api-baselines` scans `publicApi.packageRoots` (one level deep,
+skipping folders without a manifest); 09 §1.1's `.stynxrc.json` carried `boundary` only, so both saw 0
+and passed with `observed 0`. Options: (a) the template `.stynxrc.json` gains `"apiCoverage":
+{ "sourceRoots": ["apps/api/src"] }` and `"publicApi": { "packageRoots": [] }`, and, because the roots
+are literal and one level deep, the generator prints one entry per module for each as mount lines
+(`domain/<slug>/api/src`, `domain/<slug>`; 09 §2: mounting is the `generate` packet's job); (b) ask
+STYNX for globs (S10) and block `openapi`; (c) pass roots on argv (3.0.0 has no such option). (a)
+works with 3.0.0 as published; `["domain"]` would scan `domain/<m>` folders, which have no
+`package.json`. **b8**: `verify-stynx-boundary` reads `.boundary ?? {}` unchecked, so `[1]` passes with
+default roots. Options: (a) DEVAI validates `.stynxrc.json` with a zod definition of `boundary`,
+`apiCoverage`, `publicApi` before any `stynx` call: malformed → `UNKNOWN: config-invalid` for every node
+that reads it, absent → `boundary` `FAIL` (08 B.17); (b) rely on each command's own handling. (a)
+closes the one path where a malformed config yields `PASS`. **b10**: `list-routes` accepts `Public`,
+`Permission` and the other auth markers only from `@stynx-nyx/auth`, `@stynx-nyx/backend` or STYNX's
+decorators path, and `RequireRoles` is not an auth marker, so 09 §6's controller fails `route-contract`
+on the template's own fixture. STYNX's `@Permission(key)` takes one permission key
+(`stynx:packages/auth/src/decorators.ts:25`), while 06 §2 `roles: Slug[]` means "all of these roles"
+and maps to `@RequireRoles(roles, 'all')`, exported by `@stynx-nyx/backend`
+(`stynx:packages/backend/src/authorization/decorators.ts:10`). Options: (a) the generator emits
+`@Permission(…)` / `@Public()` from `@stynx-nyx/auth`; (b) the generator keeps `@RequireRoles(roles,
+'all')` imported from `@stynx-nyx/backend`; S10 gains an item for `list-routes` to accept `RequireRoles`
+as a role-binding marker and report it in `permissions`; until STYNX ships it, `route-contract` reports
+a generated route `UNKNOWN: tooling-missing — route-contract: install @stynx-nyx/cli ≥ <v> whose
+list-routes reads RequireRoles` (D-029, the D-088 pattern); (c) `route-contract` reads `RequireRoles`
+itself beside `list-routes` (a second census, D-029). (a) cannot express 06 §2's role set in one
+permission key without a new spec key; (b) keeps 06 §2, 08 B.9's `roles ↔ @RequireRoles([...], 'all')`
+comparison and S-28 unchanged and puts the gap in STYNX, where the census lives; (c) duplicates a
+STYNX rule. The first panel chose (a); the Owner revisited it in a second panel the same day after the
+`@Permission(key)` fact and chose (b). Amends 09 §1.1 (`.stynxrc.json` row), 09 §2 (lowering, mount
+lines), §2.1 (`routes[]` row), §6 (import line), 02 §2 (generator outputs: import origin), 08 B.9
+(Status, `tooling-missing`), B.17 (validation), B.19 (roots). Chosen: b7 (a), b8 (a), b10 (b).
+Source: Owner (R6 packet, 2026-10-24; b10 second panel, 2026-10-24).
+
+## D-088 · 2026-10-24 · STYNX publishes the write pair; until then `openapi` and the STYNX `generated` pairs are `tooling-missing` and the contract files are seed (R6 W2 fact sheet c1)
+`@stynx-nyx/cli` 3.0.0 ships the check forms only (`verify-api-coverage --json --strict`,
+`verify-public-api-baselines --json`); the writer exists in the unexported engine and STYNX keeps the
+write side as repository scripts, so a product has no published way to produce or refresh
+`openapi.json` or `public-api-baselines.json`. Options: (a) STYNX publishes the write pair as an S10
+item; meanwhile `openapi` and the two `generated` pairs report `UNKNOWN: tooling-missing` with an
+install hint under D-029, and the template ships the two contract files as seed (hand-refreshed);
+(b) DEVAI drops the write pairs: `openapi` checks against a hand-maintained document and B.16's STYNX
+pairs are struck; (c) DEVAI reimplements the writer from the engine source. (a) keeps the drift check
+the pair exists for and needs no law change beyond a Mode cell and hint text; (b) brings that drift
+back; (c) is forbidden by D-029. S10 items filed for STYNX, by name: **`stynx api-docs write`** and
+**`stynx public-api-baselines write`**. Amends 08 B.16 and B.19 (Status, hint text), 09 §1.1
+(contracts row Mode: seed until the pair exists). Chosen: (a). Source: Owner (R6 packet, 2026-10-24).
+
+## D-089 · 2026-10-24 · Stale citations after STYNX 3.0.0 (R6 W2 fact sheet a1–a9; a10 added in review)
+STYNX 3.0.0 was published on 2026-10-23 from `10514fea`, renaming `tools/*` to `@stynx-nyx/*`. Ten
+places in 08 and 07 cited a `stynx:` path at `63e5f788` or a "today" clause that moved; behaviour is
+unchanged in each. No option set; the Owner ratifies the list. Citations now name the published
+package path `P:<pkg>@3.0.0/<path>` (D-073 pattern):
+- **a1 · 08 B.3 `lint`.** Profiles `P:@stynx-nyx/eslint-config@3.0.0/index.mjs:316-321`; default `strict: true` already sets `no-explicit-any`/`no-unsafe-*`, `require-idempotent-route-decorator` and `boundaries/dependencies` `'disallow'`; `stynx/no-authored-cjs` ships.
+- **a2 · 08 B.4 `lint-tests`.** `./test` is exported (`package.json:9`); the `tooling-missing` status and the `./lib`/`./nest`/`./angular` fact are struck; CW-1 rules at `index.mjs:423-439`.
+- **a3 · 08 B.7 `sql-lint`.** Context flags, LINT010–013 and `parserIssues` exist (`dist/src/cli.js`, `types.d.ts:1`, `parser.js:27-30`); "no binding", "publication requirement", "swallowed" and `tooling-missing: LINT010–013 context` are struck.
+- **a4 · 08 B.9 `route-contract`.** `stynx list-routes --json --roots` is published (default = 08's roots); parser `engines/nest-route-declarations.mjs:29`.
+- **a5 · 08 B.17 `boundary`.** The published command reads `.stynxrc.json` only, prints a `scanned` census and reports a missing file as `FAIL` (`checks.js:96-106`, `stynx-boundary.mjs:9-19`).
+- **a6 · 08 B.19 `openapi`.** Paths are `.stynxrc.json` keys with STYNX-layout defaults (`api-coverage.mjs:22,24`, `checks.js:15-16,201-205`).
+- **a7 · 08 B.14 `actionlint`.** The JSON-output `[inference]` is now `[fact]`: 1.7.12 downloads the binary at install and `-format '{{json .}}'` prints a JSON array.
+- **a8 · 08 B.20 `db-apply`.** `stynx verify-rls-negative --json --ddl <roots>` is published (default `database/ddl`, `*` per segment).
+- **a9 · 07 §2.** The four "pending publication" rows (`tsconfig`, `migration-linter`, `eslint-config`, `cli`) read "published 3.0.0".
+- **a10 · 08 Part B preamble.** Every STYNX entry point the blocks invoke exists at 3.0.0; "`UNKNOWN: tooling-missing` until it exists" now applies only to D-088's write pair and to `list-routes` reading `RequireRoles` (D-087).
+Amends 08 Part B preamble, B.3, B.4, B.7, B.9, B.14, B.17, B.19, B.20 and the 08 provenance header; 07 §2 and its
+citation key. Source: Owner (R6 packet, 2026-10-24).
+
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.

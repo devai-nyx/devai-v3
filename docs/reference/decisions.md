@@ -1,14 +1,14 @@
 ---
 title: Decisions
 sidebar_position: 12
-description: Index of the 74 numbered decisions D-001 to D-074 in decisions.md, with date and title.
+description: Index of the 89 numbered decisions D-001 to D-089 in decisions.md, with date and title.
 ---
 
 # Decisions
 
-[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **74 decisions** (D-001…D-074), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
+[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **89 decisions** (D-001…D-089), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
 
-Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
+Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 15 on 2026-10-24 (D-075…D-089). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
 
 | Id | Date | Title |
 |---|---|---|
@@ -86,6 +86,21 @@ Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-0
 | D-072 | 2026-10-21 | Liveness and readiness probes may omit the request id (revisits D-071) |
 | D-073 | 2026-10-21 | Stale-text corrections found by the docs set (devai-v3#14–#30) |
 | D-074 | 2026-10-21 | Rulings on the docs-set gaps that need a choice (devai-v3#7–#13) |
+| D-075 | 2026-10-24 | The DAG runner and the verdict cache are DEVAI's; Turborepo is not the scheduler (devai-v3#48) |
+| D-076 | 2026-10-24 | Cache inputs are computable sets; model nodes use the general key; stray files are gitignored, not excluded (devai-v3#46) |
+| D-077 | 2026-10-24 | The report schema enforces the candidate-independent acceptance invariants; `review` gating stays plan-aware (devai-v3#34) |
+| D-078 | 2026-10-24 | `protected:unplanned` is computed against the packet's `protected` at its introducing commit (devai-v3#42) |
+| D-079 | 2026-10-24 | Mixed worker family is `UNKNOWN (family)`; D-037 reworded; the evidence files carry no label (devai-v3#43) |
+| D-080 | 2026-10-24 | The required check runs from `main` through a ruleset; CODEOWNERS deferred until agent PRs have their own GitHub identity (devai-v3#44) |
+| D-081 | 2026-10-24 | A skipped or pending test case is collected but not observed: `unit` and `integration` report a shortfall `FAIL` (closes the D-077 open item) |
+| D-082 | 2026-10-24 | Reviewer and sensor isolation is enforced by the host CLI and then checked in its stream (devai-v3#47) |
+| D-083 | 2026-10-24 | The sensor evidence records the threshold it was judged by, and CI re-applies the PR head's (devai-v3#36) |
+| D-084 | 2026-10-24 | R6 W1 readings: fifteen adopted as 08 clarifications, three revised, populations and `nodeVersion` ruled (devai-v3#55) |
+| D-085 | 2026-10-24 | `sql-lint` runs one invocation over every root; LINT010's day prefix is a STYNX defect; DEVAI re-roots locators (R6 W2 fact sheet b1–b3) |
+| D-086 | 2026-10-24 | Exit codes are never trusted alone: pre-flight what DEVAI controls, read verdicts from parsed output (R6 W2 fact sheet b5, b6, b9) |
+| D-087 | 2026-10-24 | Config contracts: template `.stynxrc.json` names the 04 roots and is validated by DEVAI; generated routes keep `@RequireRoles` from `@stynx-nyx/backend` (R6 W2 fact sheet b7, b8, b10) |
+| D-088 | 2026-10-24 | STYNX publishes the write pair; until then `openapi` and the STYNX `generated` pairs are `tooling-missing` and the contract files are seed (R6 W2 fact sheet c1) |
+| D-089 | 2026-10-24 | Stale citations after STYNX 3.0.0 (R6 W2 fact sheet a1–a9; a10 added in review) |
 
 ## Still open
 
