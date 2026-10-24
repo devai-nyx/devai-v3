@@ -37,8 +37,9 @@ The twelve framework documents and `decisions.md` entered the seed byte for byte
 12 §2). All twelve are carried because later documents cite earlier ones by section and decision
 number (12 §2). Since the seed they have been amended by ordinary commits that pair a framework edit
 with a new decision (D-068, D-070 in the history). The bootstrap documents 11 (migration ledger) and
-12 (succession plan) stay outside the repository as history, never edited again
-([D-065](../../decisions.md), [D-066](../../decisions.md)).
+12 (succession plan) are history, not law, never edited again except by a decision that names the edit
+([D-065](../../decisions.md), [D-066](../../decisions.md)); since R6 W0 they are committed read-only under
+[`docs/history/`](../history/index.md) so that `11 SM-nn` and `12 §n` citations resolve (#45).
 
 ## `packages/cli` → `@devai-nyx/cli`
 
@@ -48,9 +49,11 @@ with a new decision (D-068, D-070 in the history). The bootstrap documents 11 (m
 | `src/config.ts` | The `devai.json` zod definition, verbatim from [08 A.8](../framework/08-cli-and-nodes.md) |
 | `src/report.ts` | The `report.json`, sensor-evidence and review zod definitions, verbatim from [08 C.2](../framework/08-cli-and-nodes.md) |
 | `template/` | The template rows whose bytes the law fixes (below) |
+| `src/main.ts` | The 08 Part A preamble: `devai.json` load (A.8), runtime resolution (02 §6), `--format`, the three exit codes and `--version`; subcommands register here as the R6 waves land |
+| `src/schema.ts`, `schema/devai.schema.json` | The D-056 projection and its committed output (`pnpm project` rewrites it; the test fails when they differ) |
+| `tsconfig.json`, `vitest.config.ts`, `test/` | `tsc -b` build on `@stynx-nyx/tsconfig/node24.json`; Vitest 4.1.11 tests: C.2 invariants (#34), A.8, byte parity with 08, projections, the built binary, the packed tarball (#40) |
 
-There is no `src/main.ts` yet, so the `devai` bin does not resolve and no command runs. The CLI
-itself is R6 work (12 §4).
+No command runs yet beyond `--version`: the commands arrive wave by wave (R6 W1–W8).
 
 ### `packages/cli/template/` at the seed
 

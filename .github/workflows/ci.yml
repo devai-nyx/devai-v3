@@ -27,7 +27,7 @@ jobs:
         with:
           node-version: '24.20.0'
           cache: pnpm
-      - name: Build (12 §2, until R6)
+      - name: Build and test (12 §5)
         run: pnpm install --frozen-lockfile && pnpm -r --if-present build && pnpm -r --if-present test
       - name: Did packages/cli/** change
         id: changes
