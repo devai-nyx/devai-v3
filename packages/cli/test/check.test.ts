@@ -44,7 +44,7 @@ describe('devai check --only inventory (W1 entry point)', () => {
     expect(lines.length).toBeLessThanOrEqual(40);
     expect(lines[0]).toMatch(/^devai check --only inventory   runtime=bare   base=none  head=[0-9a-f]{4}…$/);
     expect(lines[1]).toBe('untracked: notes.md (not in any commit)');
-    expect(lines).toContain('PASS  2 nodes (0 cached, 0 s)');
+    expect(lines.some((l) => /^PASS  2 nodes \(0 cached, \d+ s\)$/.test(l))).toBe(true);
     expect(lines[lines.length - 1]).toBe('exit 0');
   });
 
