@@ -1,7 +1,7 @@
 ---
 title: Moving from v2
 sidebar_position: 6
-description: How a DEVAI 2 adopter moves to DEVAI 3 through a fresh scaffold, with no conversion and the 2.6.2 pin kept until then.
+description: How a DEVAI 2 adopter moves to DEVAI 3 through a fresh scaffold, with no conversion and a 2.x pin kept until then.
 ---
 
 # Moving from v2
@@ -15,10 +15,23 @@ across one approved spec at a time (12 §6, bootstrap history).
 
 ## Until you move
 
-v2 adopters pin `@aarusso-nyx/devai` at exactly `2.6.2`. Keep that pin until you move. On the day
-3.0.0 is published, the v2 repository `aarusso-nyx/devai` is archived: no rename, no notice and no
-further 2.x release. Archived repositories still serve their packages and clones, so the 2.6.2 pin
-keeps resolving (12 §6, host step H7; D-065).
+Keep `@aarusso-nyx/devai` pinned within `2.x` until you move: `^2.6.2`, or an exact pin of your
+own choosing. Publishing 3.0.0 does not end v2. The v2 repository `aarusso-nyx/devai` stays
+unarchived through a bounded stabilization window, and during it 2.x receives defect fixes only: no
+features and no new law ([D-090](../../decisions.md)).
+
+The window closes on an observed event, not a date. It closes when the first adopter (STYNX through
+its own adoption, or DETRAN's first module) shows all of these:
+
+- one v3 module green in that adopter's CI (the `devai.yml` `matrix`, or `devai check --full`
+  exiting 0);
+- its applied SQL history preserved ([D-033](../../decisions.md));
+- a recovery path demonstrated: a `devai check` after a deliberate break returns to green.
+
+Then the Owner archives `aarusso-nyx/devai` and the agent reads back `archived: true` (host step
+H7). There is no rename and no notice. Archived repositories still serve their packages and clones,
+so your 2.x pin keeps resolving after that (12 §6; [D-065](../../decisions.md),
+[D-090](../../decisions.md)).
 
 ## Why there is no converter
 
@@ -47,7 +60,7 @@ From 12 §6:
 4. Bring modules across one approved spec at a time. Keep the applied SQL history: applied
    migrations are immutable inputs, and a schema change is a new migration
    ([D-033](../../decisions.md), [D-043](../../decisions.md)).
-5. Keep the v2 repository building on 2.6.2 until its last module is ported, then archive it.
+5. Keep the v2 repository building on its 2.x pin until its last module is ported, then archive it.
 
 [Install](install.md) covers the prerequisites and the flags.
 
@@ -76,6 +89,6 @@ and the edit-loop p95 ([D-026](../../decisions.md), [D-064](../../decisions.md);
 chose it by three criteria: one capability in one app, rules in the product's own `product/` folder
 ([D-008](../../decisions.md)), and at least one write route.
 
-STYNX keeps 2.6.2 until its own release prerequisites land (12 §6).
+STYNX keeps its 2.x pin until its own release prerequisites land (12 §6; [D-090](../../decisions.md)).
 
-Source: 00, 02 §8, 04 §1, 08 A.1, decisions D-001–D-005, D-014, D-018, D-019, D-024, D-026, D-033, D-034, D-036, D-037, D-043, D-064–D-066; 11, 12 §0, §6, §8 (bootstrap history).
+Source: 00, 02 §8, 04 §1, 08 A.1, decisions D-001–D-005, D-014, D-018, D-019, D-024, D-026, D-033, D-034, D-036, D-037, D-043, D-064–D-066, D-090; 11, 12 §0, §6, §8 (bootstrap history).

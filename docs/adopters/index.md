@@ -24,7 +24,7 @@ specifies, so you can plan an adoption before the first publish.
   CI.
 - [Protected paths](protected-paths.md): the seven classes, the labels they produce, and how they
   differ from a packet's `paths.allowed` scope.
-- [Moving from v2](moving-from-v2.md): a fresh scaffold per product, no conversion, and the 2.6.2 pin
+- [Moving from v2](moving-from-v2.md): a fresh scaffold per product, no conversion, and a 2.x pin
   until you move.
 - [Upgrading](upgrading.md): generator versions, `--regenerate`, and successor specs.
 
