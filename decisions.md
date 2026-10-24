@@ -590,7 +590,7 @@ keep the exact 2.6.2 pin until they move (16); branch protection by plain contex
 (D-063). Edits E-8-01…E-8-20 applied (E-8-17 with D-064's wording; 10 §5 budget rows recounted:
 AGENTS.md 42 lines, 578 tokens); E-8-21 waits for the ledger ruling. `12-succession.md` promoted
 to `foundation/` as PROVISIONAL, revised for D-064's two non-default choices. Source: Owner
-("adopt all and apply"; "promote as PROVISIONAL").
+("adopt all and apply"; "promote as PROVISIONAL"). Superseded in part by D-090 (item 13's timing; item 16).
 
 ## D-066 · 2026-10-19 · v2 law ledger review closed; 11 final, 12 ratified
 Four Owner panels per D-064 (P-8-04) over `agents/campaign-8/LEDGER-REVIEW.md` (one line per row):

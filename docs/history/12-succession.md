@@ -1,4 +1,4 @@
-<!-- Ratified 2026-10-19 (D-064, D-065, D-066); promoted from agents/consolidate-8/claude-opus/, revised for D-064's Owner choices (P-8-08 relicensing, P-8-09 public). One-time plan. -->
+<!-- Ratified 2026-10-19 (D-064, D-065, D-066); promoted from agents/consolidate-8/claude-opus/, revised for D-064's Owner choices (P-8-08 relicensing, P-8-09 public). One-time plan. Amended in place by D-080 (§5 H3/H5) and D-090 (§5 H7, §6, §8); the line below is consolidation 8's provenance as of 2026-10-18. -->
 <!-- Consolidation 8 · Claude Opus 5.5 · 2026-10-18. Base: draft-round-8/claude-opus (reviews split; NOTES §1). Binding: decisions.md D-001–D-063, 01–10; 11 PROVISIONAL. P-8-nn, E-8-nn and Owner items: agents/campaign-8/. devai: = v2 @ 4289ff51 (origin aarusso-nyx/devai); stynx: @ 63e5f788; detran: @ 50b6c174; gh: = `gh api` 2026-10-18/19; ref: = reference/succession-2026-07/. Not promoted. -->
 # 12 — Succession plan
 
