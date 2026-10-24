@@ -18,7 +18,8 @@
   },
   "scripts": {
     "build": "tsc -b",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsc -p test/tsconfig.json && vitest run"
   },
   "peerDependencies": {
     "@nestjs/common": "^11.1.19"
@@ -27,6 +28,7 @@
     "@nestjs/common": "11.2.3",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.2",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "vitest": "4.1.11"
   }
 }
