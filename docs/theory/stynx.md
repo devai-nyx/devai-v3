@@ -83,7 +83,7 @@ Where a STYNX lint, tsconfig or linter enforces a standard, DEVAI invokes the pu
 Because the template depends on published STYNX packages and on STYNX's migrations, DEVAI 3.0.0 cannot
 ship before those STYNX deliverables exist ([D-029](../../decisions.md), [02 §1](../framework/02-architecture.md)).
 The Owner ruled which STYNX items gate the 3.0.0 template and which gate only STYNX's own adoption
-([D-064](../../decisions.md)). STYNX itself keeps DEVAI 2.6.2 until its own move ([D-065](../../decisions.md)).
+([D-064](../../decisions.md)). STYNX itself keeps a DEVAI 2.x pin until its own move ([D-065](../../decisions.md), [D-090](../../decisions.md)).
 
 Source: [00](../framework/00-intent.md), [01](../framework/01-charter.md), [02](../framework/02-architecture.md),
 [03](../framework/03-standards.md), [03b](../framework/03b-stynx-extraction.md), [04](../framework/04-layout.md),
