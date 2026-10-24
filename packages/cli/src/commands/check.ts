@@ -8,7 +8,12 @@ import type { DevaiConfig } from '../config.js';
 import { GitFailed, GitMissing, revParse, topLevel } from '../git/git.js';
 import { CommandRefusal, cliVersion, type Format, loadConfig, resolveRuntime } from '../main.js';
 import { acceptOutcome } from '../nodes/accept.js';
+import { boundary } from '../nodes/boundary.js';
+import { deadcode } from '../nodes/deadcode.js';
 import { runInventory } from '../nodes/inventory.js';
+import { openapi } from '../nodes/openapi.js';
+import { specLint } from '../nodes/spec-lint.js';
+import { sqlLint } from '../nodes/sql-lint.js';
 import { Report } from '../report.js';
 import { type NodeId, NODE_IDS } from '../runner/edges.js';
 import { exitCodeOf } from '../runner/gating.js';
@@ -26,8 +31,14 @@ export interface CheckFlags {
   prune?: boolean;
 }
 
-/** Node adapters by id (Part D: the closed enum, no registry). W1 has none beyond inventory and accept. */
-export const ADAPTERS: Partial<Record<NodeId, NodeAdapter>> = {};
+/** Node adapters by id (Part D: the closed enum, no registry). */
+export const ADAPTERS: Partial<Record<NodeId, NodeAdapter>> = {
+  'sql-lint': sqlLint,
+  'spec-lint': specLint,
+  boundary,
+  deadcode,
+  openapi,
+};
 
 /** W1: flags whose behaviour arrives with a later R6 wave. */
 const LATER: [keyof CheckFlags, string, string][] = [
