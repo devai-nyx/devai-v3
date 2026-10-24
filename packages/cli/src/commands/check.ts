@@ -8,10 +8,16 @@ import type { DevaiConfig } from '../config.js';
 import { GitFailed, GitMissing, revParse, topLevel } from '../git/git.js';
 import { CommandRefusal, cliVersion, type Format, loadConfig, resolveRuntime } from '../main.js';
 import { acceptOutcome } from '../nodes/accept.js';
+import { actionlint } from '../nodes/actionlint.js';
 import { boundary } from '../nodes/boundary.js';
+import { commitlint } from '../nodes/commitlint.js';
 import { deadcode } from '../nodes/deadcode.js';
+import { format } from '../nodes/format.js';
+import { i18n } from '../nodes/i18n.js';
 import { runInventory } from '../nodes/inventory.js';
 import { layout } from '../nodes/layout.js';
+import { lint } from '../nodes/lint.js';
+import { lintTests } from '../nodes/lint-tests.js';
 import { openapi } from '../nodes/openapi.js';
 import { routeContract } from '../nodes/route-contract.js';
 import { specLint } from '../nodes/spec-lint.js';
@@ -38,6 +44,9 @@ export interface CheckFlags {
 
 /** Node adapters by id (Part D: the closed enum, no registry); inventory and accept are the runner's. */
 export const ADAPTERS: Partial<Record<NodeId, NodeAdapter>> = {
+  format,
+  lint,
+  'lint-tests': lintTests,
   typecheck,
   layout,
   'sql-lint': sqlLint,
@@ -45,6 +54,9 @@ export const ADAPTERS: Partial<Record<NodeId, NodeAdapter>> = {
   'route-contract': routeContract,
   'sql-typed': sqlTyped,
   'test-integrity': testIntegrity,
+  i18n,
+  actionlint,
+  commitlint,
   boundary,
   deadcode,
   openapi,
