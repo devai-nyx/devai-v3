@@ -1143,6 +1143,38 @@ package path `P:<pkg>@3.0.0/<path>` (D-073 pattern):
 Amends 08 Part B preamble, B.3, B.4, B.7, B.9, B.14, B.17, B.19, B.20 and the 08 provenance header; 07 §2 and its
 citation key. Source: Owner (R6 packet, 2026-10-24).
 
+## D-090 · 2026-10-24 · v2 keeps a bounded stabilization window until the first adopter module is green on v3; H7 moves after it (devai-v3#39; amends D-065 items 13 and 16)
+D-065 archived `aarusso-nyx/devai` on 3.0.0's publish day with no further 2.x release (item 13,
+12 §6) and held adopters on an exact 2.6.2 pin (item 16). Both premises moved: 2.x development
+continued after the ruling (GitHub Packages `@aarusso-nyx/devai` 2.6.2 2026-10-14, 2.6.3
+2026-10-19, 2.7.0 2026-10-23, 2.7.1 2026-10-24T07:48Z; the repository is not archived, `main` at
+`2df84159` pushed 2026-10-24T07:46Z, tags up to v2.7.1), and both adopters (STYNX, DETRAN) run v2
+in production with no v3 module yet. Options: (a) a bounded window: `aarusso-nyx/devai` stays
+unarchived and may receive defect fixes only (no features, no new law) until the first adopter
+(STYNX through its S10 adoption, or DETRAN's first module per 12 §6) has one v3 module green in its
+CI with its applied SQL history kept and a recovery path shown; then H7 archives it; adopter pins
+float within `2.x` (`^2.6.2` or the adopter's own exact pin, their choice) until they move; (b) keep
+D-065's publish-day cutoff and only fix the stale text: the final 2.x is whatever is latest on
+publish day and the guide tells adopters to pin that exact version; (c) name 2.7.1 the final 2.x
+now, stop publishing 2.x, archive on publish day. Recommended: (a). Publication and adoption are
+different milestones: a publish-day archive would close the maintenance channel of two production
+systems before either has a v3 module; the window ends on an observable event, not a date; and
+fixes are defects only, which keeps D-065's "no dual development" in substance. (b) leaves
+production adopters on a frozen release with no defect channel; (c) does the same and freezes it
+today. Closure criteria, all observed, in order:
+- [ ] one v3 module of the first adopter is green in that adopter's CI (`devai.yml` `matrix`, or
+  `devai check --full` exit 0);
+- [ ] that adopter's applied SQL history is preserved (D-033);
+- [ ] a recovery path is demonstrated: a `devai check` after a deliberate break returns to green;
+- [ ] the Owner runs H7 and the agent reads back `gh api repos/aarusso-nyx/devai --jq .archived` →
+  `true`.
+Supersedes in D-065: item 13's timing (only `aarusso-nyx/devai` is archived still holds; H7 runs
+after the criteria above, not on publish day, and "no further 2.x" becomes "defect fixes only
+during the window"); item 16 entirely (the exact 2.6.2 pin is replaced by a pin floating within
+`2.x`). D-065's text is not edited. Amends 12 §5 (H7 row), §6 and §8; docs/adopters/moving-from-v2.md,
+docs/adopters/index.md, docs/dev/release.md, docs/theory/stynx.md. Host act (Owner): H7, after the
+criteria. Chosen: (a). Source: Owner (panel 2026-10-24, "Bounded window").
+
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.

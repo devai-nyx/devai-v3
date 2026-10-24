@@ -1,14 +1,14 @@
 ---
 title: Decisions
 sidebar_position: 12
-description: Index of the 89 numbered decisions D-001 to D-089 in decisions.md, with date and title.
+description: Index of the 90 numbered decisions D-001 to D-090 in decisions.md, with date and title.
 ---
 
 # Decisions
 
-[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **89 decisions** (D-001…D-089), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
+[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **90 decisions** (D-001…D-090), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
 
-Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 15 on 2026-10-24 (D-075…D-089). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
+Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 16 on 2026-10-24 (D-075…D-090). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
 
 | Id | Date | Title |
 |---|---|---|
@@ -101,6 +101,7 @@ Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-0
 | D-087 | 2026-10-24 | Config contracts: template `.stynxrc.json` names the 04 roots and is validated by DEVAI; generated routes keep `@RequireRoles` from `@stynx-nyx/backend` (R6 W2 fact sheet b7, b8, b10) |
 | D-088 | 2026-10-24 | STYNX publishes the write pair; until then `openapi` and the STYNX `generated` pairs are `tooling-missing` and the contract files are seed (R6 W2 fact sheet c1) |
 | D-089 | 2026-10-24 | Stale citations after STYNX 3.0.0 (R6 W2 fact sheet a1–a9; a10 added in review) |
+| D-090 | 2026-10-24 | v2 keeps a bounded stabilization window until the first adopter module is green on v3; H7 moves after it (devai-v3#39; amends D-065 items 13 and 16) |
 
 ## Still open
 
