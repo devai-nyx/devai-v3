@@ -230,6 +230,7 @@ Negative cells mutate the default cell (bare, no `--web`, `lgpd: true`, en-US) a
 | N15 | `pnpm-lock.yaml` bumped (toolchain) after a green `--full` | default | every node including `review` is a cache miss; `review` re-runs (D-076) |
 | N16 | `.DS_Store` written in the working tree | default | candidate digest equal to the commit's; no `untracked:` line (D-076); with `.gitignore` line removed, the line `untracked: .DS_Store (not in any commit)` prints |
 | N17 | one commit `Co-Authored-By: Claude …`, a second `Co-Authored-By: GPT …` in `base..HEAD` | default | `review` `UNKNOWN: family`; `review.json` absent; exit 2 (D-079) |
+| N18 | one unit case changed to `it.skip('… // #123')` | default | `test-integrity` PASS (issue referenced); `unit` FAIL `skipped [S-64]`, `observed < expected` by one (D-081) |
 
 
 ## 5. STYNX relationship

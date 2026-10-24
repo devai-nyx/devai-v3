@@ -321,9 +321,9 @@ export type DevaiConfig = z.infer<typeof DevaiConfig>;
 | Inputs | The selected `*.spec.ts` files (affected projects, minus `*.acceptance.spec.ts`, D-054) and the `tsc -b` project closure of each as `inventory` computes it (02 §2 (f)); `vitest.config.ts`; the Vitest 4.1.11 version (D-076) |
 | Population | `no unit test files in affected projects` |
 | Invokes | `vitest run --config vitest.config.ts --reporter <devai reporter module> --project <affected…>` with `TEST_TIER=unit`; the reporter is the C.5 adapter (Vitest `Reporter` interface [fact: `P:vitest@4.1.11…/dist/chunks/reporters.d.DtoKVV2s.d.ts:1041-1091`]); SWC metadata transform as STYNX's [fact: `stynx:tools/repo-config/vitest.base.mjs:243-253`] |
-| Observation | One observation = one test case; `expected` = cases collected (`onTestModuleCollected`) across the `expected` files; `observed` = cases with a terminal result (`passed`, `failed`, `skipped`, `pending` are terminal); `evaluated` = cases `passed` or `failed`. A collected file absent from the census is a shortfall `FAIL` |
-| Status | `FAIL`: ≥ 1 failed case; a test module that fails to import (candidate defect, locator = module); `UNKNOWN`: a collected case without a terminal result at `onTestRunEnd`, or exit without `onTestRunEnd` (`runner-crashed`), timeout, `tooling-missing`. Skipped/pending cases lower `evaluated`, are printed on the line, and are not a `unit` finding (S-64 is `test-integrity`'s) |
-| Findings | `<file>:<line> <fullName>: <error.message first line> [tests] fix the behaviour or the case through its packet`; import failure `<file>:1 collection failed: <message> [tests] fix the import` |
+| Observation | One observation = one test case; `expected` = cases collected (`onTestModuleCollected`) across the `expected` files; `observed` = cases that ran to `passed` or `failed` (a `skipped` or `pending` case is terminal but is **not** an observation, D-081); `evaluated` = `observed`. A collected file absent from the census, or a collected case not observed, is a shortfall `FAIL` (02 §2 rule b) |
+| Status | `FAIL`: ≥ 1 failed case; a test module that fails to import (candidate defect, locator = module); `UNKNOWN`: a collected case without a terminal result at `onTestRunEnd`, or exit without `onTestRunEnd` (`runner-crashed`), timeout, `tooling-missing`. A skipped or pending case is a shortfall `FAIL` naming the case (D-081): S-64's issue reference satisfies `test-integrity`'s static check, not `unit`, which observes what ran |
+| Findings | `<file>:<line> <fullName>: <error.message first line> [tests] fix the behaviour or the case through its packet`; import failure `<file>:1 collection failed: <message> [tests] fix the import`; skipped `<file>:<line> <fullName>: skipped [S-64] make it run or delete the case` |
 | Latency / where | B · E, P, R |
 | Needs | — |
 
@@ -475,7 +475,7 @@ export type DevaiConfig = z.infer<typeof DevaiConfig>;
 | Inputs | Affected `test/integration/*.integration.spec.ts`, `test/db/*.db.spec.ts`, their `tsc -b` project closure from `inventory`, `apps/*/src/**`, `test/support/**`, `db-apply`'s `schemaDigest`, `vitest.config.ts` (D-076) |
 | Population | `no test/integration or test/db files affected` |
 | Invokes | `vitest run --config vitest.config.ts --reporter <devai reporter module>` once per **populated** tier (`TEST_TIER=integration` when integration files are affected, `TEST_TIER=db` when db files are; never an empty tier run), with `DATABASE_URL=<scratch url>` and `DEVAI_RUNTIME`; no test may start testcontainers (02 §6; STYNX's helper does today [fact: `stynx:packages/testing/src/create-test-app.ts:3,31-38`]) |
-| Observation | As `unit` (one observation = one case; skipped/pending terminal but not evaluated); the template-emitted cases are part of the population and their absence is a shortfall `FAIL`: RLS isolation observed as `<product>_app` (S-18), a request without `X-Request-Id` or with a non-UUIDv7 id is rejected with 400, and an id-less `GET`/`HEAD` on `/healthz` or `/readyz` is served (S-70, D-072; STYNX rejects a missing id since SM-15 and exempts only those probes [fact: `stynx:packages/core/src/core.module.ts:55`, `stynx:packages/core/src/request-id-rejection.ts:20-38`]) |
+| Observation | As `unit` (one observation = one case that ran; a skipped or pending case is a shortfall `FAIL`, D-081); the template-emitted cases are part of the population and their absence is a shortfall `FAIL`: RLS isolation observed as `<product>_app` (S-18), a request without `X-Request-Id` or with a non-UUIDv7 id is rejected with 400, and an id-less `GET`/`HEAD` on `/healthz` or `/readyz` is served (S-70, D-072; STYNX rejects a missing id since SM-15 and exempts only those probes [fact: `stynx:packages/core/src/core.module.ts:55`, `stynx:packages/core/src/request-id-rejection.ts:20-38`]) |
 | Status | As `unit`; plus `UNKNOWN: postgres-unreachable`, `prerequisite-failed` (db-apply); a suite that connected as owner for an isolation assertion is `FAIL` [S-18] |
 | Findings | `<file>:<line> <fullName>: <message> [S-02\|S-18\|S-70] fix the behaviour under the application role` |
 | Latency / where | C · P (affected), R |
@@ -807,7 +807,7 @@ A Reporter module (Vitest 4.1.11 `Reporter`: onTestModuleCollected, onTestCaseRe
 by path; the runner never parses Vitest's console output.
   collected(module): every TestCase (name, location.line [d.ts:134,158]) → expected/observed accounting.
   result(testCase): TestResult.state passed|failed|skipped|pending [d.ts:354-396]; skipped/pending are terminal
-    (observed) and not evaluated; for failed, errors[0] is a TestError { name, message, stacks[] }
+    but not observations (shortfall, D-081); for failed, errors[0] is a TestError { name, message, stacks[] }
     [@vitest/utils types.d.ts:19-32].
   reached(testCase) := state === 'failed' && errors[0].name === 'AssertionError'      (chai's, thrown by every
     expect matcher [fact: @vitest/expect dist/index.js:1179,1211]) && stacks[0].file === the acceptance file
