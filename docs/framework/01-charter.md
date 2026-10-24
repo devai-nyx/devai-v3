@@ -55,7 +55,8 @@ the code; the controller is the coding agent in its own edit–check–fix loop;
 edits; the error is what `devai check` reports for the current change. A zero residual means the
 declared observations succeeded, not that correctness has been proved. Above the loop there is a
 dashboard, not another loop. Independence comes from derivation source and sequencing, not from role
-identities (D-003, D-019, D-035; packet granularity per D-026, provisional).
+identities (D-003, D-019, D-035; packet granularity per D-026, provisional); what CI can verify of the
+reviewer's evidence is a digest, not provenance (D-037 as reworded by D-079).
 
 ## What the pilot does
 
