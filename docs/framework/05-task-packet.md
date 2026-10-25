@@ -334,7 +334,7 @@ paths:
 protected: [spec]                      # this file: amendments and dispositions
 context:
   - { path: product/demo/rules/RN-DEMO-001.md, lines: "1-5", why: "the limits behind R-2; counted in UTF-16 code units" }
-  - { path: domain/notes/api/src/notes.repository.ts, lines: "1-40", why: "defineQuery seeds from PKT-DEMO-002; fill the bodies, keep the names" }
+  - { path: domain/notes/api/src/notes.repository.ts, why: "defineQuery seeds from PKT-DEMO-002; fill the bodies, keep the names" }
 observations:
   unimplemented: []
 ---
