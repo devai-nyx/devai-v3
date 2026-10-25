@@ -9,6 +9,7 @@ import { Command, CommanderError } from 'commander';
 import type { z } from 'zod';
 import { check } from './commands/check.js';
 import { init, type InitOptions } from './commands/init.js';
+import { newModule } from './commands/new-module.js';
 import { packetLint, packetNew, packetRebase } from './commands/packet.js';
 import { packetsStatus } from './commands/packets.js';
 import { DevaiConfig } from './config.js';
@@ -121,6 +122,20 @@ export function buildProgram(state: { exitCode: number; argv: readonly string[] 
       const stdin = opts.hook === 'pre-push' ? readStdin() : undefined;
       await run(opts, (format) => check(state.argv.slice(state.argv.indexOf('check') + 1), { ...opts, args, ...(stdin !== undefined ? { stdin } : {}) }, format, process.cwd()));
     });
+  // A.2.
+  program
+    .command('new')
+    .description('write from an approved spec (08 A.2)')
+    .exitOverride()
+    .command('module')
+    .description('render one module from one approved spec (09 §2)')
+    .requiredOption('--spec <path>', 'repo path of an approved spec (06 §6)')
+    .option('--web', 'add web/** (04 §2)')
+    .option('--out <dir>', 'destination, default domain/<module.slug>')
+    .option('--regenerate', 'rewrite the mode: generated files of an existing module (A.2)')
+    .option('--format <text|json>', 'output format (07 §3)')
+    .exitOverride()
+    .action(async (opts: { format?: string } & Parameters<typeof newModule>[0]) => run(opts, (format) => newModule(opts, format, process.cwd())));
   // A.4.
   const packet = program.command('packet').description('author a task packet (08 A.4)').exitOverride();
   packet
