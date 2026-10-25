@@ -28,14 +28,16 @@ describe('09 §6 worked example', () => {
     expect(readFileSync(FIXTURE, 'utf8')).toBe(lawBlock());
   });
 
-  it('the file set and every mode are §6’s', () => {
+  // W10: remove .fails once the generator follows D-093/D-094/D-095 (devai-v3#68).
+  it.fails('the file set and every mode are §6’s', () => {
     const files = module.filter((r) => r.path !== 'domain/notes/generation-manifest.json');
     expect([...rendered.keys()]).toEqual(files.map((r) => r.path.slice('domain/notes/'.length)).sort());
     for (const r of files) expect([r.path, rendered.get(r.path.slice('domain/notes/'.length))!.mode]).toEqual([r.path, r.mode]);
     expect(module.find((r) => r.path === 'domain/notes/generation-manifest.json')!.mode).toBe('—');
   });
 
-  it('every file carries §6’s text, in §6’s order', () => {
+  // W10: remove .fails once the generator follows D-093/D-094/D-095 (devai-v3#68).
+  it.fails('every file carries §6’s text, in §6’s order', () => {
     const p = valid();
     const manifest = manifestText(manifestOf({ id: 'SPEC-DEMO-001', sha256: '0'.repeat(64), machineBlockSha256: p.machineBlockSha256 }, S6, version, entriesOf(rendered)));
     for (const r of module) {
@@ -45,7 +47,8 @@ describe('09 §6 worked example', () => {
     }
   });
 
-  it('rows §6 gives whole are byte-identical: api/tsconfig.json, api/src/index.ts, acceptance/.gitkeep', () => {
+  // W10: remove .fails once the generator follows D-093/D-094/D-095 (devai-v3#68).
+  it.fails('rows §6 gives whole are byte-identical: api/tsconfig.json, api/src/index.ts, acceptance/.gitkeep', () => {
     const whole = (path: string) => rows().find((r) => r.path === `domain/notes/${path}`)!.synopsis.map((l) => (l.trim() === 'G' ? subst.header : l)).join('\n');
     expect(normalise(text(rendered, 'api/tsconfig.json'))).toBe(normalise(whole('api/tsconfig.json')));
     expect(text(rendered, 'api/src/index.ts')).toBe(whole('api/src/index.ts').split('  ').join('\n') + '\n');

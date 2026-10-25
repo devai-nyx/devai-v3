@@ -1,14 +1,14 @@
 ---
 title: Decisions
 sidebar_position: 12
-description: Index of the 91 numbered decisions D-001 to D-091 in decisions.md, with date and title.
+description: Index of the 102 numbered decisions D-001 to D-102 in decisions.md, with date and title.
 ---
 
 # Decisions
 
-[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **91 decisions** (D-001…D-091), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
+[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **102 decisions** (D-001…D-102), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
 
-Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 17 on 2026-10-24 (D-075…D-091). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
+Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 28 on 2026-10-24 (D-075…D-102). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
 
 | Id | Date | Title |
 |---|---|---|
@@ -95,7 +95,7 @@ Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-0
 | D-081 | 2026-10-24 | A skipped or pending test case is collected but not observed: `unit` and `integration` report a shortfall `FAIL` (closes the D-077 open item) |
 | D-082 | 2026-10-24 | Reviewer and sensor isolation is enforced by the host CLI and then checked in its stream (devai-v3#47) |
 | D-083 | 2026-10-24 | The sensor evidence records the threshold it was judged by, and CI re-applies the PR head's (devai-v3#36) |
-| D-084 | 2026-10-24 | R6 W1 readings: fifteen adopted as 08 clarifications, three revised, populations and `nodeVersion` ruled (devai-v3#55) |
+| D-084 | 2026-10-24 | R6 W1 readings: fifteen adopted as 08 clarifications, three revised, populations and `nodeVersion` ruled (devai-v3#55) — item 7 refined by D-092 |
 | D-085 | 2026-10-24 | `sql-lint` runs one invocation over every root; LINT010's day prefix is a STYNX defect; DEVAI re-roots locators (R6 W2 fact sheet b1–b3) |
 | D-086 | 2026-10-24 | Exit codes are never trusted alone: pre-flight what DEVAI controls, read verdicts from parsed output (R6 W2 fact sheet b5, b6, b9) |
 | D-087 | 2026-10-24 | Config contracts: template `.stynxrc.json` names the 04 roots and is validated by DEVAI; generated routes keep `@RequireRoles` from `@stynx-nyx/backend` (R6 W2 fact sheet b7, b8, b10) |
@@ -103,6 +103,17 @@ Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-0
 | D-089 | 2026-10-24 | Stale citations after STYNX 3.0.0 (R6 W2 fact sheet a1–a9; a10 added in review) |
 | D-090 | 2026-10-24 | v2 keeps a bounded stabilization window until the first adopter module is green on v3; H7 moves after it (devai-v3#39; amends D-065 items 13 and 16) |
 | D-091 | 2026-10-24 | DEVAI requires nothing beyond GitHub Free; D-080's ruleset is retired |
+| D-092 | 2026-10-24 | The two `domain/*` workspace globs are seed globs and never raise the no-match finding (refines D-084 item 7) |
+| D-093 | 2026-10-24 | Module tsconfigs carry `rootDir` and `composite`; the mount adds the module to the app's `references` |
+| D-094 | 2026-10-24 | Each module package declares what its emitted code imports; the root carries tooling only |
+| D-095 | 2026-10-24 | The `generate` packet's globs, protected classes and `base` |
+| D-096 | 2026-10-24 | `.prettierignore` names the fixed-byte law texts; the generator formats its own output |
+| D-097 | 2026-10-24 | Materialise `init` installs `@devai-nyx/cli` at its own version, then commits with live hooks |
+| D-098 | 2026-10-24 | 09 §4 campaign: reference files as fixtures, the default cell is O2, negative cells re-stated to 08's forms |
+| D-099 | 2026-10-24 | Under `--hook pre-push` an unreadable base is `UNKNOWN` and exits 2 (C.2 over the A.7 "notice") |
+| D-100 | 2026-10-24 | R6 closes modulo the S10 list of STYNX defects (cross-references D-088) |
+| D-101 | 2026-10-24 | The sensor runs without `--bare` |
+| D-102 | 2026-10-24 | The remaining R6 wave Open items are ratified as recorded |
 
 ## Still open
 

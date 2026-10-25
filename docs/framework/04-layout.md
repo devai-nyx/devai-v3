@@ -28,6 +28,7 @@ O-004…O-007 were closed 2026-10-17 (D-021…D-024). Everything below is bindin
   docs/{framework,meta,adopters,reference,start,site,_ia}/
   .agents/skills/<name>/SKILL.md # agent skills; thin per-tool pointers elsewhere
   .stynxrc.json                  # STYNX boundary config, checked by STYNX's own verifier
+  .prettierignore                # the fixed-byte law texts `format` leaves alone (D-096)
 ```
 
 Rules:
