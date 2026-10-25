@@ -407,7 +407,7 @@ devai commit-msg FAIL — write type(scope): subject, scope = package or module 
 devai commit-msg UNKNOWN — commitlint: <reason>; do the remedy above, then commit again
 ````
 
-[opinion] `protected-paths` lines stay notices. "CI runs the same nodes" replaces a `--no-verify` ban.
+[opinion] `protected-paths` touched-class lines stay notices. An unreadable base is not a notice: `protected-paths UNKNOWN: base-unreadable` prints the pre-push `UNKNOWN` line and refuses the push (exit 2) until `git fetch origin` (08 A.7, D-099). "CI runs the same nodes" replaces a `--no-verify` ban.
 
 **Reason-code hints.** [fact] 08 C.2 gives command-level `reason` no hint, so most codes reach the agent
 bare. [opinion] E-6-03 prints `UNKNOWN <node> <reason>: <hint>` and `devai: <reason> — <hint>`.
