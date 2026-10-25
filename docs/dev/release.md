@@ -58,6 +58,9 @@ ratify W11's `config-mismatch` readings; [D-122](../../decisions.md) admits the 
 R8's first pass (devai-v3#81) ran the 09 §4 matrix; [D-123](../../decisions.md)–[D-131](../../decisions.md) rule
 its open items: the shell's guards and error bodies, `packet rebase`'s PL-14, the aggregate `matrix`
 job, and the sensor evidence, deferred until S10 #4 ([D-128](../../decisions.md)).
+[D-132](../../decisions.md)–[D-134](../../decisions.md) make the test config a `typecheck` project, word `unit`'s
+population as coded, and let R8 close on a green `matrix` in both runtimes, the sensor evidence re-checked at
+R9. With them, R8 has no open law question.
 R7 is confirmed on the release host.
 
 **Not blocking 3.0.0** (12 §4): the D-047 edit-loop p95 measurement (3.0.0 ships 90000); the first

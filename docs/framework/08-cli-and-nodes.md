@@ -195,13 +195,13 @@ export type DevaiConfig = z.infer<typeof DevaiConfig>;
 | `format` | changed, present `*.{ts,mjs,json,md}` not named by `.prettierignore` (D-096) |
 | `lint` | changed, present `*.ts`, `*.mts`, `*.html` |
 | `lint-tests` | changed, present `*.spec.ts` |
-| `typecheck` | workspace package containing a changed `*.ts`/`*.mts`/`*.cts` or `tsconfig*.json` (the `tsc -b` closure replaces it when its wave lands) |
+| `typecheck` | workspace package containing a changed `*.ts`/`*.mts`/`*.cts` or `tsconfig*.json` (the `tsc -b` closure replaces it when its wave lands); a changed file under a `test/` tree puts the root `tsconfig.test.json` project in that closure (D-132) |
 | `layout` | candidate path; never `SKIPPED` |
 | `sql-lint` | changed, present `*.sql` |
 | `spec-lint` | changed path under `specs/` or `product/` |
 | `route-contract` | declared `domain/*/api/src/**/*.controller.ts` (declared, not mounted, until the mount census lands) |
 | `sql-typed` | changed, present `*.repository.ts` |
-| `unit` | `*.spec.ts` outside the tier suffixes (`acceptance`, `integration`, `db`, `e2e`) in a `typecheck`-affected package |
+| `unit` | `*.spec.ts` outside the tier suffixes (`acceptance`, `integration`, `db`, `e2e`) in a package containing a changed file or an affected project (D-133) |
 | `test-integrity` | changed path under `test/`, `apps/*/test/` or `domain/*/{api,web}/test/` |
 | `i18n` | opted-in locale beyond `en-US`, plus each package that depends on `@angular/core` |
 | `actionlint` | changed, present `.github/**/*.{yml,yaml}` |
