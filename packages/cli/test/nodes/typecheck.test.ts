@@ -51,6 +51,14 @@ describe('B.5 typecheck', () => {
     expect(row).toMatchObject({ status: 'SKIPPED', evidence: 'no affected project' });
   });
 
+  it('SKIPPED with "no affected project" when the changed *.ts belongs to no project (B.1: the tsc -b closure)', async () => {
+    // A test packet's diff: a spec beside a package whose tsconfig includes only src/, so no project is affected.
+    const dir = workspace();
+    write(dir, 'apps/api/test/acceptance/spec-demo-001.acceptance.spec.ts', "import { it } from 'vitest';\nit('R-1: x', () => undefined);\n");
+    const { row } = await runOnly(dir, 'typecheck');
+    expect(row).toMatchObject({ status: 'SKIPPED', evidence: 'no affected project' });
+  });
+
   const direct = async (dir: string): Promise<RunContext> => ({
     root: dir, config: templateConfig(), runtime: 'bare', cliVersion: '3.0.0', listing: await workingTree(dir, null), base: null, head: 'b'.repeat(40),
     plan: plan({ packet: false, full: false, only: ['typecheck'] }),
