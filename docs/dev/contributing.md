@@ -71,7 +71,7 @@ named v3 mechanism depends on it ([D-055](../../decisions.md);
 | Protection (12 §5) | Value |
 |---|---|
 | Required checks | `build` (H3); `build` and `matrix` once R9 lands (H5) |
-| Required workflow (ruleset) | `.github/workflows/ci.yml` from `main`, so a PR cannot redefine its own required check ([D-080](../../decisions.md)) |
+| Required workflow (ruleset) | **none**: GitHub Free cannot require a workflow from `main` ([D-091](../../decisions.md)) |
 | Up to date before merge | yes (`strict`) |
 | Applies to admins | yes |
 | Required reviews | **none** |
@@ -82,8 +82,9 @@ named v3 mechanism depends on it ([D-055](../../decisions.md);
 A few percent of v2's 319 merged PR diffs were read, so human ratification of diffs is not a
 control. Acceptance authority rests on deterministic checks plus an independent reviewer
 ([D-003](../../decisions.md)). This repository therefore has no CODEOWNERS file, no required
-reviewers and no publish PAT (12 §8). The one thing a PR must not be able to do is redefine the check
-it is gated by; a ruleset runs the required workflow from `main` ([D-080](../../decisions.md)). Whatever the pilot reads, they read for intent: decisions,
+reviewers and no publish PAT (12 §8). A PR can still edit `ci.yml` and so the check
+it is gated by: GitHub Free has no way to require the `main` copy, and DEVAI uses nothing beyond
+GitHub Free ([D-091](../../decisions.md)). Such a PR is `protected:ci`; read it for intent. Whatever the pilot reads, they read for intent: decisions,
 specs and the error state ([D-003](../../decisions.md), [01](../framework/01-charter.md)).
 
 This does not mean nobody looks. A PR that changes the law carries its decision entry, and that entry

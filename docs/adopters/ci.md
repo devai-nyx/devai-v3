@@ -66,27 +66,27 @@ D-002's rule that CI is the only consumer of evidence ([D-037](../../decisions.m
 ([D-028](../../decisions.md), [08 C.2](../framework/08-cli-and-nodes.md)). During the shadow period
 the summary prints `mustRun: false` and `tallied`.
 
-## Branch protection and the required workflow
+## Branch protection
 
-Require the `devai` job as the status check, **and** require the workflow itself through a
-repository ruleset that runs `.github/workflows/devai.yml` from `main` ([D-080](../../decisions.md)).
-Without the ruleset, GitHub computes a pull request's checks from the PR's own copy of the workflow,
-so a PR could rewrite the check it must pass. The ruleset runs the `main` copy regardless of what the
-PR changes under `.github/**`; the PR's own copy still runs and is informational. Required workflows
-are available on public repositories and on paid plans; a private repository on a free plan cannot
-add the rule and carries the residual risk D-003 states.
+Require the `devai` job as the status check through classic branch protection. DEVAI needs nothing
+beyond GitHub Free ([D-091](../../decisions.md)): protection with required status checks is free on
+public repositories; a private repository on the free plan has no enforced gate, and the `devai`
+check is what the pilot reads before merging.
 
 ```sh
-gh api -X POST repos/<owner>/<repo>/rulesets --input - <<'JSON'
-{ "name": "devai", "target": "branch", "enforcement": "active",
-  "conditions": { "ref_name": { "include": ["~DEFAULT_BRANCH"], "exclude": [] } },
-  "rules": [ { "type": "workflows", "parameters": { "workflows": [
-    { "path": ".github/workflows/devai.yml", "repository_id": <id>, "ref": "refs/heads/main" } ] } } ] }
+gh api -X PUT repos/<owner>/<repo>/branches/main/protection --input - <<'JSON'
+{ "required_status_checks": { "strict": true, "contexts": ["devai"] }, "enforce_admins": true,
+  "required_pull_request_reviews": null, "restrictions": null,
+  "allow_force_pushes": false, "allow_deletions": false }
 JSON
 ```
 
-`<id>` is `gh api repos/<owner>/<repo> --jq .id`. `devai init` prints both host lines, protection and
-ruleset, at the end of its output ([08 A.1](../framework/08-cli-and-nodes.md)). The succession plan's step for each adopter is
+There is no ruleset. GitHub computes a pull request's checks from the PR's own copy of
+`.github/workflows/devai.yml`, so a PR that edits the workflow can weaken the check it must pass;
+requiring the `main` copy needs an organization ruleset, which GitHub Free does not offer. Such a PR
+carries `protected:ci`, and `review` gates it when the packet did not declare the class
+(`protected:unplanned`); the residual risk is stated in [D-091](../../decisions.md). `devai init`
+prints the protection host line at the end of its output ([08 A.1](../framework/08-cli-and-nodes.md)). The succession plan's step for each adopter is
 "protection requires the `devai.yml` job" (12 §6, bootstrap history). Required human reviews are not
 the control: acceptance authority rests on deterministic checks plus the independent reviewer, and
 a pilot reading diffs is not an observation ([D-003](../../decisions.md)). No CODEOWNERS file ships
