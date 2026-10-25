@@ -40,7 +40,7 @@ Consumers are 02 §2 nodes; "dashboard" is the `--summary` line and the PR body 
 | `paths.allowed` | list of globs, ≥ 1 | yes | `packet-scope` | Everything the candidate may change, including the packet's own path. Globs are gitignore-style, rooted at the repo |
 | `paths.forbidden` | list of globs | no | `packet-scope`, agent | Overrides inside `allowed` (D-052): a changed path matching `forbidden` fails even if `allowed` matches it. The explicit "don't" for the paths the agent is most likely to reach for |
 | `protected` | subset of `spec product decisions standards infra ci acceptance` | yes, may be `[]` | `protected-paths`, Action, `accept`, dashboard | Classes this packet *plans* to touch (02 §5). A touched class not listed → `protected:unplanned` → `review` gates this PR |
-| `context[]` | `{ path, lines: "a-b", why }` | no | agent, `review` | Bounded pointers, not quotes: ≤ 8 entries, ≤ 40 lines each, ≤ 200 lines total, resolved at `base`. The spec is never listed here; it is read whole |
+| `context[]` | `{ path, lines?: "a-b", why }` | no | agent, `review` | Bounded pointers, not quotes: ≤ 8 entries, ≤ 40 lines each, ≤ 200 lines total, resolved at `base`. An entry without `lines` names the whole file and counts at the file's own length (D-135). The spec is never listed here; it is read whole |
 | `observations.unimplemented` | list of `R-n` | yes, may be `[]` | `spec-tests` (`--expect-red`, 02 §8), `accept`, dashboard | Non-empty only for `kind: test` (D-051). Each id is an `acceptance: yes` requirement that appears in the spec's `unimplemented[]` under `requirement:` (06); `spec-tests` applies expected red to exactly these cases |
 
 Markdown sections, in this order; headings are literal:
@@ -91,7 +91,7 @@ paths:
   forbidden: [ <glob>, ... ]                # optional; wins inside allowed (D-052)
 protected: []                               # classes planned, may be empty
 context:                                    # optional, ≤ 8 × ≤ 40 lines, ≤ 200 lines
-  - { path: <repo path>, lines: "1-12", why: <one line> }
+  - { path: <repo path>, lines: "1-12", why: <one line> }   # lines optional: omitted = whole file (D-135)
 observations:
   unimplemented: []                         # R-n ids; non-empty only for kind: test
 ```
@@ -221,7 +221,7 @@ plus the working-tree copy. `packet-scope` executes 06's SL09 and SL10 here beca
 | PL-11 | Every named `R-n` is an `acceptance: yes` requirement of the spec at `spec.sha256` and appears in its `unimplemented[]` under `requirement:` (06); `--expect-red` given with an empty list, or a non-empty list on a kind other than `test`, is an error | `R-9 is not a requirement of SPEC-DEMO-001` · `R-3 is not in SPEC-DEMO-001 unimplemented[]: a test packet may expect red only for cases the spec declares unimplemented` · `--expect-red given but observations.unimplemented is empty` | 1 · 2 `expect-red-nothing-named` | `packet-scope` |
 | PL-12 | Each `after` id appears as a `Packet:` trailer in `git log <base>` (`CMP-` values skipped, D-122); `supersedes` names an existing packet | `after: PKT-DEMO-003 is not merged below base 21d6…; advance base with devai packet rebase` | 1, `--full` only | `accept` |
 | PL-13 | `id`, `kind`, `spec.*`, `supersedes` equal their values at the introducing commit | `frozen field 'spec.sha256' changed since 9e41…; write a successor packet` | 1 | `packet-scope` |
-| PL-14 | `context` entries resolve at `base`, ranges inside the file, bounds of §2 kept; the packet is ≤ 200 lines | `context[0] product/demo/rules/RN-DEMO-001.md lines 1-40 exceeds the file (5 lines)` · `packet is 231 lines (limit 200): move prose to the spec or the module README` | 2 `packet-invalid` | `packet-scope` |
+| PL-14 | `context` entries resolve at `base`, ranges inside the file, bounds of §2 kept (an entry without `lines` counts at the file's length, D-135); the packet is ≤ 200 lines | `context[0] product/demo/rules/RN-DEMO-001.md lines 1-40 exceeds the file (5 lines)` · `packet is 231 lines (limit 200): move prose to the spec or the module README` | 2 `packet-invalid` | `packet-scope` |
 | PL-15 | No node in the required set (§3) is `SKIPPED` | `required node skipped for kind: code: route-contract (inventory: no mounted routes in domain/notes)`; hint `deliver what the kind requires (05 §3); an empty population means the deliverable is missing` (D-084) | 1 | `accept` |
 | PL-16 | No packet under `packets/**` at HEAD carries `supersedes: <this id>` | `packet PKT-DEMO-004 is superseded by PKT-DEMO-006; work that packet` | 1 | `accept` |
 | PL-17 | Spec transitions (SL09, bounded to the blob at `base`): for every `specs/**` file in the candidate diff, the change is one of: added as `draft`, or as `approved` with `approved-by`; `draft → draft`; `draft → approved` with `approved-by`; `approved → superseded-by: <X>` with no other byte changed and `X` present in the candidate carrying `supersedes: {id, path, sha256}` where `sha256` is the blob at `base` | `spec SPEC-DEMO-001: illegal transition approved → draft; write a successor` · `spec SPEC-DEMO-001 superseded-by SPEC-DEMO-002 but SPEC-DEMO-002.supersedes.sha256 ≠ blob at base` | 1 | `packet-scope` |
@@ -247,7 +247,7 @@ description: Work one DEVAI task packet (packets/**/PKT-*.md) through the check 
 # devai-task
 
 Read, in this order, and nothing else is required: the packet; the spec at `spec.path`
-(whole file); each `context` entry at the given lines; `domain/<m>/README.md` if it exists.
+(whole file); each `context` entry at the given lines (the whole file when it gives none, D-135); `domain/<m>/README.md` if it exists.
 
 ## Loop
 1. `devai check --packet <packet>` — the edit-loop subset plus packet scope and the
@@ -334,7 +334,7 @@ paths:
 protected: [spec]                      # this file: amendments and dispositions
 context:
   - { path: product/demo/rules/RN-DEMO-001.md, lines: "1-5", why: "the limits behind R-2; counted in UTF-16 code units" }
-  - { path: domain/notes/api/src/notes.repository.ts, lines: "1-40", why: "defineQuery seeds from PKT-DEMO-002; fill the bodies, keep the names" }
+  - { path: domain/notes/api/src/notes.repository.ts, why: "defineQuery seeds from PKT-DEMO-002; fill the bodies, keep the names" }
 observations:
   unimplemented: []
 ---

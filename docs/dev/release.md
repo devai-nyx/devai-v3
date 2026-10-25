@@ -60,7 +60,9 @@ its open items: the shell's guards and error bodies, `packet rebase`'s PL-14, th
 job, and the sensor evidence, deferred until S10 #4 ([D-128](../../decisions.md)).
 [D-132](../../decisions.md)–[D-134](../../decisions.md) make the test config a `typecheck` project, word `unit`'s
 population as coded, and let R8 close on a green `matrix` in both runtimes, the sensor evidence re-checked at
-R9. With them, R8 has no open law question.
+R9. [D-135](../../decisions.md)–[D-138](../../decisions.md) drop PKT-DEMO-004's repository range, ratify the
+shell's filter wiring, add the public health controller to S10 (#8; the probes answer 401 until then) and
+let the test config reach the modules through the apps.
 R7 is confirmed on the release host.
 
 **Not blocking 3.0.0** (12 §4): the D-047 edit-loop p95 measurement (3.0.0 ships 90000); the first
