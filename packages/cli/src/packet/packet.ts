@@ -17,7 +17,8 @@ const REQUIRED_SECTIONS: readonly string[] = ['Intent', 'Deliverables'];
 /** 08 A.4: the placeholder `devai packet new` renders, visible to PL-01 as blank. */
 export const TITLE_PLACEHOLDER = '<title>';
 
-export interface ContextEntry { path: string; lines: string; why: string }
+/** `lines` absent: the whole file (D-135). */
+export interface ContextEntry { path: string; lines?: string; why: string }
 
 export interface Packet {
   /** Repo-relative path of the file. */
@@ -184,12 +185,14 @@ export function parsePacket(path: string, text: string): Packet {
     fm['context'].forEach((c, i) => {
       if (c === null || typeof c !== 'object' || Array.isArray(c)) throw pl01(['context', i], `'context.${i}' is not a mapping`);
       const e = c as Record<string, unknown>;
-      for (const k of ['path', 'lines', 'why']) if (isBlank(e[k])) throw pl01(['context', i, k], `blank 'context.${i}.${k}'`);
-      const lines = str(['context', i, 'lines'], e['lines'], (s) => {
+      for (const k of ['path', 'why']) if (isBlank(e[k])) throw pl01(['context', i, k], `blank 'context.${i}.${k}'`);
+      // D-135: `lines` may be omitted (the whole file); given, it is a range and never blank.
+      if ('lines' in e && isBlank(e['lines'])) throw pl01(['context', i, 'lines'], `blank 'context.${i}.lines'`);
+      const lines = 'lines' in e ? str(['context', i, 'lines'], e['lines'], (s) => {
         const m = /^([1-9]\d*)-([1-9]\d*)$/.exec(s);
         return m !== null && Number(m[1]) <= Number(m[2]);
-      }, 'a line range "a-b"');
-      context.push({ path: str(['context', i, 'path'], e['path']), lines, why: str(['context', i, 'why'], e['why']) });
+      }, 'a line range "a-b"') : undefined;
+      context.push({ path: str(['context', i, 'path'], e['path']), ...(lines !== undefined ? { lines } : {}), why: str(['context', i, 'why'], e['why']) });
     });
   }
   const observations = obj('observations');

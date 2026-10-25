@@ -99,12 +99,14 @@ export async function preDag(root: string, p: Packet, packetPaths: readonly stri
   if (p.context.length > 8) throw pl14(`context has ${p.context.length} entries (limit 8)`);
   let total = 0;
   for (const [i, c] of p.context.entries()) {
-    const [a, b] = c.lines.split('-').map(Number) as [number, number];
     const blob = await show(root, p.base, c.path);
     if (blob === null) throw pl14(`context[${i}] ${c.path} does not exist at base ${short(p.base)}`);
     const n = blob.toString('utf8').replace(/\n$/, '').split('\n').length;
-    if (b > n) throw pl14(`context[${i}] ${c.path} lines ${c.lines} exceeds the file (${n} lines)`);
-    if (b - a + 1 > 40) throw pl14(`context[${i}] ${c.path} lines ${c.lines} spans ${b - a + 1} lines (limit 40)`);
+    // D-135: an entry without `lines` is the whole file, held to the same bounds at its length.
+    const [a, b] = c.lines ? (c.lines.split('-').map(Number) as [number, number]) : [1, n];
+    const range = c.lines ? `lines ${c.lines}` : `(whole file, ${n} lines)`;
+    if (b > n) throw pl14(`context[${i}] ${c.path} ${range} exceeds the file (${n} lines)`);
+    if (b - a + 1 > 40) throw pl14(`context[${i}] ${c.path} ${range} spans ${b - a + 1} lines (limit 40)`);
     total += b - a + 1;
   }
   if (total > 200) throw pl14(`context spans ${total} lines (limit 200)`);

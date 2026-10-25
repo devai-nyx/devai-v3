@@ -92,13 +92,12 @@ export const S10: Record<number, string> = {
   4: 'S10 #4 (list-routes reports permissions "" for @RequireRoles, D-087)',
   5: 'S10 #5 (migration linter: unquoted identifiers only, no author_alias PII token)',
   6: 'S10 #6 (LINT010 reads one prefix group, D-085)',
+  7: 'S10 #7 (the guard answers a token naming no platform tenant with 403, D-129, D-134)',
+  8: 'S10 #8 (the id-less /healthz and /readyz probes pass the global guard, D-137)',
 };
 
 /** The R8 PR's `## Open` items a pending form waits on (DEVAI, not STYNX). */
 export const OPEN: Record<string, string> = {
-  tenant: 'S10 (D-129: STYNX answers a member token naming an unknown tenant with 403)',
-  range: 'Open: PKT-DEMO-004 context names notes.repository.ts lines 1-40 (05 §7), but the 09 §6 seed is 29 lines, so PL-14 refuses it at --to (D-124)',
-  health: 'Open: with StynxAuthGuard global (D-123) the id-less GET /healthz and /readyz answer 401, so D-072 needs the probes public as well as S10 #3',
   evidence: 'Open: permissions-pattern evidence cannot be produced while route-contract is tooling-missing (S10 #4)',
 };
 
@@ -132,11 +131,19 @@ export const STEP6: Rows = {
   absent: [['accept', 'required node skipped for kind: test']],
 };
 
-/**
- * Campaign step 8 once PKT-DEMO-004 rebases (not observable yet: Open `range`): `db-apply` still FAILs on
- * S10 #2, so only that row is pinned until a run shows the rest.
- */
-export const STEP8: Rows = { exit: 1, nodes: { 'db-apply': 'FAIL', accept: 'FAIL' } };
+/** Campaign step 8 today: PKT-DEMO-004's bodies, every DB-backed node behind `db-apply`'s FAIL (S10 #2). */
+export const STEP8: Rows = {
+  exit: 1,
+  nodes: {
+    'db-apply': 'FAIL', accept: 'FAIL',
+    'route-contract': 'UNKNOWN tooling-missing', generated: 'UNKNOWN tooling-missing',
+    'sql-typed': 'UNKNOWN prerequisite-failed', 'spec-tests': 'UNKNOWN prerequisite-failed', integration: 'UNKNOWN prerequisite-failed',
+    'permissions-pattern': 'UNKNOWN prerequisite-failed', review: 'UNKNOWN prerequisite-failed',
+    'sql-lint': 'SKIPPED', 'spec-lint': 'SKIPPED', actionlint: 'SKIPPED', openapi: 'SKIPPED',
+  },
+  others: 'PASS',
+  findings: [['db-apply', 'packages/data/migrations/platform'], ['route-contract', 'reads RequireRoles']],
+};
 
 // ---- process helpers ------------------------------------------------------------------------------
 
@@ -346,14 +353,12 @@ function campaign(c: Cell, o: OptionCell, work: string): boolean {
 
   // 6. --packet PKT-DEMO-003 --full --expect-red: exit 0, expect-red 3 (R-1, R-2, R-4)
   c.expectRows('6 check PKT-DEMO-003 --expect-red', c.check(['--packet', P3, '--full', '--expect-red']), STEP6, [
-    `exit 0, spec-tests PASS with expect-red 3 (R-1, R-2, R-4) after ${S10[2]}, ${S10[3]}, ${OPEN['health']}, ${S10[1]}, ${S10[4]}, ${OPEN['tenant']}`,
+    `exit 0, spec-tests PASS with expect-red 3 (R-1, R-2, R-4) after ${S10[2]}, ${S10[3]}, ${S10[8]}, ${S10[1]}, ${S10[4]}, ${S10[7]}`,
   ]);
 
   // 7. rebase PKT-DEMO-004, add the reference service and repository bodies (D-098) and their unit spec (D-131), commit
-  const r7 = c.devai(['packet', 'rebase', P4, '--to', 'HEAD']);
-  const rebased = r7.code === 0;
-  // D-124 judges PL-14 at --to; there the shipped context range (05 §7: lines 1-40) exceeds the 09 §6 seed.
-  c.record('7 packet rebase PKT-DEMO-004', `exit ${r7.code} ${r7.stdout.trim().slice(0, 160)}`, rebased || (r7.code === 2 && r7.stdout.includes('lines 1-40 exceeds the file')) ? [] : [`exit ${r7.code}, expected 0, or 2 with PL-14 "lines 1-40 exceeds the file" (current form)`], rebased ? [] : [`exit 0 (base moves to HEAD) after ${OPEN['range']}`]);
+  // D-124 judges PL-14 at --to; D-135's whole-file context entry fits the 09 §6 seed there.
+  const rebased = c.expectExit('7 packet rebase PKT-DEMO-004', c.devai(['packet', 'rebase', P4, '--to', 'HEAD']), 0);
   for (const f of ['notes.service.ts', 'notes.repository.ts']) cpSync(resolve(FIXTURES, f), resolve(c.dir, 'domain/notes/api/src', f));
   cpSync(resolve(FIXTURES, 'notes.service.spec.ts'), resolve(c.dir, 'domain/notes/api/test/notes.service.spec.ts'));
   if (!c.expectExit('7 commit (hooks)', c.commit('feat(notes): implement note creation and retrieval\n\nPacket: PKT-DEMO-004'), 0)) return false;
@@ -362,7 +367,7 @@ function campaign(c: Cell, o: OptionCell, work: string): boolean {
   const s8 = c.check(['--packet', P4, '--full']);
   c.packetUsable = s8.reason !== 'packet-invalid';
   c.expectRows('8 check PKT-DEMO-004', s8, rebased ? STEP8 : { exit: 2, message: 'does not exist at base' }, [
-    `exit 0 after ${rebased ? '' : `${OPEN['range']}, `}${S10[1]}, ${S10[2]}, ${S10[3]}, ${S10[4]}, ${OPEN['tenant']}`,
+    `exit 0 after ${S10[1]}, ${S10[2]}, ${S10[3]}, ${S10[4]}, ${S10[7]}, ${S10[8]}`,
   ]);
   return true;
 }
@@ -410,7 +415,7 @@ const CONTROLLER = 'domain/notes/api/src/notes.controller.ts';
  * runs `--full` and names the packet form as pending.
  */
 const nRun = (c: Cell): string[] => (c.packetUsable ? ['--packet', P4, '--full'] : ['--full']);
-const nPending = (c: Cell): string[] => (c.packetUsable ? [] : [`the row under --packet PKT-DEMO-004 --full (D-130) after ${OPEN['range']}`]);
+const nPending = (c: Cell): string[] => (c.packetUsable ? [] : [`the row under --packet PKT-DEMO-004 --full (D-130) after PKT-DEMO-004 passes the pre-DAG rules`]);
 const SQL = 'domain/notes/db/demo_notes_notes.sql';
 
 /** The negative cells; each starts from O2's state after step 7's commit (`head`) with a clean tree. */
@@ -467,14 +472,14 @@ export const NEGATIVES: Negative[] = [
     id: 'N7a', title: "one it('R-3: …') removed",
     run: (c) => {
       edit(c, ACCEPTANCE, /\n\n {2}it\('R-3: role-boundary'[\s\S]*?\n {2}\}\);\n/, '\n');
-      c.expectRows('N7a', c.check(nRun(c)), { exit: 1, nodes: { 'test-integrity': 'FAIL', format: 'PASS' }, findings: [['test-integrity', "it('R-3: …') removed for an acceptance: yes requirement [S-63]"]] }, [`spec-tests FAIL uncovered R-3 [S-65] under --packet PKT-DEMO-004 after ${OPEN['range']}`, ...nPending(c)]);
+      c.expectRows('N7a', c.check(nRun(c)), { exit: 1, nodes: { 'test-integrity': 'FAIL', format: 'PASS' }, findings: [['test-integrity', "it('R-3: …') removed for an acceptance: yes requirement [S-63]"]] }, [`spec-tests FAIL uncovered R-3 [S-65] (spec-tests is prerequisite-failed today) after ${S10[2]}`, ...nPending(c)]);
     },
   },
   {
     id: 'N7b', title: 'acceptance file deleted',
     run: (c) => {
       rmSync(resolve(c.dir, ACCEPTANCE));
-      c.expectRows('N7b', c.check(nRun(c)), { exit: 1, nodes: { 'test-integrity': 'FAIL' }, findings: [['test-integrity', 'acceptance file changed without @acceptance-change [S-63]']] }, [`spec-tests SKIPPED → accept FAIL PL-15 required node skipped for kind: code under --packet PKT-DEMO-004 after ${OPEN['range']}`, ...nPending(c)]);
+      c.expectRows('N7b', c.check(nRun(c)), { exit: 1, nodes: { 'test-integrity': 'FAIL', 'spec-tests': 'SKIPPED', accept: 'FAIL' }, findings: [['test-integrity', 'acceptance file changed without @acceptance-change [S-63]'], ['accept', 'required node skipped for kind: code: spec-tests']] }, [...nPending(c)]);
     },
   },
   {
@@ -532,19 +537,15 @@ export const NEGATIVES: Negative[] = [
   {
     id: 'N12', title: '@stynx-nyx/cli uninstalled',
     run: (c) => {
-      const moved: [string, string][] = [];
-      for (const p of ['node_modules/.bin/stynx', 'node_modules/@stynx-nyx/cli']) {
-        const from = resolve(c.dir, p);
-        if (existsSync(from)) {
-          renameSync(from, `${from}.uninstalled`);
-          moved.push([from, `${from}.uninstalled`]);
-        }
-      }
+      // A real uninstall changes the root manifest and the lock, so no verdict cached for the installed
+      // candidate stands; the reset after the row restores both, and the install restores node_modules.
+      c.exec(['pnpm', 'remove', '-w', '@stynx-nyx/cli']);
       try {
         // The shell's own wording follows (bash: `No such file or directory`, dash: `not found`).
         c.expectRows('N12', c.check(nRun(c)), { exit: 1, nodes: { 'route-contract': 'UNKNOWN tooling-missing', boundary: 'UNKNOWN tooling-missing', 'db-apply': 'FAIL', openapi: 'SKIPPED' }, findings: [['route-contract', 'stynx not resolvable from node_modules/.bin'], ['boundary', 'stynx not resolvable from node_modules/.bin'], ['db-apply', 'database/apply.sh exited 1'], ['db-apply', 'tooling-missing — db-apply: stynx not resolvable from node_modules/.bin (rls-negative)']] }, [...nPending(c)]);
       } finally {
-        for (const [from, to] of moved) renameSync(to, from);
+        reset(c);
+        c.exec(['pnpm', 'install', '--no-frozen-lockfile']);
       }
     },
   },
@@ -553,11 +554,18 @@ export const NEGATIVES: Negative[] = [
     run: (c) => {
       edit(c, P4, 'protected: [spec]', 'protected: []');
       mkdirSync(resolve(c.dir, '.github/workflows'), { recursive: true });
-      writeFileSync(resolve(c.dir, '.github/workflows/notes.yml'), 'name: notes\non: push\njobs: {}\n');
+      writeFileSync(resolve(c.dir, '.github/workflows/notes.yml'), 'name: notes\non: push\njobs:\n  noop:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: echo notes\n');
       c.commit('ci(notes): add a workflow\n\nPacket: PKT-DEMO-004');
       edit(c, P4, 'protected: []', 'protected: [ci]');
       c.commit('chore(packets): widen PKT-DEMO-004 protected\n\nPacket: PKT-DEMO-004');
-      c.expectRows('N13', c.check(['--packet', P4, '--full']), { exit: 2, message: 'does not exist at base' }, [`protected-paths declared: false for ci; protected:unplanned; review gating (D-078), after ${OPEN['range']}`]);
+      const r = c.check(nRun(c));
+      const pp = r.nodes?.find((n) => n.id === 'protected-paths');
+      const touched = (pp?.details as { touched?: { class: string; declared: boolean }[] } | undefined)?.touched ?? [];
+      const ci = touched.find((t) => t.class === 'ci');
+      c.record('N13', `${summary(r)} · ci touched, declared: ${String(ci?.declared)}`, [
+        ...compare(r, { exit: 1, nodes: { 'protected-paths': 'PASS', review: 'UNKNOWN prerequisite-failed' } }),
+        ...(ci?.declared === false ? [] : ['protected-paths: ci not touched with declared: false (D-078)']),
+      ], [`protected:unplanned makes review gating (D-078) once review runs, after ${S10[1]}, ${S10[2]}, ${S10[4]}`, ...nPending(c)]);
     },
   },
   {
@@ -565,7 +573,7 @@ export const NEGATIVES: Negative[] = [
     run: (c) => {
       c.check(nRun(c));
       edit(c, 'apps/api/src/validation.filter.ts', '@Injectable()', '// edited\n@Injectable()');
-      c.expectRows('N14', c.check(nRun(c)), { exit: 1, cached: { integration: false } }, [`spec-tests cache miss and re-run, unit hit for unaffected projects (D-076), under --packet after ${OPEN['range']}; a green --full first needs ${S10[2]}`, ...nPending(c)]);
+      c.expectRows('N14', c.check(nRun(c)), { exit: 1, cached: { integration: false } }, [`spec-tests cache miss and re-run, unit a hit for unaffected projects (D-076), after a green --full, which needs ${S10[2]}`, ...nPending(c)]);
     },
   },
   {
@@ -575,7 +583,7 @@ export const NEGATIVES: Negative[] = [
       writeFileSync(resolve(c.dir, 'pnpm-lock.yaml'), `${readFileSync(resolve(c.dir, 'pnpm-lock.yaml'), 'utf8')}\n`);
       const r = c.check(nRun(c));
       const hits = (r.nodes ?? []).filter((n) => n.cached === true).map((n) => n.id);
-      c.record('N15', summary(r), hits.length === 0 ? [] : [`cache hits after a toolchain bump: ${hits.join(', ')}`], [`review re-runs (D-076) under --packet --full after ${OPEN['range']}`]);
+      c.record('N15', summary(r), hits.length === 0 ? [] : [`cache hits after a toolchain bump: ${hits.join(', ')}`], [`review re-runs (D-076) once it runs at all, after ${S10[1]}, ${S10[2]}, ${S10[4]}`, ...nPending(c)]);
     },
   },
   {
@@ -596,7 +604,7 @@ export const NEGATIVES: Negative[] = [
     run: (c) => {
       c.exec(['git', 'commit', '--allow-empty', '-q', '-m', 'chore(notes): one\n\nPacket: PKT-DEMO-004\nCo-Authored-By: Claude <noreply@anthropic.com>']);
       c.exec(['git', 'commit', '--allow-empty', '-q', '-m', 'chore(notes): two\n\nPacket: PKT-DEMO-004\nCo-Authored-By: GPT <noreply@openai.com>']);
-      c.expectRows('N17', c.check(['--packet', P4, '--full']), { exit: 2, message: 'does not exist at base' }, [`review UNKNOWN: family; review.json absent; exit 2 (D-079), after ${OPEN['range']}`]);
+      c.expectRows('N17', c.check(nRun(c)), { exit: 1, nodes: { review: 'UNKNOWN prerequisite-failed' } }, [`review UNKNOWN: family; review.json absent; exit 2 (D-079), once review runs, after ${S10[1]}, ${S10[2]}, ${S10[4]}`, ...nPending(c)]);
     },
   },
   {

@@ -69,6 +69,19 @@ describe('pre-DAG branches that read git (C.1 step 1)', () => {
     expect((await preDagError(dir, long)).message).toBe(`packet is ${long.split('\n').length - 1} lines (limit 200): move prose to the spec or the module README`);
   });
 
+  it('PL-14 (D-135): a context entry without lines is the whole file, held to the same bounds at its length', async () => {
+    const { dir, base, sha } = packetWorkspace();
+    const whole = (path: string) => packetText({ base, sha, extra: `context:\n  - { path: ${path}, why: the whole file }` });
+    const parsed = parsePacket(PACKET, whole('product/demo/rules/RN-DEMO-001.md'));
+    expect(parsed.context).toEqual([{ path: 'product/demo/rules/RN-DEMO-001.md', why: 'the whole file' }]);
+    await expect(preDag(dir, parsed, [PACKET])).resolves.toBeUndefined();
+    write(dir, 'docs/long.md', 'x\n'.repeat(41));
+    const longBase = commitAll(dir, 'docs: long');
+    const long = packetText({ base: longBase, sha, extra: 'context:\n  - { path: docs/long.md, why: too long }' });
+    expect(await preDagError(dir, long)).toMatchObject({ rule: 'PL-14', message: 'context[0] docs/long.md (whole file, 41 lines) spans 41 lines (limit 40)' });
+    expect(() => parsePacket(PACKET, packetText({ base, sha, extra: 'context:\n  - { path: docs/long.md, lines: "", why: blank }' }))).toThrow(/blank 'context\.0\.lines'/);
+  });
+
   it('PL-04: the pinned spec does not exist at base (exit 2 packet-invalid)', async () => {
     const { dir, base, sha } = packetWorkspace();
     const text = packetText({ base, sha, spec: `spec:\n  id: SPEC-DEMO-009\n  path: specs/notes/SPEC-DEMO-009.md\n  sha256: "${sha}"\n` });
