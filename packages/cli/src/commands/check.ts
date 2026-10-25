@@ -18,6 +18,7 @@ import { dbApply } from '../nodes/db-apply.js';
 import { deadcode } from '../nodes/deadcode.js';
 import { e2e } from '../nodes/e2e.js';
 import { format } from '../nodes/format.js';
+import { generated } from '../nodes/generated.js';
 import { i18n } from '../nodes/i18n.js';
 import { integration } from '../nodes/integration.js';
 import { runInventory } from '../nodes/inventory.js';
@@ -78,6 +79,7 @@ export const ADAPTERS: Partial<Record<NodeId, NodeAdapter>> = {
   i18n,
   actionlint,
   commitlint,
+  generated,
   boundary,
   deadcode,
   openapi,

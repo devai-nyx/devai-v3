@@ -5,7 +5,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { z } from 'zod';
 import type { NodeAdapter, NodeOutcome, RunContext } from '../runner/run.js';
-import { MachineBlock, pointer, readSpec, type RuleParams, UseCase } from '../spec/machine-block.js';
+import { pointer, type RuleParams, UseCase } from '../spec/machine-block.js';
+import { parseSpec } from '../spec/parse-spec.js';
 import type { Finding } from './tool-local.js';
 
 const HINT = 'fix it in a spec packet';
@@ -74,10 +75,10 @@ async function run(ctx: RunContext): Promise<NodeOutcome> {
   const ioFinding = (path: string): Finding => ({ locator: `${path}:1`, message: `${path} cannot be read`, standard: 'S-25', hint: 'make the path readable (permissions, broken or escaping symlink), then re-run' });
 
   // The global identity population (SL06) and the scope's source join need every spec and use case.
-  const specs = new Map<string, { text: string | null; read: ReturnType<typeof readSpec> | null }>();
+  const specs = new Map<string, { text: string | null; read: ReturnType<typeof parseSpec> | null }>();
   for (const p of paths.filter((x) => SPEC.test(x))) {
     const { text } = readOr(ctx.root, p);
-    specs.set(p, { text, read: text === null ? null : readSpec(text) });
+    specs.set(p, { text, read: text === null ? null : parseSpec(text) });
   }
   const useCases = new Map<string, { text: string | null; value: unknown; parsed: z.ZodSafeParseResult<UseCase> | null }>();
   for (const p of paths.filter((x) => USE_CASE.test(x))) {
@@ -94,7 +95,7 @@ async function run(ctx: RunContext): Promise<NodeOutcome> {
     }
     useCases.set(p, { text, value, parsed });
   }
-  const docOf = (p: string) => { const r = specs.get(p)?.read; return r?.kind === 'document' ? r : null; };
+  const docOf = (p: string) => { const r = specs.get(p)?.read; return r && r.kind !== 'malformed' ? r : null; };
   const scope = [...specs.keys()].filter((p) => {
     if (changed.has(p)) return true;
     const sources = at(docOf(p)?.value, 'sources');
@@ -117,15 +118,14 @@ async function run(ctx: RunContext): Promise<NodeOutcome> {
     for (const pr of read.problems) add('SL01', pr.line, message.SL01(pr.pointer, pr.reason));
     if (read.kind === 'malformed') { findings.push(...dedupe(out)); continue; }
     observed++;
-    const parsed = MachineBlock.safeParse(read.value);
     const id = at(read.value, 'id');
     if (typeof id === 'string' && (idCount.get(id) ?? 0) > 1) add('SL06', read.lineOf(['id']), message.SL06(`spec ${id}`));
-    if (!parsed.success) {
-      for (const i of parsed.error.issues) { const r = ruleOf(i, read.value); add(r.rule, read.lineOf(i.path), r.text); }
+    if (read.kind === 'invalid') {
+      for (const i of read.issues) { const r = ruleOf(i, read.value); add(r.rule, read.lineOf(i.path), r.text); }
       findings.push(...dedupe(out));
       continue;
     }
-    const b = parsed.data;
+    const b = read.block;
     let complete = true;
     // SL02: each source resolves to an existing product/** artifact carrying the id and the verbatim quote.
     const sourceIds = new Set(b.sources.map((s) => s.id));

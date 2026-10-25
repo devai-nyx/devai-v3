@@ -33,6 +33,9 @@ const AbsoluteRoutePath = z.string().regex(/^\/$|^(\/([A-Za-z0-9_-]+|:[A-Za-z_][
 export const Method = z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS']);
 
 /** PostgreSQL reserved key words (PostgreSQL 16 Appendix C, "reserved" in the PostgreSQL column): 06 §2 `namespace` is non-reserved. */
+/** STYNX's reserved schema set, unchanged (09 §5) [fact: `stynx:packages/cli/src/generate-module.ts:13-16,118-119`]; matching is exact. */
+const PLATFORM_SCHEMAS = new Set(['archive', 'audit', 'auth', 'core', 'data', 'demo', 'flow', 'jobs', 'notifications', 'offline', 'outbox', 'sample', 'storage', 'tenancy', 'worklist']);
+const reservedSchema = (n: string): boolean => n.startsWith('pg_') || n === 'public' || n === 'information_schema' || PLATFORM_SCHEMAS.has(n);
 const PG_RESERVED = new Set(('all analyse analyze and any array as asc asymmetric both case cast check collate column constraint create current_catalog ' +
   'current_date current_role current_time current_timestamp current_user default deferrable desc distinct do else end except false fetch for foreign ' +
   'from grant group having in initially intersect into lateral leading limit localtime localtimestamp not null offset on only or order placing primary ' +
@@ -98,7 +101,7 @@ export const MachineBlock = z.strictObject({
   'approved-by': NonemptyString.nullable(),
   supersedes: z.strictObject({ id: SpecId, path: RepoPath, sha256: Hex64 }).optional(),
   product: Slug,
-  module: z.strictObject({ name: PascalCase, slug: Slug, namespace: SqlIdentifier.refine((n) => !PG_RESERVED.has(n), 'reserved word') }),
+  module: z.strictObject({ name: PascalCase, slug: Slug, namespace: SqlIdentifier.refine((n) => !PG_RESERVED.has(n), 'reserved word').refine((n) => !reservedSchema(n), 'reserved schema') }),
   sources: z.array(z.strictObject({ id: z.union([RuleId, UseCaseId]), path: RepoPath, quote: NonemptyString })).min(1),
   requirements: z.array(z.strictObject({
     id: RequirementId,
@@ -230,7 +233,7 @@ export interface BlockProblem { line: number; pointer: string; reason: string }
 
 export type ReadSpec =
   | { kind: 'malformed'; problems: BlockProblem[] }
-  | { kind: 'document'; value: unknown; lineOf: (path: readonly PropertyKey[]) => number; sections: string[]; problems: BlockProblem[] };
+  | { kind: 'document'; value: unknown; lineOf: (path: readonly PropertyKey[]) => number; sections: string[]; problems: BlockProblem[]; block: string };
 
 const FENCE = /^(`{3,}|~{3,})\s*([A-Za-z0-9_-]*)\s*$/;
 
@@ -293,5 +296,6 @@ export function readSpec(text: string): ReadSpec {
     }
     return offset + 1;
   };
-  return { kind: 'document', value: doc.toJS(), lineOf, sections, problems };
+  // `block`: the fenced YAML's bytes, every line newline-terminated (09 §2 `machineBlockSha256`).
+  return { kind: 'document', value: doc.toJS(), lineOf, sections, problems, block: source + '\n' };
 }
