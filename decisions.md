@@ -592,7 +592,8 @@ keep the exact 2.6.2 pin until they move (16); branch protection by plain contex
 (D-063). Edits E-8-01…E-8-20 applied (E-8-17 with D-064's wording; 10 §5 budget rows recounted:
 AGENTS.md 42 lines, 578 tokens); E-8-21 waits for the ledger ruling. `12-succession.md` promoted
 to `foundation/` as PROVISIONAL, revised for D-064's two non-default choices. Source: Owner
-("adopt all and apply"; "promote as PROVISIONAL"). Superseded in part by D-090 (item 13's timing; item 16).
+("adopt all and apply"; "promote as PROVISIONAL"). Superseded in part by D-090 (item 13's timing; item 16) and D-142
+(item 13: nothing is archived).
 
 ## D-066 · 2026-10-19 · v2 law ledger review closed; 11 final, 12 ratified
 Four Owner panels per D-064 (P-8-04) over `agents/campaign-8/LEDGER-REVIEW.md` (one line per row):
@@ -1175,7 +1176,8 @@ after the criteria above, not on publish day, and "no further 2.x" becomes "defe
 during the window"); item 16 entirely (the exact 2.6.2 pin is replaced by a pin floating within
 `2.x`). D-065's text is not edited. Amends 12 §5 (H7 row), §6 and §8; docs/adopters/moving-from-v2.md,
 docs/adopters/index.md, docs/dev/release.md, docs/theory/stynx.md. Host act (Owner): H7, after the
-criteria. Chosen: (a). Source: Owner (panel 2026-10-24, "Bounded window").
+criteria. Chosen: (a). Source: Owner (panel 2026-10-24, "Bounded window"). Superseded in part by D-142:
+the window has no closing event and H7 is struck; the defect-fixes-only scope and the `2.x` pins stand.
 
 ## D-091 · 2026-10-24 · DEVAI requires nothing beyond GitHub Free; D-080's ruleset is retired
 On 2026-10-24 the Owner ran the H3 ruleset command from 12 §5 against devai-nyx/devai-v3 (public,
@@ -2100,6 +2102,24 @@ devai-v3#94 Open):
 3. The site root `/devai-v3/` answers 200 and redirects client-side to `/devai-v3/docs/`
    (`site/src/pages/index.tsx`), as the W0 site did.
 12 §5's `pages` bullet already reads "on push to `main` only", so reading 1 changes no other text.
+
+## D-142 · 2026-10-25 · H7 is struck: v2 and v3 cohabit, and `aarusso-nyx/devai` is not archived (supersedes in part D-065, D-090)
+[fact] 12 §5 H7 archives `aarusso-nyx/devai` (v2) once D-090's window closes, on the first adopter
+module green on v3 (`docs/history/12-succession.md:159`); 12 §6 and §8, D-065 item 13 and D-090
+describe that window: v2 unarchived, defect fixes only, adopters pinned within `2.x`. Today v2 still
+serves its Pages site and packages; v3 3.0.0 is published and its site is live (D-141). Options: (a)
+H7 is struck from 12 §5; D-090's window has no closing event: v2 stays unarchived and the two majors
+cohabit; D-090's scope for v2 (defect fixes only, no new law) is unchanged unless the Owner widens it;
+12 §6 and §8 are amended accordingly; (b) keep H7 and re-trigger it on a later event; (c) other.
+Recommended: (a). Chosen: (a). Supersedes in D-065: item 13 (no repository is archived; "only
+`aarusso-nyx/devai` is archived" no longer holds). Supersedes in D-090: the window's closing event and
+its fourth closure criterion (the Owner runs H7, read-back `archived` → `true`); the first three
+criteria no longer close anything; the scope (defect fixes only, no features, no new law) and the
+pins floating within `2.x` stand. Neither entry's text is edited beyond its "superseded in part" note.
+Amends 12 §5 (H7 struck), §6 (the window paragraph and step 5), §8 (two bullets) and 12's provenance
+note; docs/adopters/moving-from-v2.md ("Until you move"); docs/history/index.md. Host act: none (H7
+is not run). Source: Owner (message 2026-10-25, "Drop H7, since v3 and v2 will cohabit."; packet
+`PACKET-2026-10-25-R10.md`, section D-142, Owner's workspace).
 
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.

@@ -1,4 +1,4 @@
-<!-- Ratified 2026-10-19 (D-064, D-065, D-066); promoted from agents/consolidate-8/claude-opus/, revised for D-064's Owner choices (P-8-08 relicensing, P-8-09 public). One-time plan. Amended in place by D-080 (§5 H3/H5), D-090 (§5 H7, §6, §8), D-091 (§5 H3/H5, ruleset struck), D-100 (§4 R6, done clause), D-128 (§3.1), D-130 (§4 R8, N rows), D-134 (§4 R8 close, §3.1) and D-141 (§5 `pages`, H9); the line below is consolidation 8's provenance as of 2026-10-18. -->
+<!-- Ratified 2026-10-19 (D-064, D-065, D-066); promoted from agents/consolidate-8/claude-opus/, revised for D-064's Owner choices (P-8-08 relicensing, P-8-09 public). One-time plan. Amended in place by D-080 (§5 H3/H5), D-090 (§5 H7, §6, §8), D-091 (§5 H3/H5, ruleset struck), D-100 (§4 R6, done clause), D-128 (§3.1), D-130 (§4 R8, N rows), D-134 (§4 R8 close, §3.1), D-141 (§5 `pages`, H9) and D-142 (§5 H7 struck, §6, §8); the line below is consolidation 8's provenance as of 2026-10-18. -->
 <!-- Consolidation 8 · Claude Opus 5.5 · 2026-10-18. Base: draft-round-8/claude-opus (reviews split; NOTES §1). Binding: decisions.md D-001–D-063, 01–10; 11 PROVISIONAL. P-8-nn, E-8-nn and Owner items: agents/campaign-8/. devai: = v2 @ 4289ff51 (origin aarusso-nyx/devai); stynx: @ 63e5f788; detran: @ 50b6c174; gh: = `gh api` 2026-10-18/19; ref: = reference/succession-2026-07/. Not promoted. -->
 # 12 — Succession plan
 
@@ -156,7 +156,7 @@ The template's `devai.yml` (02 §1) is the adopters' required check.
 | H5 | Owner | H3's protection command and read-back with `"contexts":["build","matrix"]`; no ruleset (D-091) | 02 §7, once `<v>` exists |
 | H6 | agent | `git tag -a v3.0.0 -m "DEVAI 3.0.0" <green main sha> && git push origin v3.0.0` | `publish` |
 | H8 | Owner | After R10: package settings → Change visibility → Public for `@devai-nyx/cli` and `@devai-nyx/decorators`; read-back `gh api orgs/devai-nyx/packages/npm/cli --jq .visibility` → `public` (and `npm/decorators`) | D-064 (P-8-09) |
-| H7 | Owner, then agent | `gh repo archive aarusso-nyx/devai --yes` after R10 and after §6's window closes (D-090); agent: `gh api repos/aarusso-nyx/devai --jq .archived` → `true` | §6 |
+| H7 | — | ~~`gh repo archive aarusso-nyx/devai --yes` after R10 and after §6's window closes (D-090); agent: `gh api repos/aarusso-nyx/devai --jq .archived` → `true`~~ **Struck by D-142**: v2 and v3 cohabit, so `aarusso-nyx/devai` is not archived | — |
 | H9 | Owner, then agent | Owner: Settings → Pages → Source "GitHub Actions"; read-back `gh api repos/devai-nyx/devai-v3/pages --jq .build_type` → `workflow` (done 2026-10-25, `html_url` `https://devai-nyx.github.io/devai-v3/`). Agent: the `pages` job above and the repository `homepage` set to that URL | D-141; adopters reach v3's docs, not v2's |
 | per adopter clone | agent | `devai init` (attach) → `core.hooksPath scripts/hooks`, worktree identity (`08-cli-and-nodes.md:23-27`); needs `devai.json`, so not the DEVAI repository | hooks (D-057) |
 
@@ -168,14 +168,14 @@ The template's `devai.yml` (02 §1) is the adopters' required check.
 
 [fact] 2.x continued after D-065: `@aarusso-nyx/devai` 2.6.3 (2026-10-19), 2.7.0 (2026-10-23), 2.7.1 (2026-10-24); `main` at `2df84159`, unarchived (gh, 2026-10-24; D-090).
 
-[opinion] `aarusso-nyx/devai` keeps a **bounded stabilization window** (D-090): unarchived, defect fixes only (no features, no new law), until the first adopter (STYNX through S10, or DETRAN's first module below) has one v3 module green in its CI (`devai.yml` `matrix` or `check --full` exit 0), its applied SQL history kept (D-033) and a recovery path shown (a `devai check` after a deliberate break returns to green). Then H7 archives it: no rename or notice. `devai-nyx/devai` and `devai-verifier` are untouched; no v3 mechanism reads them (P-8-13). Adopters pin within `2.x` (`^2.6.2` or their own exact pin) until they move (D-090, replacing P-8-16). [fact] Archived repositories still serve packages and clones (`devai-original`), and every citation pin resolves remotely (`4289ff51`, `63e5f788`, `b2c5d389`).
+[opinion] `aarusso-nyx/devai` stays unarchived and takes defect fixes only (no features, no new law; D-090). D-090 bounded this as a window that closed when the first adopter (STYNX through S10, or DETRAN's first module below) had one v3 module green in its CI, its applied SQL history kept (D-033) and a recovery path shown, after which H7 archived it; D-142 strikes H7, so the window has no closing event and **v2 and v3 cohabit**: no archive, rename or notice. `devai-nyx/devai` and `devai-verifier` are untouched; no v3 mechanism reads them (P-8-13). Adopters pin within `2.x` (`^2.6.2` or their own exact pin) until they move (D-090, replacing P-8-16). [fact] The unarchived repository keeps serving packages, clones and its Pages site, and every citation pin resolves remotely (`4289ff51`, `63e5f788`, `b2c5d389`).
 
 **An adopter moves from a fresh scaffold, never by conversion** (P-8-15). [inference] `init` materialises only into an empty directory and attaches only where `devai.json` exists (`08-cli-and-nodes.md:23-25`); a v2 repository fails `layout` (DETRAN: `tests/`, `CONSTITUTION.md`; `04-layout.md:35`), and both CLIs claim the `devai` bin:
 1. `pnpm dlx @devai-nyx/cli@3.0.0 init --product <prefix> --dir <empty>`, locales/LGPD per product (D-014);
 2. the scaffold becomes a new repository or a migration branch; then only attach runs;
 3. protection requires the `devai.yml` job;
 4. modules arrive one approved spec at a time; applied SQL history is kept (D-033);
-5. v2 builds on its 2.x pin until its last module is ported, then is archived.
+5. the adopter's v2 repository builds on its 2.x pin until its last module is ported; archiving it is the adopter's choice (`aarusso-nyx/devai` itself is not archived, D-142).
 
 **First DETRAN module (D-026, `decisions.md:159-168`)**: `domain/inf-rait-worklist`, narrowly the analyst's "claim next", existing case integration a declared boundary (`detran:docs/framework/arch/rait-web-journeys/JW-01-analista.md:10-11,60-68`); (P-8-05 → D-064). Criteria: one capability in one app (prefix → `productPrefix`, D-032), rules in DETRAN `product/` (D-008), at least one write route. Its `kind:` packets measure D-026's packets/PRs/touches, D-028's shadow counts and D-047's p95. No DETRAN rule is quoted (D-048). **STYNX** keeps its 2.x pin until R5 and its own rows land (D-090).
 
@@ -195,9 +195,9 @@ The template's `devai.yml` (02 §1) is the adopters' required check.
 
 - No `devai.json`, adopter layout, hooks or self-check in the DEVAI repository; its matrix runs `--full` in sixteen temporary workspaces (P-8-02).
 - No Changesets there: two packages, one literal version, no node over it; in adopters it stays the `openapi` mechanism (P-8-18). No signed tags, provenance or attestations (D-002).
-- No migration command, converter, shim, dual bin or 2.x branch; 2.x takes defect fixes only, during §6's window (D-090).
+- No migration command, converter, shim, dual bin or 2.x branch; 2.x takes defect fixes only (D-090), with no closing date while the majors cohabit (D-142).
 - No v2 code or law text, evidence standing, genesis attestation, seed hash inventory or frozen succession folder (P-8-12).
-- No rename, redirect or notice; no archive beyond `aarusso-nyx/devai`, and that one after §6's window (D-090).
+- No rename, redirect, notice or archive: `aarusso-nyx/devai` stays unarchived beside v3 (D-142).
 - No hosting for the `$schema` URL; the committed `devai.schema.json` is the artifact.
 - No pin file or enforced tested-with versions (D-057); no model-id mismatch refusal.
 - No publish PAT, CODEOWNERS or required reviewers (D-003). No SLO measurer in DEVAI's release (P-8-14).
