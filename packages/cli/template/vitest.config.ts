@@ -19,6 +19,14 @@ if (patterns === undefined)
 const files = patterns
   .flatMap((p) => globSync(p))
   .filter((f) => tier !== 'unit' || !f.endsWith('.acceptance.spec.ts'));
+// D-105: web specs run in their own project, with the Angular test environment as setup file.
+const isWeb = (f: string) => f.startsWith('domain/') && f.includes('/web/test/');
+const web = files.filter(isWeb);
+const rest = files.filter((f) => !isWeb(f));
+const project = (name: string, include: string[], setupFiles: string[] = []) => ({
+  extends: true,
+  test: { name, include, setupFiles },
+});
 
 export default defineConfig({
   plugins: [
@@ -34,5 +42,14 @@ export default defineConfig({
       module: { type: 'es6' },
     }),
   ],
-  test: { include: files.length > 0 ? files : [], passWithNoTests: false },
+  test:
+    web.length > 0
+      ? {
+          passWithNoTests: false,
+          projects: [
+            ...(rest.length > 0 ? [project(tier, rest)] : []),
+            project(`${tier}-web`, web, ['test/support/angular.setup.ts']),
+          ],
+        }
+      : { include: files.length > 0 ? files : [], passWithNoTests: false },
 });

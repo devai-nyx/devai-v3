@@ -160,7 +160,8 @@ function renderDto(spec: Ctx, m: RouteModel, hosted: readonly string[]): string 
     types.push(`export type ${cap(p.schema)} = z.infer<typeof ${p.schema}>;`);
   }
   for (const h of hosted) out.push(`export const ${h} = z.strictObject({});`);
-  out.push(braces('', `export const ${m.response} = z.strictObject(`, m.route.response.columns.map((ref) => `${ref.split('.')[1]}: ${leaf(spec.columns.get(ref)!)}`), ');'));
+  // D-104: the response schema is for the code packet; `@public` keeps knip from reporting it unused.
+  out.push('/** @public */', braces('', `export const ${m.response} = z.strictObject(`, m.route.response.columns.map((ref) => `${ref.split('.')[1]}: ${leaf(spec.columns.get(ref)!)}`), ');'));
   types.push(`export type ${m.responseType} = z.infer<typeof ${m.response}>;`);
   return lines(...out, '', ...types);
 }
@@ -267,7 +268,8 @@ function renderRepository(spec: Ctx): string {
       ? `insert into ${table} (${cols(q.params)}) values (${q.params.map((_, i) => `$${i + 1}`).join(', ')}) returning ${cols(q.returns)}`
       : `select ${cols(q.returns)} from ${table} where ${q.params.map((p, i) => `${p.split('.')[1]} = $${i + 1}`).join(' and ')}`;
     const params = brackets('', 'z.tuple(', q.params.map((ref) => leaf(spec.columns.get(ref)!)), ')');
-    queries.push(braces('', `export const ${camel(label)}${pascal(q.table)} = defineQuery(`, [
+    // D-104: the code packet consumes the query; `@public` keeps knip from reporting it unused.
+    queries.push('/** @public */', braces('', `export const ${camel(label)}${pascal(q.table)} = defineQuery(`, [
       `name: ${str(q.name)}`, `text: sql\`${text}\``, `params: ${params}`, `row: ${row}`, `expects: ${str(q.expects)}`,
     ], ');'));
   }
@@ -393,7 +395,8 @@ function renderWeb(spec: Ctx, put: (path: string, mode: FileMode, text: string) 
     `    "@angular/core": "${ANGULAR}",`,
     `    "@angular/router": "${ANGULAR}",`,
     `    "rxjs": "${RXJS}"`,
-    '  }',
+    '  },',
+    ...devDependencies(),
     '}',
   ].join('\n') + '\n');
   put('web/tsconfig.json', 'generated', lines(`// ${spec.header}`, '{', '  "extends": "@stynx-nyx/tsconfig/angular18.json",', '  "compilerOptions": { "rootDir": "src", "outDir": "dist", "composite": true },', '  "include": ["src"]', '}'));
@@ -474,6 +477,14 @@ export const MODULE_PINS: Readonly<Record<string, string>> = {
   zod: '4.4.3',
 };
 
+/** D-103: the module `tsconfig.json` extends `@stynx-nyx/tsconfig`, so both module manifests carry it as a devDependency. */
+export const MODULE_DEV_PINS: Readonly<Record<string, string>> = { '@stynx-nyx/tsconfig': '3.0.0' };
+const devDependencies = (): string[] => [
+  '  "devDependencies": {',
+  Object.entries(MODULE_DEV_PINS).map(([n, v]) => `    ${JSON.stringify(n)}: ${JSON.stringify(v)}`).join(',\n'),
+  '  }',
+];
+
 /** Bare package names a TypeScript text imports (`from '<pkg>'`), scoped names kept whole. */
 function importedPackages(text: string): string[] {
   const out: string[] = [];
@@ -502,7 +513,8 @@ function renderApiPackage(files: Rendered, options: RenderOptions, slug: string,
     '  "exports": { ".": "./dist/index.js" },',
     '  "dependencies": {',
     deps.join(',\n'),
-    '  }',
+    '  },',
+    ...devDependencies(),
     '}',
   ].join('\n') + '\n';
 }
