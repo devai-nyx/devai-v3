@@ -88,7 +88,8 @@ describe('09 §4 campaign fixtures (D-098)', () => {
   it('the service spec passes against the bodies', () => {
     put(dir, 'vitest.fixtures.config.mjs', "export default { test: { include: ['domain/notes/api/test/notes.service.spec.ts'] } };\n");
     const r = tool('vitest', ['run', '--config', 'vitest.fixtures.config.mjs']);
-    expect(r.stdout + r.stderr).toMatch(/Tests {2}2 passed \(2\)/);
+    // CI colours Vitest's summary; the count is read without the escape codes.
+    expect(`${r.stdout}${r.stderr}`.replace(/\x1b\[[0-9;]*m/g, '')).toMatch(/Tests {2}2 passed \(2\)/);
     expect(r.status).toBe(0);
   });
 
