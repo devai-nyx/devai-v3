@@ -1,16 +1,16 @@
 ---
 title: Reason codes
 sidebar_position: 4
-description: All 54 reason codes of the closed ReasonCode enum, where each is raised, its exit code and its one-line hint from 10 §4.
+description: All 55 reason codes of the closed ReasonCode enum, where each is raised, its exit code and its one-line hint from 10 §4.
 ---
 
 # Reason codes
 
 > **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
 
-A reason code says why something could not run or could not be observed. The set is a closed zod enum, `ReasonCode`, in [08 C.2](../framework/08-cli-and-nodes.md) (the same text is in `packages/cli/src/report.ts`). It has **54 codes**: 14 command-level and 40 node-level. No other code exists.
+A reason code says why something could not run or could not be observed. The set is a closed zod enum, `ReasonCode`, in [08 C.2](../framework/08-cli-and-nodes.md) (the same text is in `packages/cli/src/report.ts`). It has **55 codes**: 15 command-level and 40 node-level. No other code exists.
 
-The hints are the one-line remedies of [10 §4](../framework/10-agent-surface.md), copied verbatim; only code-span backticks were added around `<placeholders>` and commands so they render. 10 §4 marks each as *kept* (08's own remedy, 9 codes), *rewritten* (3 codes) or *new* (42 codes). Each hint is at most 160 characters.
+The hints are the one-line remedies of [10 §4](../framework/10-agent-surface.md), copied verbatim; only code-span backticks were added around `<placeholders>` and commands so they render. 10 §4 marks each as *kept* (08's own remedy, 9 codes), *rewritten* (3 codes) or *new* (43 codes). Each hint is at most 160 characters.
 
 ## How codes are printed
 
@@ -27,7 +27,7 @@ Some node blocks attach detail to a code, for example `unsupported-oid <oid>`, `
 
 "Raised by" below comes from the Part A command blocks, the Part B node blocks and the C.1 runner steps of [08](../framework/08-cli-and-nodes.md). "Exit" is the exit code the code leads to when it is the only problem.
 
-## Command level (14)
+## Command level (15)
 
 "Could not run": the command stops before or around the node graph. In `report.json` the code is the top-level `reason`.
 
@@ -47,6 +47,7 @@ Some node blocks attach detail to a code, for example `unsupported-oid <oid>`, `
 | 12 | `spec-superseded` | `packet new` (pinning kinds, spec carries `superseded-by`) | 2 | new | pin the successor named in the status line |
 | 13 | `output-exists` | `new module` (`--out` exists without `--regenerate`) | 2 | new | the module exists: use --regenerate |
 | 14 | `spec-mismatch` | `new module --regenerate` (manifest `specId` ≠ spec id and ≠ `supersedes.id`) | 2 | new | regenerate only from the spec the manifest names; a successor spec's module is not supported: note it under ## Notes |
+| 15 | `config-mismatch` | `init` re-run (`HEAD` unborn or no `Packet:` commit) with `--product` ≠ `devai.json` `productPrefix` ([D-113](../../decisions.md)) | 2 | new | `--product` differs from devai.json productPrefix; omit it or pass the recorded product |
 
 ## Node level (40)
 
@@ -54,46 +55,46 @@ Some node blocks attach detail to a code, for example `unsupported-oid <oid>`, `
 
 | # | Code | Raised by | Exit | 10 §4 | Hint |
 |---|---|---|---|---|---|
-| 15 | `no-observations` | runner, any node (PASS with `observed = 0`, C.1 step 9) | 2 | new | the tool saw nothing to check: put the files where the tier glob expects them (04 §4) |
-| 16 | `prerequisite-failed` | runner, any node whose prerequisite is FAIL/UNKNOWN (C.1 step 8); named in `inventory` dependents, `route-contract`, `sql-typed`, `openapi`, `integration` | 2 | new | fix `<prerequisite>` first; this node did not run |
-| 17 | `tooling-missing` | `init` preflight; `check` (when `inventory` cannot run); `inventory`, `format`, `lint`, `lint-tests`, `typecheck`, `sql-lint`, `route-contract`, `i18n`, `actionlint`, `commitlint`, `generated`, `boundary`, `deadcode`, `openapi`, `db-apply`, `e2e` | 2 | kept | "install with `<command>`" |
-| 18 | `engines-mismatch` | `inventory` | 2 | kept | "`corepack use <packageManager>`"; Node must satisfy engines (`>=24 <25`) |
-| 19 | `lint-config-failed` | `lint`, `lint-tests`, `commitlint` | 2 | new | the config at the locator did not load; fix it in a standards packet |
-| 20 | `runner-crashed` | `format`, `typecheck`, `sql-lint`, `unit`, `integration`, `actionlint`, `boundary`, `deadcode`, `e2e`, `accept`; the C.5 Vitest adapter | 2 | new | the tool exited abnormally; re-run once, then put the output under ## Notes |
-| 21 | `timeout` | `unit`, `integration`, `permissions-pattern` | 2 | new | re-run once; a repeat goes under ## Notes |
-| 22 | `base-unreadable` | `test-integrity`, `openapi`, `protected-paths` (incl. pre-push hook notice), `packet-scope` | 2 | new | git fetch origin, then re-run |
-| 23 | `io` | `check` (C.6 candidate digest), `layout`, `spec-lint`, `i18n`, `commitlint` | 2 | new | make the path readable (permissions, broken or escaping symlink), then re-run |
-| 24 | `parser-unavailable` | `sql-lint`, `sql-typed` | 2 | new | the SQL parser did not load: pnpm install --force |
-| 25 | `adapter-unbound` | `sql-typed` | 2 | new | restore pg 8.23.1 and pg-protocol ^1.16.1 from the lockfile (pnpm install --frozen-lockfile), then re-run |
-| 26 | `unsupported-oid` | `sql-typed` | 2 | new | the column type has no zod mapping (02 §3); note it under ## Notes |
-| 27 | `unsupported-binding` | `sql-typed` | 2 | new | bind $n directly to a column, with no cast or function around it |
-| 28 | `mount-unresolved` | `inventory`, `route-contract`, `permissions-pattern` | 2 | new | make the module's imports/controllers arrays static at the locator |
-| 29 | `missing-source` | `permissions-pattern` | 2 | new | restore the file or pnpm install; the slice needs it |
-| 30 | `postgres-unreachable` | `sql-typed` (DB), `db-apply`, `integration` | 2 | rewritten | was "start it with `<command from devai.json>`" → start PostgreSQL for the declared runtime; check DATABASE_URL and CREATE DATABASE privilege, then re-run |
-| 31 | `docker-unreachable` | `db-apply` | 2 | kept | "start Docker" |
-| 32 | `psql-missing` | `db-apply` | 2 | new | install the PostgreSQL 16 client (psql) |
-| 33 | `shell-missing` | `db-apply` | 2 | new | install a POSIX sh at /bin/sh |
-| 34 | `scratch-collision` | `db-apply` | 2 | new | re-run for a fresh scratch name; if it repeats, note it under ## Notes; never drop a database devai did not create |
-| 35 | `browsers-missing` | `e2e` | 2 | kept | "pnpm exec playwright install" |
-| 36 | `setup-failed` | `spec-tests`, `e2e`; the C.5 Vitest adapter | 2 | new | the suite failed before any case: fix the import, app start or DB setup at the locator |
-| 37 | `expect-red-not-reached` | `spec-tests` | 2 | rewritten | was "fix the arrange step" → make the case fail at an expect; seed with SQL, not unbuilt routes |
-| 38 | `assertion-unresolved` | `spec-tests` | 2 | new | fail through expect(); a throw without a source-mapped AssertionError cannot be classified |
-| 39 | `generator-version-mismatch` | `generated` | 2 | kept | "`pnpm add -D @devai-nyx/cli@<version>`" |
-| 40 | `generator-unavailable` | `generated` | 2 | kept | "regenerate in a generate packet" |
-| 41 | `catalog-unresolved` | `i18n` | 2 | new | regenerate the module in a generate packet |
-| 42 | `slice-too-large` | `permissions-pattern` | 2 | rewritten | was "narrow the slice" → move code out of the listed guard-reachable files, or note it for the pilot |
-| 43 | `input-bound-exceeded` | `permissions-pattern`, `review` | 2 | new | the change is too large to review: split the packet (smaller spec or successor packet) |
-| 44 | `output-bound-exceeded` | `permissions-pattern`, `review` | 2 | new | re-run once; a repeat goes under ## Notes |
-| 45 | `budget-exhausted` | `review` | 2 | new | re-run once; if it repeats, split the packet |
-| 46 | `review-incomplete` | `review` | 2 | new | re-run once; the unexamined R-n are listed; if it repeats, split the packet |
-| 47 | `tool-use-observed` | `permissions-pattern` | 2 | new | the sensor CLI used a tool; install the CLI version 12 pins, then re-run |
-| 48 | `capability-missing` | `permissions-pattern`, `review` | 2 | new | the reviewer CLI cannot enforce read-only, no-network isolation (sandbox or flag missing); install the version 12 pins |
-| 49 | `schema-invalid` | `permissions-pattern`, `review` | 2 | new | re-run once; a repeat goes under ## Notes |
-| 50 | `verdict-unknown` | `permissions-pattern`, `review` | 2 | new | re-run once; a repeat goes to the pilot under ## Notes |
-| 51 | `model-error` | `permissions-pattern`, `review` | 2 | new | check that `<reviewer command>` is logged in, then re-run |
-| 52 | `no-reviewer-configured` | `permissions-pattern`, `review` | 2 | new | the pilot adds the other family under devai.json review.reviewers |
-| 53 | `family` | `permissions-pattern`, `review` | 2 | new | commit with a Co-Authored-By trailer naming your model; the reviewer is the other family |
-| 54 | `stale` | `permissions-pattern`, `review` (CI: evidence digest ≠ PR head) | 2 | new | re-run `devai check --packet <p> --full` and commit `.devai/review/` |
+| 16 | `no-observations` | runner, any node (PASS with `observed = 0`, C.1 step 9) | 2 | new | the tool saw nothing to check: put the files where the tier glob expects them (04 §4) |
+| 17 | `prerequisite-failed` | runner, any node whose prerequisite is FAIL/UNKNOWN (C.1 step 8); named in `inventory` dependents, `route-contract`, `sql-typed`, `openapi`, `integration` | 2 | new | fix `<prerequisite>` first; this node did not run |
+| 18 | `tooling-missing` | `init` preflight; `check` (when `inventory` cannot run); `inventory`, `format`, `lint`, `lint-tests`, `typecheck`, `sql-lint`, `route-contract`, `i18n`, `actionlint`, `commitlint`, `generated`, `boundary`, `deadcode`, `openapi`, `db-apply`, `e2e` | 2 | kept | "install with `<command>`" |
+| 19 | `engines-mismatch` | `inventory` | 2 | kept | "`corepack use <packageManager>`"; Node must satisfy engines (`>=24 <25`) |
+| 20 | `lint-config-failed` | `lint`, `lint-tests`, `commitlint` | 2 | new | the config at the locator did not load; fix it in a standards packet |
+| 21 | `runner-crashed` | `format`, `typecheck`, `sql-lint`, `unit`, `integration`, `actionlint`, `boundary`, `deadcode`, `e2e`, `accept`; the C.5 Vitest adapter | 2 | new | the tool exited abnormally; re-run once, then put the output under ## Notes |
+| 22 | `timeout` | `unit`, `integration`, `permissions-pattern` | 2 | new | re-run once; a repeat goes under ## Notes |
+| 23 | `base-unreadable` | `test-integrity`, `openapi`, `protected-paths` (incl. pre-push hook notice), `packet-scope` | 2 | new | git fetch origin, then re-run |
+| 24 | `io` | `check` (C.6 candidate digest), `layout`, `spec-lint`, `i18n`, `commitlint` | 2 | new | make the path readable (permissions, broken or escaping symlink), then re-run |
+| 25 | `parser-unavailable` | `sql-lint`, `sql-typed` | 2 | new | the SQL parser did not load: pnpm install --force |
+| 26 | `adapter-unbound` | `sql-typed` | 2 | new | restore pg 8.23.1 and pg-protocol ^1.16.1 from the lockfile (pnpm install --frozen-lockfile), then re-run |
+| 27 | `unsupported-oid` | `sql-typed` | 2 | new | the column type has no zod mapping (02 §3); note it under ## Notes |
+| 28 | `unsupported-binding` | `sql-typed` | 2 | new | bind $n directly to a column, with no cast or function around it |
+| 29 | `mount-unresolved` | `inventory`, `route-contract`, `permissions-pattern` | 2 | new | make the module's imports/controllers arrays static at the locator |
+| 30 | `missing-source` | `permissions-pattern` | 2 | new | restore the file or pnpm install; the slice needs it |
+| 31 | `postgres-unreachable` | `sql-typed` (DB), `db-apply`, `integration` | 2 | rewritten | was "start it with `<command from devai.json>`" → start PostgreSQL for the declared runtime; check DATABASE_URL and CREATE DATABASE privilege, then re-run |
+| 32 | `docker-unreachable` | `db-apply` | 2 | kept | "start Docker" |
+| 33 | `psql-missing` | `db-apply` | 2 | new | install the PostgreSQL 16 client (psql) |
+| 34 | `shell-missing` | `db-apply` | 2 | new | install a POSIX sh at /bin/sh |
+| 35 | `scratch-collision` | `db-apply` | 2 | new | re-run for a fresh scratch name; if it repeats, note it under ## Notes; never drop a database devai did not create |
+| 36 | `browsers-missing` | `e2e` | 2 | kept | "pnpm exec playwright install" |
+| 37 | `setup-failed` | `spec-tests`, `e2e`; the C.5 Vitest adapter | 2 | new | the suite failed before any case: fix the import, app start or DB setup at the locator |
+| 38 | `expect-red-not-reached` | `spec-tests` | 2 | rewritten | was "fix the arrange step" → make the case fail at an expect; seed with SQL, not unbuilt routes |
+| 39 | `assertion-unresolved` | `spec-tests` | 2 | new | fail through expect(); a throw without a source-mapped AssertionError cannot be classified |
+| 40 | `generator-version-mismatch` | `generated` | 2 | kept | "`pnpm add -D @devai-nyx/cli@<version>`" |
+| 41 | `generator-unavailable` | `generated` | 2 | kept | "regenerate in a generate packet" |
+| 42 | `catalog-unresolved` | `i18n` | 2 | new | regenerate the module in a generate packet |
+| 43 | `slice-too-large` | `permissions-pattern` | 2 | rewritten | was "narrow the slice" → move code out of the listed guard-reachable files, or note it for the pilot |
+| 44 | `input-bound-exceeded` | `permissions-pattern`, `review` | 2 | new | the change is too large to review: split the packet (smaller spec or successor packet) |
+| 45 | `output-bound-exceeded` | `permissions-pattern`, `review` | 2 | new | re-run once; a repeat goes under ## Notes |
+| 46 | `budget-exhausted` | `review` | 2 | new | re-run once; if it repeats, split the packet |
+| 47 | `review-incomplete` | `review` | 2 | new | re-run once; the unexamined R-n are listed; if it repeats, split the packet |
+| 48 | `tool-use-observed` | `permissions-pattern` | 2 | new | the sensor CLI used a tool; install the CLI version 12 pins, then re-run |
+| 49 | `capability-missing` | `permissions-pattern`, `review` | 2 | new | the reviewer CLI cannot enforce read-only, no-network isolation (sandbox or flag missing); install the version 12 pins |
+| 50 | `schema-invalid` | `permissions-pattern`, `review` | 2 | new | re-run once; a repeat goes under ## Notes |
+| 51 | `verdict-unknown` | `permissions-pattern`, `review` | 2 | new | re-run once; a repeat goes to the pilot under ## Notes |
+| 52 | `model-error` | `permissions-pattern`, `review` | 2 | new | check that `<reviewer command>` is logged in, then re-run |
+| 53 | `no-reviewer-configured` | `permissions-pattern`, `review` | 2 | new | the pilot adds the other family under devai.json review.reviewers |
+| 54 | `family` | `permissions-pattern`, `review` | 2 | new | commit with a Co-Authored-By trailer naming your model; the reviewer is the other family |
+| 55 | `stale` | `permissions-pattern`, `review` (CI: evidence digest ≠ PR head) | 2 | new | re-run `devai check --packet <p> --full` and commit `.devai/review/` |
 
 ## Notes
 
