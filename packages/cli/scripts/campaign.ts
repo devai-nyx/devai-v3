@@ -120,13 +120,15 @@ export const STEP6: Rows = {
   exit: 1,
   nodes: {
     'db-apply': 'FAIL', integration: 'FAIL', accept: 'FAIL',
-    'spec-tests': 'UNKNOWN setup-failed', typecheck: 'SKIPPED',
+    'spec-tests': 'UNKNOWN setup-failed', typecheck: 'PASS',
     'route-contract': 'UNKNOWN tooling-missing', 'permissions-pattern': 'UNKNOWN prerequisite-failed', review: 'UNKNOWN prerequisite-failed',
     generated: 'UNKNOWN tooling-missing',
     'sql-lint': 'SKIPPED', 'spec-lint': 'SKIPPED', actionlint: 'SKIPPED', openapi: 'SKIPPED', 'sql-typed': 'SKIPPED',
   },
   others: 'PASS',
-  findings: [['spec-tests', 'tenancy.tenants'], ['db-apply', 'packages/data/migrations/platform'], ['integration', 'GET /healthz with 200'], ['accept', 'required node skipped for kind: test: typecheck (inventory: no affected project)']],
+  findings: [['spec-tests', 'tenancy.tenants'], ['db-apply', 'packages/data/migrations/platform'], ['integration', 'GET /healthz with 200']],
+  // D-132: the test project is a typecheck project, so a test packet's required typecheck runs.
+  absent: [['accept', 'required node skipped for kind: test']],
 };
 
 /**
@@ -343,7 +345,7 @@ function campaign(c: Cell, o: OptionCell, work: string): boolean {
 
   // 6. --packet PKT-DEMO-003 --full --expect-red: exit 0, expect-red 3 (R-1, R-2, R-4)
   c.expectRows('6 check PKT-DEMO-003 --expect-red', c.check(['--packet', P3, '--full', '--expect-red']), STEP6, [
-    `exit 0, spec-tests PASS with expect-red 3 (R-1, R-2, R-4) after ${S10[2]}, ${S10[3]}, ${S10[8]}, ${S10[1]}, ${S10[4]}, ${OPEN['testProject']}, ${S10[7]}`,
+    `exit 0, spec-tests PASS with expect-red 3 (R-1, R-2, R-4) after ${S10[2]}, ${S10[3]}, ${S10[8]}, ${S10[1]}, ${S10[4]}, ${S10[7]}`,
   ]);
 
   // 7. rebase PKT-DEMO-004, add the reference service and repository bodies (D-098) and their unit spec (D-131), commit
