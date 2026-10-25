@@ -232,7 +232,7 @@ successor" are the only ones the agent cannot act on alone; they go to the pilot
 
 Rules PL-01…PL-03, PL-06, PL-14, and the "does not exist at base" / "not an ancestor" branches of
 PL-04 and PL-05 run before any other node and stop the command (`exit 2`, `accepted: false`,
-`reason`); every other rule is a finding like any other node's and coexists with the rest of the
+`reason`); `devai packet rebase` evaluates PL-14 at its `--to` base (D-124); every other rule is a finding like any other node's and coexists with the rest of the
 report. A digest mismatch is a violation (`1`), never "could not run".
 
 ## 6. Agent-facing surface
@@ -347,7 +347,7 @@ carries its contract; the acceptance tests from PKT-DEMO-003 go from red to gree
 ## Deliverables
 - R-1, R-2, R-4 of SPEC-DEMO-001 implemented in `notes.service.ts`,
   `notes.repository.ts`, `notes.controller.ts` (seed files from PKT-DEMO-002). R-3 is
-  rail behaviour from the generated guards and stays green.
+  rail behaviour from the shell's guards and stays green (D-123).
 - Routes `POST /notes` and `GET /notes/:id` as the spec's route table states; both
   carry `@NoIdempotent()`, `@RequireRoles(['demo-member'], 'all')`, `@ErrorContract`,
   `@UseCase('UC-DEMO-001')`, `@Slo`.

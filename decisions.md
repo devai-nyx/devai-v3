@@ -1427,6 +1427,8 @@ of STYNX work on the critical path; (c) reports a missing verification as "nothi
 5. the migration linter matches quoted identifiers, counts `author_alias` as a PII token, and the
    LINT002 it then raises on 09 §6's DDL is settled (devai-v3#58 Open 1–3);
 6. LINT010 reads both prefix groups of `YYYYMMDD_NN_` (D-085).
+7. the guard rejects a token whose `tenant_id` is no platform tenant with 403 (added by D-129,
+   2026-10-25; devai-v3#81 Open 3).
 The first panel's (a) read step 4 as "exit 0, or exit 2 whose only non-PASS rows are `UNKNOWN
 tooling-missing` or FAILs traced to the S10 list"; the recording PR (devai-v3#68) found it
 self-contradictory, since a `FAIL` row makes the exit 1 (02 §8). A second panel the same day restated
@@ -1802,9 +1804,147 @@ states its one exception. Amends 02 §5 (Identity), 02 §11 (Packets row), 05 §
 (PL-12), docs/reference/glossary.md. Code follow-up: PL-12 skips `CMP-` trailer values. Chosen: (a).
 Source: Owner (panel, 2026-10-25; packet `PACKET-2026-10-24-R6-CLOSE.md` Part H, Owner's workspace).
 
+## D-123 · 2026-10-25 · The API shell registers the STYNX guards; `apps/api` depends on `@stynx-nyx/backend`
+[fact] The template's `apps/api/src/app.module.ts` imports `StynxAuthModule.forRoot({})`, which provides
+`StynxAuthGuard` but not as `APP_GUARD`, and nothing registers STYNX's `AuthorizationGuard`, so
+`@RequireRoles` is metadata only: an unauthenticated `POST /notes` reaches the service, the queries run
+without `app.tenant_id`, R-3 can never be green and step 8's R-1, R-2, R-4 cannot pass; PKT-DEMO-004
+calls R-3 "rail behaviour from the generated guards", but neither the generator nor the template emits
+a guard; 09 §1.1's shell row names `StynxAuthModule` only (devai-v3#81 Open 1). Options: (a) 09 §1.1's
+shell row: `apps/api/src/app.module.ts` registers `StynxAuthGuard` as `APP_GUARD` and
+`StynxAuthorizationModule.forRoot({ global: true })`; `apps/api/package.json` gains `@stynx-nyx/backend`
+3.0.0; PKT-DEMO-004's "rail behaviour from the generated guards" becomes "from the shell's guards";
+(b) the generator emits per-module guards; (c) external to STYNX. Recommended: (a). R8's preview of
+exactly this wiring made R-1, R-2, R-4, R-5 and R-6 pass (devai-v3#81 Open 1); (b) repeats one
+cross-cutting guard per module; (c) leaves the rail's authorization outside its library. Amends 09 §1.1
+(`apps/api` row), 05 §7 (PKT-DEMO-004's Deliverables). Code follow-up: the template shell, its manifest
+and lock, and the shipped `packets/CMP-DEMO-001/PKT-DEMO-004.md`. Chosen: (a). Source: Owner (panels,
+2026-10-25; packet `PACKET-2026-10-25-R8.md`, Owner's workspace).
+
+## D-124 · 2026-10-25 · `packet rebase` evaluates PL-14 at the `--to` base
+[fact] `devai packet rebase PKT-DEMO-004.md --to HEAD` exits 2 `PL-14 context[1]
+domain/notes/api/src/notes.repository.ts does not exist at base <init's template commit>`: `packetRebase`
+reads the packet through the pre-DAG check, PL-14 at the current `base`, before moving it
+(`packages/cli/src/commands/packet.ts:161-178,199-203`), and PKT-DEMO-004's shipped `context` names a
+file PKT-DEMO-002 creates. 08 A.4 lists `rebase`'s conditions as descent and the spec pin only; 05 §5
+puts PL-14 pre-DAG for "the command". Campaign steps 7–8 and every `--packet PKT-DEMO-004` cell are
+exit 2 `packet-invalid` (devai-v3#81 Open 4). Options: (a) `packet rebase` evaluates PL-14 at the `--to`
+base (08 A.4, 05 §5 amended); (b) rebase skips PL-14; (c) PKT-DEMO-004's `context` changes.
+Recommended: (a). The rebased packet is checked where it will stand; (b) lets a rebase land a packet
+whose `context` no longer resolves; (c) bends the shipped packet to a check-order defect. Amends 08 A.4
+(`rebase` row), 05 §5 (PL-14 timing). Code follow-up: `packetRebase`. Chosen: (a). Source: Owner
+(panels, 2026-10-25; packet `PACKET-2026-10-25-R8.md`, Owner's workspace).
+
+## D-125 · 2026-10-25 · A test-only packet's `typecheck` is SKIPPED by `inventory`, as 08 B.5 says: a DEVAI defect
+[fact] At campaign step 6, PKT-DEMO-003's diff touches only the acceptance file and its packet;
+`typecheck` returns `expected: 0`, which the runner rewrites to `UNKNOWN no-observations`, while 08 B.5's
+population predicate is "no affected project" (SKIPPED, pronounced by `inventory`), as step 2's report
+does (devai-v3#81 Open 5). Options: (a) a DEVAI defect: `inventory` pronounces `typecheck` SKIPPED when no
+project is affected (08 B.5 as written), no law change; (b) amend B.5. Recommended: (a). The law already
+says what the code must do. No law text changes. Code: fixed by devai-v3#82 (merged 2026-10-25): the
+`typecheck` population is the `tsc -b` closure, `packages/cli/src/nodes/inventory.ts`. Chosen: (a). Source: Owner (panels, 2026-10-25; packet
+`PACKET-2026-10-25-R8.md`, Owner's workspace).
+
+## D-126 · 2026-10-25 · CI cells run step 3's install with `--no-frozen-lockfile`; the step and the mount line keep `pnpm install`
+[fact] pnpm forces `--frozen-lockfile` under `CI=true` and ignores every config form; a freshly
+generated workspace package is not in the lock until step 3's install writes it, and the step-3 commit
+carries that lock. R8's runner runs `pnpm install --no-frozen-lockfile` at step 3, what a plain
+`pnpm install` does on the agent's machine (devai-v3#81 Open 9). Options: (a) 09 §4 gains a note that
+cells run step 3's `pnpm install` with `--no-frozen-lockfile` because `CI=true` forces a frozen
+lockfile; step text and the printed mount line stay `pnpm install`; (b) everywhere. Recommended: (a). The
+flag is a CI artefact; the agent's command is unchanged. Amends 09 §4 (note under step 3). Chosen: (a).
+Source: Owner (panels, 2026-10-25; packet `PACKET-2026-10-25-R8.md`, Owner's workspace).
+
+## D-127 · 2026-10-25 · `ci.yml` gains an aggregate `matrix` job; H5's contexts stay `build` and `matrix`
+[fact] A strategy job reports as `matrix (bare, options-a)` and so on, not `matrix`, so 12 §5 H5's
+`"contexts":["build","matrix"]` would name a check that never reports (devai-v3#81 Open 14). Options: (a)
+`ci.yml` gains an aggregate `matrix` job needing all shards (`if: always()`, failing if any shard failed
+or was cancelled); 12 §5 H5 stays `"contexts":["build","matrix"]`, and `publish` needs the aggregate;
+(b) H5 lists the five shards. Recommended: (a). One context survives a change of shards; (b) edits the
+protection at every matrix change. No law text changes: 12 §5 H5 already reads so. Code follow-up:
+`.github/workflows/ci.yml`. Chosen: (a). Source: Owner (panels, 2026-10-25; packet
+`PACKET-2026-10-25-R8.md`, Owner's workspace).
+
+## D-128 · 2026-10-25 · `permissions-pattern` evidence and 12 §3.1's model rows wait on S10 #4 and D-124; R8's replay evidence is recorded
+[fact] `permissions-pattern`'s prerequisite `route-contract` is `UNKNOWN tooling-missing` in every option
+cell (S10 #4), so the sensor never runs and writes no `.devai/review/PKT-DEMO-00n.permissions.json`, and
+PKT-DEMO-004's `--packet --full` is blocked (D-124); where per-cell, per-packet evidence is committed and
+how CI places it are unstated (devai-v3#81 Open 15). 12 §3.1 cannot be filled: both model nodes are
+`prerequisite-failed` in every cell, so no `details` carry `utf8Bytes`, proxy or CLI token counts; the
+release host reports `claude` 2.1.292 and `codex-cli` 0.163.0 (devai-v3#81 Open 16). Options: (a) the
+evidence is deferred: 09 §4's Evidence paragraph and 12 §3.1 are marked "pending S10 #4
+(route-contract tooling-missing) and D-124"; the committed location and CI placement are ruled when the
+sensor can run; R8's replay and `--check` evidence goes into 12 §3.1 now: N8 a hand edit → `generated`
+FAIL `differs from regeneration [S-45]`; N9 same-id `--regenerate` leaves edited seeds and rewrites
+generated files byte-identical; N11 the successor `--regenerate` keeps base-present SQL and prints the
+hand-migration line, and editing that SQL is LINT013; N6 a catalogue edit is caught by `i18n` and
+`generated`; (b) rule the location now. Recommended: (a). A location ruled before any evidence exists
+would be ruled blind. Amends 09 §4 (Evidence), 12 §3.1 (in place; this entry names the edit, as D-066's
+index note requires), docs/history/index.md (12's status line). Chosen: (a). Source: Owner (panels,
+2026-10-25; packet `PACKET-2026-10-25-R8.md`, Owner's workspace).
+
+## D-129 · 2026-10-25 · The shell maps 401/403 to the route's error contract and adds `requestId`; the S10 list gains the tenant check
+[fact] 401 and 403 answer Nest's default `{ message, error, statusCode }`, and the 400 `VALIDATION` body is
+`{ code, messageKey }` with no `requestId`, while the spec's Contract notes require exactly `code`,
+`messageKey`, `requestId` (devai-v3#81 Open 2). [fact] `StynxAuthGuard` derives the principal from token
+claims only (S-12) and checks no tenant: a demo-member token naming an unknown tenant answers `POST` 500
+(an HTML page carrying the FK error text) and `GET` 404; the fixture reads "without verified tenant
+context" as a member token whose `tenant_id` is no tenant of the platform (devai-v3#81 Open 3). Options:
+(a) the shell's `validation.filter.ts` maps 401/403 to `{ code, messageKey, requestId }` from the route's
+`@ErrorContract` and adds `requestId` to the 400 `VALIDATION` body (09 §1.1 row); the S10 list gains "the
+guard rejects a token whose `tenant_id` is no platform tenant with 403" (STYNX); R-3's fixture reading
+(a member token naming an unknown tenant) is ratified; (b) relax the contract. Recommended: (a). The
+contract is the fixture's (06 §7); (b) would edit fixed-byte law text. [fact] D-100's S10 list already has
+six items (item 6 is LINT010's prefix groups), so the new item is item 7 there. Amends 09 §1.1 (`apps/api`
+row), D-100's S10 list (item 7 added, marked as added by this entry). Code follow-up: the shell filter;
+STYNX: the tenant check. Chosen: (a). Source: Owner (panels, 2026-10-25; packet
+`PACKET-2026-10-25-R8.md`, Owner's workspace).
+
+## D-130 · 2026-10-25 · R8's campaign readings are ratified (devai-v3#81 Open 6, 7, 8, 12, 13, 17); 12 §4's R8 row names N1–N20
+[fact] R8 (devai-v3#81) recorded these readings:
+- **Open 6**: at step 6 `spec-tests` runs although `db-apply` FAILs (with no changed SQL `sql-typed` is
+  SKIPPED) and is `UNKNOWN setup-failed` on a scratch database without the platform schema; it traces to
+  S10 #2.
+- **Open 7**: N3's static `≠ spec limit` finding is hidden behind `db-apply`'s FAIL (`sql-typed` is one
+  node with one status, 08 B.10), pending S10 #2.
+- **Open 8**: 09 §4 names no command for the N rows; they run `devai check --full` on an uncommitted
+  mutation of O2 until D-124 lands, then `--packet PKT-DEMO-004 --full`.
+- **Open 12**: N6 is restated to 08 B.13's finding form `missing key demo.notes.missing [S-16]`.
+- **Open 13**: the `schemaDigest` comparison of O9–O16 is deferred until a `db-apply` PASS exists, and is
+  then made by an aggregate step (bare and docker run in different jobs).
+- **Open 17**: N17 and N19 skip in CI (no reviewer CLIs; D-079, D-082); N19 skips on every host the runner
+  knows (it needs both CLIs with their sandboxes).
+[fact] 12 §4's R8 row reads "N1–N12" (`docs/history/12-succession.md:119`), while 09 §4 has N1–N20.
+Options: (a) ratify as recorded; (b) ratify except named rows. Recommended: (a). Where a reading changes
+framework text it is applied: 09 §4 (N rows' command, N6, O9–O16, N17, N19). 12 §4's R8 row is aligned to
+N1–N20 (in place; this entry names the edit). Chosen: (a). Source: Owner (panels, 2026-10-25; packet
+`PACKET-2026-10-25-R8.md`, Owner's workspace).
+
+## D-131 · 2026-10-25 · The token helper is a section of the acceptance file; D-098's fixtures gain `notes.service.spec.ts`
+[fact] 04 §4's tier suffix (`layout`: every `.ts` under `test/acceptance/` is `*.acceptance.spec.ts`) and
+PKT-DEMO-003's `paths.allowed` (`acceptance/**` only) leave no other file for the bearer-token helper; the
+shell configures no JWKS source or issuer (`forRoot({})`), so the test provides the
+`SessionJwtSigningService` token with its own key for STYNX's default issuer `https://stynx.local`
+(devai-v3#81 Open 10; D-107 left the token form open). PKT-DEMO-004 names `test/notes.service.spec.ts`
+("unit tests for the zero-row → 404 mapping"), which D-098's fixtures do not include (devai-v3#81 Open
+11). Options: (a) the bearer-token helper is a section of the acceptance file (04 §4 suffix,
+PKT-DEMO-003 `paths.allowed`); the test signs RS256 for STYNX's default issuer via
+`SessionJwtSigningService`; the shell keeps `forRoot({})`; D-098's fixture list gains a fourth,
+`notes.service.spec.ts` → `domain/notes/api/test/notes.service.spec.ts` at step 7; (b) three fixtures, and
+PKT-DEMO-004 drops the unit-test line; (c) the shell declares issuer and JWKS. Recommended: (a). It
+fits the layout and paths the law already fixes, and gives PKT-DEMO-004's unit-test deliverable an
+oracle. D-098 is not edited; this entry adds the fourth fixture. Amends 09 §4 (step 7, the fixtures
+paragraph). Code follow-up (R8): `packages/cli/fixtures/campaign/notes.service.spec.ts` and the cell
+runner. Chosen: (a). Source: Owner (panels, 2026-10-25; packet `PACKET-2026-10-25-R8.md`, Owner's
+workspace).
+
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
 - Mutation testing's home (D-004: outside the cycle or not at all) — not blocking v3.0.
 - 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck (D-058) — not blocking v3.0.
 - STYNX local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 (D-069) — STYNX item, not blocking 3.0.0.
+- D-129's new S10 item was ruled as "item #6", but D-100's list already has an item 6 (LINT010's prefix
+  groups); it is recorded as item 7. Whether the Owner meant a renumbering is not stated.
+- D-128 defers the sensor evidence and 12 §3.1's model rows, while 12 §4's R8 row still reads "with sensor
+  evidence committed; §3.1 filled". Whether R8 closes before the evidence exists is not ruled.

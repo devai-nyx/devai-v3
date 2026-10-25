@@ -1,4 +1,4 @@
-<!-- Ratified 2026-10-19 (D-064, D-065, D-066); promoted from agents/consolidate-8/claude-opus/, revised for D-064's Owner choices (P-8-08 relicensing, P-8-09 public). One-time plan. Amended in place by D-080 (§5 H3/H5), D-090 (§5 H7, §6, §8), D-091 (§5 H3/H5, ruleset struck) and D-100 (§4 R6, done clause); the line below is consolidation 8's provenance as of 2026-10-18. -->
+<!-- Ratified 2026-10-19 (D-064, D-065, D-066); promoted from agents/consolidate-8/claude-opus/, revised for D-064's Owner choices (P-8-08 relicensing, P-8-09 public). One-time plan. Amended in place by D-080 (§5 H3/H5), D-090 (§5 H7, §6, §8), D-091 (§5 H3/H5, ruleset struck), D-100 (§4 R6, done clause), D-128 (§3.1) and D-130 (§4 R8, N rows); the line below is consolidation 8's provenance as of 2026-10-18. -->
 <!-- Consolidation 8 · Claude Opus 5.5 · 2026-10-18. Base: draft-round-8/claude-opus (reviews split; NOTES §1). Binding: decisions.md D-001–D-063, 01–10; 11 PROVISIONAL. P-8-nn, E-8-nn and Owner items: agents/campaign-8/. devai: = v2 @ 4289ff51 (origin aarusso-nyx/devai); stynx: @ 63e5f788; detran: @ 50b6c174; gh: = `gh api` 2026-10-18/19; ref: = reference/succession-2026-07/. Not promoted. -->
 # 12 — Succession plan
 
@@ -104,6 +104,14 @@ Author and committer `devai-agent <agent@devai.local>`, unsigned (D-002); an Own
 
 D-058's first-call calibration (`decisions.md:466-468`), read from `details` (`08-cli-and-nodes.md:653-654`), plus one line per harness for wrapper H (`10-agent-surface.md:510-511`).
 
+**Pending S10 #4 (route-contract tooling-missing) and D-124** (D-128): both model nodes are `prerequisite-failed` in every R8 cell, so no row above can be filled yet. The release host reports `claude` 2.1.292 and `codex-cli` 0.163.0.
+
+**Replay and `--check` evidence** (R8, 09 §3; D-128):
+- N8: a hand edit is `generated` FAIL `differs from regeneration [S-45]`.
+- N9: a same-id `--regenerate` leaves edited seeds alone and rewrites `generated` files byte-identical.
+- N11: the successor `--regenerate` keeps base-present SQL and prints the hand-migration line; editing that SQL is LINT013.
+- N6: a catalogue edit is caught by both `i18n` and `generated`.
+
 ## 4. Release prerequisites, ordered
 
 | # | Prerequisite | Who | Turns observing | 3.0.0 |
@@ -116,7 +124,7 @@ D-058's first-call calibration (`decisions.md:466-468`), read from `details` (`0
 | R5 | STYNX publishes `<v>`. The R3–R4 acceptance commands are rerun against it; R6's locally built CLI serves the rows that call `devai check` | STYNX, agent | `devai init` preflight clean | **blocking** |
 | R6 | CLI per 08, decorators, template per 09 §1.1, generator per 09 §2. Packages' `tsconfig.json`, both schema projections and the projection test. Template `package.json`/lock produced at `<v>` (`09-rail.md:56`). Done (D-100) when W9's clause check is green modulo the S10 list D-100 enumerates: until STYNX ships it, campaign step 4 is met on exit 0, or exit 1 or 2 where every `FAIL` row traces to the S10 list and every other non-PASS row is `UNKNOWN tooling-missing` or `prerequisite-failed` behind a traced row (D-088's write pair is item 1); `--full` completion is W10 code work | agent | — | **blocking** |
 | R7 | Release host: psql 16.15 on PATH; `claude` 2.1.292 and `codex` 0.163.0 authenticated; Docker | Owner | sensor evidence producible (`09-rail.md:205`) | **blocking** |
-| R8 | 09 §4 matrix O1–O16 and N1–N12 green in CI, with sensor evidence committed; §3.1 filled | agent | — | **blocking**. Calibration is recorded, not separately gated: an under-estimating proxy surfaces inside the matrix as `input-bound-exceeded` |
+| R8 | 09 §4 matrix O1–O16 and N1–N20 green in CI (D-130), with sensor evidence committed; §3.1 filled | agent | — | **blocking**. Calibration is recorded, not separately gated: an under-estimating proxy surfaces inside the matrix as `input-bound-exceeded` |
 | R9 | H5: `matrix` becomes required | Owner | — | **blocking** |
 | R10 | H6: tag and publish. `npm view @devai-nyx/{cli,decorators}@3.0.0 version` → `3.0.0` twice; `pnpm dlx @devai-nyx/cli@3.0.0 init --product demo` in an empty directory → exit 0 | agent | — | the release |
 
