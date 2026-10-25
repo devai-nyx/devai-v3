@@ -1,14 +1,14 @@
 ---
 title: Decisions
 sidebar_position: 12
-description: Index of the 140 numbered decisions D-001 to D-140 in decisions.md, with date and title.
+description: Index of the 141 numbered decisions D-001 to D-141 in decisions.md, with date and title.
 ---
 
 # Decisions
 
-[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **140 decisions** (D-001…D-140), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
+[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **141 decisions** (D-001…D-141), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
 
-Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 28 on 2026-10-24 (D-075…D-102), 38 on 2026-10-25 (D-103…D-140). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
+Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 28 on 2026-10-24 (D-075…D-102), 39 on 2026-10-25 (D-103…D-141). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
 
 | Id | Date | Title |
 |---|---|---|
@@ -152,6 +152,7 @@ Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-0
 | D-138 | 2026-10-25 | `tsconfig.test.json` references the two app projects; the modules come transitively (amends D-132) |
 | D-139 | 2026-10-25 | `init`'s materialise install adds `-w`: `pnpm add -w -D --save-exact @devai-nyx/cli@<own version>` (amends D-097) |
 | D-140 | 2026-10-25 | Materialise runs `pnpm add -w …` then `pnpm install`; every printed `pnpm add` remedy takes that shape (amends D-097, D-139) |
+| D-141 | 2026-10-25 | The Docusaurus site is published on GitHub Pages from `main` |
 
 ## Still open
 

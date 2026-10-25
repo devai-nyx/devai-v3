@@ -2072,6 +2072,35 @@ docs/guides/troubleshooting.md. Code follow-up (R10, in parallel): `init`'s inst
 hint (`src/nodes/generated.ts:73`), with their tests. Chosen: (a). Source: Owner (panel, 2026-10-25;
 packet `PACKET-2026-10-25-R10.md`, Owner's workspace).
 
+## D-141 · 2026-10-25 · The Docusaurus site is published on GitHub Pages from `main`
+[fact] `site/` (Docusaurus, W0 commit `7b7fc0fe`) renders `docs/` and `decisions.md` and already
+targets `https://devai-nyx.github.io/devai-v3/` (`site/docusaurus.config.ts:10-13`), but nothing served
+it: `ci.yml` never built `site/` and the repository had `has_pages: false`. 04 §5's Docs row names `site/`
+(`04-layout.md:137`); no framework text or decision required publishing, and 12 §5 lists no
+Pages step. v2 publishes `https://aarusso-nyx.github.io/devai/`, which stays served after H7, so
+adopters would otherwise land on v2's docs. Pages is free on GitHub Free for a public repository, so
+D-091 holds. Options: (a) a two-part step: the Owner sets repository Settings → Pages → Source "GitHub
+Actions" (read-back `gh api repos/devai-nyx/devai-v3/pages --jq .build_type` → `workflow`); an agent PR
+adds a `pages` job to `ci.yml` on push to `main` only (`needs: [build]`,
+`actions/upload-pages-artifact` + `actions/deploy-pages`, environment `github-pages`) and sets the
+repository `homepage` to the Pages URL; the job is not a PR check, and protection stays
+`[["build","matrix"],true]`; (b) leave the site unpublished until H7; (c) other. Recommended: (a). It
+costs nothing under D-091 and gives adopters v3's docs at the URL the site already names; (b) sends
+them to v2's. The Owner enabled Pages on 2026-10-25: read-back `build_type` → `workflow`, `html_url` →
+`https://devai-nyx.github.io/devai-v3/`. Amends 12 §5 (the `pages` job and step H9). 04 §5 is
+unchanged (its `site/` entry needs no deploy note). Code follow-up: the `pages` job, `homepage`, and
+`docs/dev/release.md`'s "Docs site" paragraph (session `pages-deploy`, branch `pages-deploy`). Chosen:
+(a). Source: Owner (message 2026-10-25, "GH Pages set. Do it as proposed."; packet
+`PACKET-2026-10-25-R10.md`, section D-141, Owner's workspace).
+**Readings** (ratified by the Owner, 2026-10-25, packet `PACKET-2026-10-25-R10.md`, D-141 readings;
+devai-v3#94 Open):
+1. The site deploys from `main` only, never on `v*` tags; the docs on `main` are the current law.
+2. The site's `onBrokenAnchors` stays `'warn'`; `onBrokenLinks` fails the build
+   (`site/docusaurus.config.ts:14-15`).
+3. The site root `/devai-v3/` answers 200 and redirects client-side to `/devai-v3/docs/`
+   (`site/src/pages/index.tsx`), as the W0 site did.
+12 §5's `pages` bullet already reads "on push to `main` only", so reading 1 changes no other text.
+
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
