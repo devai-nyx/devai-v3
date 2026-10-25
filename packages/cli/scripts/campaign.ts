@@ -479,7 +479,7 @@ export const NEGATIVES: Negative[] = [
     id: 'N7b', title: 'acceptance file deleted',
     run: (c) => {
       rmSync(resolve(c.dir, ACCEPTANCE));
-      c.expectRows('N7b', c.check(nRun(c)), { exit: 1, nodes: { 'test-integrity': 'FAIL', 'spec-tests': 'SKIPPED', accept: 'FAIL' }, findings: [['test-integrity', 'acceptance file changed without @acceptance-change [S-63]'], ['accept', 'required node skipped for kind: code: spec-tests']] }, [...nPending(c)]);
+      c.expectRows('N7b', c.check(nRun(c)), { exit: 1, nodes: { 'test-integrity': 'FAIL', 'spec-tests': 'SKIPPED', accept: 'FAIL' }, findings: [['test-integrity', 'acceptance file changed without @acceptance-change [S-63]'], ['accept', 'required node skipped for kind: code: spec-tests (inventory: no acceptance file for SPEC-DEMO-001)']] }, [...nPending(c)]);
     },
   },
   {
