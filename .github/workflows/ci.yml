@@ -58,26 +58,70 @@ jobs:
           if [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then echo cli=true >> "$GITHUB_OUTPUT"; exit 0; fi
           if git diff --quiet "$base" "$GITHUB_SHA" -- packages/cli/; then echo cli=false; else echo cli=true; fi >> "$GITHUB_OUTPUT"
 
+  # 09 §4 (R8): every cell in a temporary workspace through packages/cli/scripts/campaign.ts, which asserts
+  # each step's current form and prints the law's form as pending (D-100). Both runtimes (12 §5); option
+  # cells O1–O8 bare and O9–O16 docker, negative cells N1–N20 on the default cell O2, bare (D-098). The
+  # entries shard the cells so no job runs much past twenty minutes.
   matrix:
     needs: [build]
     if: needs.build.outputs.cli == 'true'
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
         runtime: [bare, docker]
+        shard: [options-a, options-b, negative]
+        exclude:
+          - runtime: docker
+            shard: negative
+        include:
+          - { runtime: bare, shard: options-a, cells: 'O1,O2,O3,O4' }
+          - { runtime: bare, shard: options-b, cells: 'O5,O6,O7,O8' }
+          - { runtime: bare, shard: negative, cells: 'N1,N2,N3,N4a,N4b,N4c,N5,N6,N7a,N7b,N8,N9,N10,N11,N12,N13,N14,N15,N16,N17,N18,N19,N20' }
+          - { runtime: docker, shard: options-a, cells: 'O9,O10,O11,O12' }
+          - { runtime: docker, shard: options-b, cells: 'O13,O14,O15,O16' }
+    # bare: the declared server is DATABASE_URL (02 §6). docker: the cell's compose.yaml publishes
+    # 127.0.0.1:5432 itself, so no service runs there (an empty image starts none).
+    services:
+      postgres:
+        image: ${{ matrix.runtime == 'bare' && 'postgres:16' || '' }}
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DATABASE_URL: ${{ matrix.runtime == 'bare' && 'postgresql://postgres:postgres@localhost:5432/postgres' || '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: 09 §4 cells (O1–O16, N1–N12)
+      - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5; version from packageManager
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.20.0'
+          cache: pnpm
+      - name: PostgreSQL client for db-apply (07 §4)
+        run: psql --version || (sudo apt-get update && sudo apt-get install -y postgresql-client)
+      - name: Build the CLI the cells install (until R10, D-107)
+        run: pnpm install --frozen-lockfile && pnpm -r --if-present build
+      - name: Playwright browsers (the template's @playwright/test 1.60.0)
+        run: npx -y playwright@1.60.0 install --with-deps chromium
+      - name: 09 §4 cells (${{ matrix.runtime }} · ${{ matrix.cells }})
         env:
-          REF: ${{ github.ref }}
           RUNTIME: ${{ matrix.runtime }}
-        run: |
-          # The 09 §4 cells need src/main.ts (R6) and the published STYNX <v> (R5); they are
-          # written into this job at R8. Until then the job passes on branches and refuses tags,
-          # so publish cannot run on an unfilled matrix.
-          echo "matrix ($RUNTIME): 09 §4 cells not yet present (filled at R8)"
-          case "$REF" in refs/tags/v*) exit 1;; esac
+          CELLS: ${{ matrix.cells }}
+        run: node packages/cli/scripts/campaign.ts --runtime "$RUNTIME" --cells "$CELLS" --work "$RUNNER_TEMP/cells" --out "$RUNNER_TEMP/cells/results.json"
+      - name: Cell table
+        if: always()
+        run: test -f "$RUNNER_TEMP/cells/results.json" && node packages/cli/scripts/campaign.ts --report "$RUNNER_TEMP/cells/results.json" >> "$GITHUB_STEP_SUMMARY" || true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: cells-${{ matrix.runtime }}-${{ matrix.shard }}
+          path: |
+            ${{ runner.temp }}/cells/results.json
+            ${{ runner.temp }}/cells/*.log
+          if-no-files-found: ignore
 
   publish:
     needs: [build, matrix]
