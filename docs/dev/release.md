@@ -68,6 +68,8 @@ let the test config reach the modules through the apps (devai-v3#87, applied by 
 evidence and 12 §3.1's token rows stay pending S10 #4 and D-124 ([D-124](../../decisions.md), [D-128](../../decisions.md)).
 **R9 is applied** (2026-10-25): `main`'s protection requires `build` and `matrix`, strict, enforced for admins;
 read back `[["build","matrix"],true,true]`.
+[D-139](../../decisions.md) adds `-w` to `init`'s install (`pnpm add -w -D --save-exact @devai-nyx/cli@<own version>`):
+without it pnpm 9.15.0 refuses to add to the workspace root, and R10's `init` would exit 2.
 R7 is confirmed on the release host.
 
 **Not blocking 3.0.0** (12 §4): the D-047 edit-loop p95 measurement (3.0.0 ships 90000); the first

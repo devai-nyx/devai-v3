@@ -1,14 +1,14 @@
 ---
 title: Decisions
 sidebar_position: 12
-description: Index of the 138 numbered decisions D-001 to D-138 in decisions.md, with date and title.
+description: Index of the 139 numbered decisions D-001 to D-139 in decisions.md, with date and title.
 ---
 
 # Decisions
 
-[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **138 decisions** (D-001…D-138), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
+[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **139 decisions** (D-001…D-139), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
 
-Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 28 on 2026-10-24 (D-075…D-102), 36 on 2026-10-25 (D-103…D-138). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
+Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 28 on 2026-10-24 (D-075…D-102), 37 on 2026-10-25 (D-103…D-139). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
 
 | Id | Date | Title |
 |---|---|---|
@@ -150,16 +150,18 @@ Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-0
 | D-136 | 2026-10-25 | D-129's mechanism: a recording guard, the filter, and a filter module imported last |
 | D-137 | 2026-10-25 | The S10 list gains the public health controller; the probes answer 401 until then |
 | D-138 | 2026-10-25 | `tsconfig.test.json` references the two app projects; the modules come transitively (amends D-132) |
+| D-139 | 2026-10-25 | `init`'s materialise install adds `-w`: `pnpm add -w -D --save-exact @devai-nyx/cli@<own version>` (amends D-097) |
 
 ## Still open
 
-The file's closing "Open" section lists five items ([decisions.md](../../decisions.md)):
+The file's closing "Open" section lists six items ([decisions.md](../../decisions.md)):
 
 - [D-026](../../decisions.md) (`kind:` packets) is provisional until the first DETRAN module is built with `kind:` packets.
 - [D-047](../../decisions.md) (edit-loop ceiling) is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
 - Mutation testing's home ([D-004](../../decisions.md)): outside the cycle or not at all; not blocking v3.0.
 - The 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck ([D-058](../../decisions.md)); not blocking v3.0.
 - STYNX's local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 ([D-069](../../decisions.md)); a STYNX item, not blocking 3.0.0.
+- [D-139](../../decisions.md) adds `-w` to `init`'s install only; whether the `generator-version-mismatch` remedy `pnpm add -D @devai-nyx/cli@<version>`, also run in the workspace root, gains `-w` is not ruled.
 
 ## How decisions are made
 

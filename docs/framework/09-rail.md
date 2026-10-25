@@ -12,7 +12,7 @@ Tags: `[fact]` cited source, `[inference]` consequence, `[opinion]` contract cho
 
 [opinion] **Modes.** *Materialise* (`devai.json` absent): `devai init --product <slug>` validates every input before it writes anything. It then:
 1. Writes the §1.1 tree, running `git init` if needed.
-2. Runs `pnpm add -D --save-exact @devai-nyx/cli@<its own version>`, which installs the workspace and completes `pnpm-lock.yaml`; a failed install is exit 2 `tooling-missing` with that command as the remedy (D-097).
+2. Runs `pnpm add -w -D --save-exact @devai-nyx/cli@<its own version>` (D-139), which installs the workspace and completes `pnpm-lock.yaml`; a failed install is exit 2 `tooling-missing` with that command as the remedy (D-097).
 3. Commits the tree as `chore(template): devai init <product>` with the trailer `Packet: PKT-DEMO-001`, with the hooks live (no `--no-verify`).
 4. Renders the four `CMP-DEMO-001` packets with `base` = the template commit and commits them as `chore(packets): seed CMP-DEMO-001` with the trailer `Packet: CMP-DEMO-001` (08 A.1, D-120).
 
