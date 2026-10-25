@@ -4,6 +4,7 @@ import { spawnSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { ADAPTERS, check } from '../src/commands/check.js';
 import { Report } from '../src/report.js';
 import { NODE_IDS } from '../src/runner/edges.js';
 import { templateWorkspace, write } from './repo.js';
@@ -76,9 +77,16 @@ describe('devai check refusals (W1)', () => {
     expect(r.status).toBe(2);
     return JSON.parse(r.stdout) as { reason: string; message: string };
   };
-  it('a node without an adapter: exit 2 usage "node <id> arrives in a later wave"', () => {
+  it('a node without an adapter: exit 2 usage "node <id> arrives in a later wave"', async () => {
+    // W8 registered the last adapter (`generated`); the refusal is exercised with it withdrawn in-process.
     const dir = templateWorkspace();
-    expect(usage(dir, '--only', 'generated')).toMatchObject({ reason: 'usage', message: 'node generated arrives in a later wave' });
+    const saved = ADAPTERS.generated;
+    delete ADAPTERS.generated;
+    try {
+      await expect(check([], { only: ['generated'] }, 'json', dir)).rejects.toMatchObject({ reason: 'usage', message: 'node generated arrives in a later wave' });
+    } finally {
+      ADAPTERS.generated = saved;
+    }
   });
   it('A.3 (D-084 item 19): --only on a packet-bound node without --packet is exit 2 usage "<node> needs --packet"', () => {
     const dir = templateWorkspace();

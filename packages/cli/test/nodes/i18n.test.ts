@@ -43,7 +43,7 @@ describe('B.13 i18n', () => {
       status: 'FAIL', expected: 4, observed: 4, evaluated: 4,
       findings: [{ locator: `${PT}:1`, message: 'missing key demo.notes.missing', standard: 'S-16', hint: 'add the pt-BR text' }],
     });
-    const spec = '# SPEC-DEMO-001\n\n```yaml\nid: SPEC-DEMO-001\ni18n:\n  demo.notes.invalid: {en-US: a, pt-BR: b}\n  demo.notes.missing: {en-US: a, pt-BR: b}\n  demo.notes.forbidden: {en-US: a, pt-BR: b}\n```\n';
+    const spec = '# SPEC-DEMO-001\n\n## Contract\n\n```yaml\nid: SPEC-DEMO-001\ni18n:\n  demo.notes.invalid: {en-US: a, pt-BR: b}\n  demo.notes.missing: {en-US: a, pt-BR: b}\n  demo.notes.forbidden: {en-US: a, pt-BR: b}\n```\n';
     const withSpec = { ...CATALOGS, 'domain/notes/generation-manifest.json': JSON.stringify({ specId: 'SPEC-DEMO-001' }), 'specs/notes/SPEC-DEMO-001.md': spec };
     expect((await run(workspace(withSpec, {}, null))).findings).toEqual([
       { locator: `${EN}:1`, message: 'missing key demo.notes.forbidden', standard: 'S-16', hint: 'add the en-US text' },
