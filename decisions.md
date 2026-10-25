@@ -1688,7 +1688,8 @@ Owner (panels, 2026-10-25; packet `PACKET-2026-10-24-R6-CLOSE.md` Part E, Owner'
 hooks refuse the packets commit, the repository has a `Packet:` commit, a re-run is attach mode, which
 makes no commit, and the packets commit has no path (devai-v3#73 Open 1). Options: (a) `init` is a
 re-run while `HEAD` lacks either of its two commits (the template commit, trailer `Packet:
-PKT-DEMO-001`, and the packets commit) and makes whichever is missing; attach mode starts only after
+PKT-DEMO-001`, and the packets commit, trailer `Packet: CMP-DEMO-001` since D-120; wording amended by
+D-120, 2026-10-25) and makes whichever is missing; attach mode starts only after
 both exist; (b) the operator commits by hand; (c) a single `init` commit. Recommended: (a). It finishes
 an interrupted `init` from any point with the same command; (b) leaves the commits' form to the
 operator; (c) changes 05 §7's campaign, whose spec packet is complete in the template commit. D-112's
@@ -1727,7 +1728,8 @@ follow-up: the hint in `packages/cli/src/text/hints.ts`. Chosen: (a). Source: Ow
 [fact] W11 (devai-v3#72, devai-v3#74) listed its readings where the law was silent. Ratified:
 - **#72 Open 3**: a `Packet:` commit is any commit reachable from `HEAD` with a `Packet:` trailer
   (`git log --format=%(trailers:key=Packet,valueonly) HEAD`), not specifically `PKT-DEMO-001`; under
-  D-115 the two `init` commits are identified by their trailers.
+  D-115 the two `init` commits are identified by their trailers, `Packet: PKT-DEMO-001` and `Packet:
+  CMP-DEMO-001` (wording amended by D-120, 2026-10-25).
 - **#72 Open 4**: `accept`'s campaign step 4 `FAIL` counts as traced (D-100) when every finding it
   carries is a traced or `tooling-missing` row.
 - **#72 Open 7**: on a re-run, the `dir-not-empty` check and the `--product` requirement do not apply
@@ -1754,13 +1756,44 @@ closed at 10/10 modulo the S10 list (D-100)**, effective when devai-v3#74 merges
 close. 12 §4's R6 row is not edited. Chosen: (a). Source: Owner (panels, 2026-10-25; packet
 `PACKET-2026-10-24-R6-CLOSE.md` Part F, Owner's workspace).
 
+## D-120 · 2026-10-25 · `init`'s packets commit carries `Packet: CMP-DEMO-001`; both `init` commits are recognised by their trailers (amends D-115, D-118)
+[fact] D-118 identifies the two `init` commits by their `Packet:` trailers, but the packets commit
+(`chore(packets): seed CMP-DEMO-001`) carried no trailer (08 A.1; `packages/cli/src/commands/init.ts:313`),
+so a re-run could not recognise it (devai-v3#75 Open 1); W11 matched its exact subject instead
+(devai-v3#76 Open 2; `packages/cli/src/commands/init.ts:242,249`, commit at `:335`). Options: (a) the packets commit gains the trailer `Packet: CMP-DEMO-001`, so both
+`init` commits are recognised by their `Packet:` trailers exactly as D-118 reads; a history without both
+trailers reachable from `HEAD` is a re-run, one with both is attach mode; (b) match the exact subject;
+(c) `packets/CMP-DEMO-001/` present at `HEAD`. Recommended: (a). Trailers survive a reworded subject,
+and D-118 already reads them; (b) breaks on a reworded or squashed history; (c) holds after a hand
+commit of the packet files, which is not `init`'s commit. D-115's and D-118's wording is amended:
+"identified by their trailers" names `Packet: PKT-DEMO-001` (template commit) and `Packet: CMP-DEMO-001`
+(packets commit). Amends 08 A.1 (Modes: the packets commit's message, attach mode), 09 §1 (step 4,
+attach), 05 §7 (campaign prose), docs/adopters/install.md, docs/start/quickstart.md. Code follow-up: the
+trailer on the packets commit and trailer-based detection in `init`. Chosen: (a). Source: Owner (panels,
+2026-10-25; packet `PACKET-2026-10-24-R6-CLOSE.md` Part G, Owner's workspace).
+
+## D-121 · 2026-10-25 · W11's `config-mismatch` readings are ratified (devai-v3#76 Open 1, 3, 4)
+[fact] W11's second follow-up (devai-v3#76) listed its readings of D-116 and D-117:
+- **Open 1**: `HINTS['config-mismatch']` equals 10 §4's row byte for byte: `<flag> differs from
+  devai.json <field>; omit it or pass the recorded value`.
+- **Open 3**: `--runtime` names its field `runtime.mode` (the `devai.json` path); `--lgpd` can mismatch
+  only when given (a boolean flag cannot say "off").
+- **Open 4**: `--locales` compares the comma list, each tag trimmed, in order, against `devai.json`
+  `locales`.
+Options: (a) ratify as recorded; (b) ratify except named rows. Recommended: (a). Chosen: (a). Where a
+reading changes framework text it is applied: 08 A.1 (Arguments: the field names, `--lgpd`, the
+`--locales` comparison). Open 1 changes no law text (10 §4 already reads so). devai-v3#76 Open 2 is
+ruled by D-120. No code change: W11 already behaves as ratified. Source: Owner (panels, 2026-10-25;
+packet `PACKET-2026-10-24-R6-CLOSE.md` Part G, Owner's workspace).
+
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
 - Mutation testing's home (D-004: outside the cycle or not at all) — not blocking v3.0.
 - 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck (D-058) — not blocking v3.0.
 - STYNX local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 (D-069) — STYNX item, not blocking 3.0.0.
-- D-115/D-118: the two `init` commits are "identified by their trailers", but the packets commit
-  (`chore(packets): seed CMP-DEMO-001`) carries no `Packet:` trailer (08 A.1;
-  `packages/cli/src/commands/init.ts:313`). How a re-run recognises it (its subject, a new trailer, or
-  the packet files at `HEAD`) is not ruled.
+- D-120's trailer value `CMP-DEMO-001` is a campaign id, while 02 §5 gives agent commits the trailer
+  `Packet: PKT-<PRODUCT>-nnn` (D-050) and 05 §2 calls the trailer the packet `id`. The code's trailer
+  readers take any value (PL-12 builds a set, `packages/cli/src/packet/rules.ts:405`; `init` reads
+  them per commit, `packages/cli/src/commands/init.ts:247`), but whether 02 §5/05 §2 widen the trailer's form
+  for `init`'s commit, or readers that expect a packet id must skip it, is not ruled.

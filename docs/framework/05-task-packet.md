@@ -300,7 +300,7 @@ ids in order), `PKT-DEMO-001` (`spec`, wrote `SPEC-DEMO-001`; complete, since th
 the template commit, whose message carries `Packet: PKT-DEMO-001`), `PKT-DEMO-002` (`generate`),
 `PKT-DEMO-003` (`test`, §3), `PKT-DEMO-004` (`code`, below). `devai init` commits the template first,
 then renders the packets with `base` = that commit and commits them (`chore(packets): seed
-CMP-DEMO-001`). The campaign moves `PKT-DEMO-002`, `003` and `004` past that second commit with
+CMP-DEMO-001`, trailer `Packet: CMP-DEMO-001`, D-120). The campaign moves `PKT-DEMO-002`, `003` and `004` past that second commit with
 `devai packet rebase … --to HEAD` before each one's first run (09 §4 steps 3, 5, 7; D-095). `PKT-DEMO-002` declares
 `protected: [spec, standards, acceptance]`, the classes a `generate` packet touches by construction
 (`.stynxrc.json` is `standards`; its own file is `spec`), and its `paths.allowed` are 08 A.4's
