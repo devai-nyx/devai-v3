@@ -328,6 +328,8 @@ export async function runInventory(ctx: RunContext): Promise<{ outcome: NodeOutc
   // The affected `tsc -b` closure (B.1 side product; B.5 builds it): package tsconfigs as projects.
   const projectRoots = packageDirs.map((d) => `${d}/tsconfig.json`).filter((t) => present.has(t));
   if (present.has('tsconfig.json')) projectRoots.unshift('tsconfig.json');
+  // D-132: the test project is a `typecheck` project, affected when one of its test files changes.
+  if (present.has('tsconfig.test.json')) projectRoots.push('tsconfig.test.json');
   const projects = affectedClosure(root, projectRoots, changed).map((p) => p.tsconfig);
   const data: InventoryData = {
     toolchainDigest,

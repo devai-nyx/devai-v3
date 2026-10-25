@@ -99,7 +99,6 @@ export const OPEN: Record<string, string> = {
   tenant: 'S10 (D-129: STYNX answers a member token naming an unknown tenant with 403)',
   range: 'Open: PKT-DEMO-004 context names notes.repository.ts lines 1-40 (05 §7), but the 09 §6 seed is 29 lines, so PL-14 refuses it at --to (D-124)',
   health: 'Open: with StynxAuthGuard global (D-123) the id-less GET /healthz and /readyz answer 401, so D-072 needs the probes public as well as S10 #3',
-  testProject: 'Open: 05 §3 requires typecheck PASS for a test packet, but an acceptance file is in no tsc -b project, so typecheck is SKIPPED and PL-15 fails',
   evidence: 'Open: permissions-pattern evidence cannot be produced while route-contract is tooling-missing (S10 #4)',
 };
 
@@ -122,13 +121,15 @@ export const STEP6: Rows = {
   exit: 1,
   nodes: {
     'db-apply': 'FAIL', integration: 'FAIL', accept: 'FAIL',
-    'spec-tests': 'UNKNOWN setup-failed', typecheck: 'SKIPPED',
+    'spec-tests': 'UNKNOWN setup-failed', typecheck: 'PASS',
     'route-contract': 'UNKNOWN tooling-missing', 'permissions-pattern': 'UNKNOWN prerequisite-failed', review: 'UNKNOWN prerequisite-failed',
     generated: 'UNKNOWN tooling-missing',
     'sql-lint': 'SKIPPED', 'spec-lint': 'SKIPPED', actionlint: 'SKIPPED', openapi: 'SKIPPED', 'sql-typed': 'SKIPPED',
   },
   others: 'PASS',
-  findings: [['spec-tests', 'tenancy.tenants'], ['db-apply', 'packages/data/migrations/platform'], ['integration', 'GET /healthz with 200'], ['accept', 'required node skipped for kind: test: typecheck (inventory: no affected project)']],
+  findings: [['spec-tests', 'tenancy.tenants'], ['db-apply', 'packages/data/migrations/platform'], ['integration', 'GET /healthz with 200']],
+  // D-132: the test project is a typecheck project, so a test packet's required typecheck runs.
+  absent: [['accept', 'required node skipped for kind: test']],
 };
 
 /**
@@ -345,7 +346,7 @@ function campaign(c: Cell, o: OptionCell, work: string): boolean {
 
   // 6. --packet PKT-DEMO-003 --full --expect-red: exit 0, expect-red 3 (R-1, R-2, R-4)
   c.expectRows('6 check PKT-DEMO-003 --expect-red', c.check(['--packet', P3, '--full', '--expect-red']), STEP6, [
-    `exit 0, spec-tests PASS with expect-red 3 (R-1, R-2, R-4) after ${S10[2]}, ${S10[3]}, ${OPEN['health']}, ${S10[1]}, ${S10[4]}, ${OPEN['testProject']}, ${OPEN['tenant']}`,
+    `exit 0, spec-tests PASS with expect-red 3 (R-1, R-2, R-4) after ${S10[2]}, ${S10[3]}, ${OPEN['health']}, ${S10[1]}, ${S10[4]}, ${OPEN['tenant']}`,
   ]);
 
   // 7. rebase PKT-DEMO-004, add the reference service and repository bodies (D-098) and their unit spec (D-131), commit

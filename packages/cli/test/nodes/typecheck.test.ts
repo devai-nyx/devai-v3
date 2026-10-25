@@ -8,7 +8,7 @@ import { typecheck } from '../../src/nodes/typecheck.js';
 import { plan } from '../../src/runner/plan.js';
 import type { RunContext } from '../../src/runner/run.js';
 import { templateConfig } from '../fixtures.js';
-import { templateWorkspace, write } from '../repo.js';
+import { gitIn, templateWorkspace, write } from '../repo.js';
 import { linkToolchain, runOnly } from './w2b.js';
 
 const TSCONFIG = (refs: string[] = []) => JSON.stringify({ extends: '@stynx-nyx/tsconfig/node24.json', compilerOptions: { rootDir: 'src', outDir: 'dist', composite: true }, include: ['src'], ...(refs.length ? { references: refs.map((path) => ({ path })) } : {}) });
@@ -57,6 +57,17 @@ describe('B.5 typecheck', () => {
     write(dir, 'apps/api/test/acceptance/spec-demo-001.acceptance.spec.ts', "import { it } from 'vitest';\nit('R-1: x', () => undefined);\n");
     const { row } = await runOnly(dir, 'typecheck');
     expect(row).toMatchObject({ status: 'SKIPPED', evidence: 'no affected project' });
+  });
+
+  it('D-132: with a tsconfig.test.json, a changed test file makes the test project affected; it builds with its references', async () => {
+    const dir = workspace();
+    const testProject = { extends: '@stynx-nyx/tsconfig/node24.json', compilerOptions: { noEmit: true, incremental: true, types: [] }, include: ['apps/*/test/**/*.ts'], references: [{ path: 'apps/api' }] };
+    write(dir, 'tsconfig.test.json', JSON.stringify(testProject));
+    gitIn(dir, 'add', '-A');
+    gitIn(dir, 'commit', '-q', '-m', 'chore: test project');
+    write(dir, 'apps/api/test/main.spec.ts', "import { main } from '../src/main.js';\nexport const probe: string = main();\n");
+    const { row } = await runOnly(dir, 'typecheck');
+    expect(row).toMatchObject({ status: 'PASS', expected: 3, observed: 3, evaluated: 3, findings: [] });
   });
 
   const direct = async (dir: string): Promise<RunContext> => ({
