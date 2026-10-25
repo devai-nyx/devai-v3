@@ -37,6 +37,11 @@ R3–R4 (12 §4).
 ([D-068](../../decisions.md)), and rulings taken while landing STYNX wave 1
 ([D-069](../../decisions.md), [D-070](../../decisions.md)) and the wave-2 design rulings
 ([D-071](../../decisions.md)), with the probe ruling revisited in [D-072](../../decisions.md).
+R5 is met: STYNX 3.0.0 is published and 07 §2 cites it ([D-089](../../decisions.md)). R6's code
+has landed: the CLI, decorators, template and generator, in waves W0–W8 (devai-v3#53–#66), with the
+readings ruled in [D-084](../../decisions.md)–[D-088](../../decisions.md) and the hosting rule of
+[D-091](../../decisions.md); the W9 close-out lists the R6 clauses still unmet and what R8 inherits.
+R7 is confirmed on the release host.
 
 **Not blocking 3.0.0** (12 §4): the D-047 edit-loop p95 measurement (3.0.0 ships 90000); the first
 DETRAN campaign that settles D-026; each adopter's own `review.mustRun` flip (D-028); the open items

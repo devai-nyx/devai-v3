@@ -92,9 +92,9 @@ is what the Owner rules on ([Changing the law](changing-the-law.md)).
 
 ## Licence and provenance
 
-Both packages are Apache-2.0. The STYNX generator code that enters at R6 is carried under NYXK's
-Apache-2.0 grant. Each carried file opens with `SPDX-License-Identifier: Apache-2.0` and a provenance
-line citing D-067, and the commit states its STYNX provenance ([D-067](../../decisions.md),
-[D-064](../../decisions.md); 12 §1). No v2 code is carried (12 §2).
+Both packages are Apache-2.0. The STYNX generator code R6 carried (`src/generator/render.ts`,
+`src/commands/new-module.ts`) is under NYXK's Apache-2.0 grant. Each carried file opens with
+`SPDX-License-Identifier: Apache-2.0` and a provenance line citing D-067, and the commit states its
+STYNX provenance ([D-067](../../decisions.md), [D-064](../../decisions.md); 12 §1). No v2 code is carried (12 §2).
 
 Source: 01, 02 §5, 03, 08 A.1, decisions D-002, D-003, D-019, D-050, D-055, D-064, D-067; 12 §1–§2, §5, §8 (bootstrap history); `AGENTS.md` and git history at HEAD.

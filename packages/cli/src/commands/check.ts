@@ -1,5 +1,5 @@
 // 08 A.3 `devai check`: `--only`, `--format`, `--prune` (W1); `--packet`, `--hook`, `--expect-red`,
-// `--summary` (W4). `--full` still refuses with exit 2 `usage` naming the waves that bring its nodes;
+// `--summary` (W4). `--full` still refuses with exit 2 `usage`: R6 closed without wiring it (W9);
 // a plan containing a node without an adapter refuses with "node <id> arrives in a later wave".
 import { readFileSync, realpathSync, rmSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
@@ -97,9 +97,9 @@ export const ADAPTERS: Partial<Record<NodeId, NodeAdapter>> = {
 /** A.3: the packet-bound nodes `--only` refuses without `--packet` (D-084 item 19). */
 const PACKET_ONLY: readonly string[] = ['review', 'permissions-pattern', 'packet-scope', 'spec-tests'];
 
-/** Flags whose behaviour arrives with a later R6 wave. */
+/** Flags whose behaviour arrives after R6. */
 const LATER: [keyof CheckFlags, string, string][] = [
-  ['full', '--full', 'R6 W2–W5, with the nodes it selects'],
+  ['full', '--full', 'not wired at the R6 close; the R8 matrix needs it'],
 ];
 
 export interface CheckResult {

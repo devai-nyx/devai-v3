@@ -1,7 +1,7 @@
 ---
 title: Repository
 sidebar_position: 2
-description: The layout of the devai-v3 repository as it stands at the seed, and what each part becomes at release prerequisite R6.
+description: The layout of the devai-v3 repository as release prerequisite R6 built it.
 ---
 
 # Repository
@@ -9,7 +9,7 @@ description: The layout of the devai-v3 repository as it stands at the seed, and
 `github.com/devai-nyx/devai-v3`, branch `main`, builds two packages: `@devai-nyx/cli` and
 `@devai-nyx/decorators` (12 §1, bootstrap history; [D-063](../../decisions.md),
 [D-064](../../decisions.md)). It is a pnpm workspace over `packages/*`. This page describes the tree
-as it is today, the seed state, and says what arrives at release prerequisite R6.
+as release prerequisite R6 built it.
 
 ## Root
 
@@ -23,7 +23,7 @@ as it is today, the seed state, and says what arrives at release prerequisite R6
 | `package.json` | Private root: `type: module`, `engines` `node >=24 <25`, `pnpm >=9 <10`, `packageManager pnpm@9.15.0` ([07 §1](../framework/07-dependencies.md)) |
 | `pnpm-workspace.yaml`, `pnpm-lock.yaml` | Workspace `packages/*`; the lock from the seed manifests |
 | `.npmrc` | Both scopes, `@devai-nyx` and `@stynx-nyx`, point at `https://npm.pkg.github.com`, with the token from `${NODE_AUTH_TOKEN}` |
-| `.gitignore` | `node_modules/`, `dist/` |
+| `.gitignore` | `node_modules/`, `dist/`, and the documentation site's build output |
 | `.github/workflows/ci.yml` | The repository's only workflow: jobs `build`, `matrix`, `publish` ([Building and testing](building-and-testing.md), [Release](release.md)) |
 
 The DEVAI repository is not itself a DEVAI adopter. It has no `devai.json`, no adopter layout, no
@@ -45,19 +45,22 @@ with a new decision (D-068, D-070 in the history). The bootstrap documents 11 (m
 
 | Path | Today |
 |---|---|
-| `package.json` | Version 3.0.0, `type: module`, Apache-2.0; bin `devai` → `dist/main.js`; `files: [dist, template]`; `publishConfig.registry` GitHub Packages; runtime dependencies pinned as 07 §2 lists them (`commander` 15.0.0, `ignore` 7.0.5, `pg` 8.23.1, `pg-query-emscripten` 5.1.0, `typescript` `~6.0.3`, `yaml` 2.9.0, `zod` 4.4.3; dev `@types/pg` 8.20.0) |
+| `package.json` | Version 3.0.0, `type: module`, Apache-2.0; bin `devai` → `dist/main.js`; `files: [dist, template, schema]`; `exports` `./eslint-overlay`; `publishConfig.registry` GitHub Packages; runtime dependencies pinned as 07 §2 lists them (`commander` 15.0.0, `ignore` 7.0.5, `pg` 8.23.1, `pg-query-emscripten` 5.1.0, `typescript` `~6.0.3`, `yaml` 2.9.0, `zod` 4.4.3; dev `@types/pg` 8.20.0) |
 | `src/config.ts` | The `devai.json` zod definition, verbatim from [08 A.8](../framework/08-cli-and-nodes.md) |
 | `src/report.ts` | The `report.json`, sensor-evidence and review zod definitions, verbatim from [08 C.2](../framework/08-cli-and-nodes.md) |
-| `template/` | The template rows whose bytes the law fixes (below) |
-| `src/main.ts` | The 08 Part A preamble: `devai.json` load (A.8), runtime resolution (02 §6), `--format`, the three exit codes and `--version`; subcommands register here as the R6 waves land |
-| `src/schema.ts`, `schema/devai.schema.json` | The D-056 projection and its committed output (`pnpm project` rewrites it; the test fails when they differ) |
-| `tsconfig.json`, `vitest.config.ts`, `test/` | `tsc -b` build on `@stynx-nyx/tsconfig/node24.json`; Vitest 4.1.11 tests: C.2 invariants (#34), A.8, byte parity with 08, projections, the built binary, the packed tarball (#40) |
+| `template/` | The [09 §1.1](../framework/09-rail.md) template `devai init` materialises (below) |
+| `src/main.ts` | The 08 Part A preamble: `devai.json` load (A.8), runtime resolution (02 §6), `--format`, the three exit codes and `--version`, and the commands' registration |
+| `src/commands/` | `check`, `init`, `new module`, `packet`, `packets` and the hook entry ([08 Part A](../framework/08-cli-and-nodes.md)) |
+| `src/runner/`, `src/cache/`, `src/candidate/` | The DAG plan and runner, the verdict cache and the candidate digest ([08 Part C](../framework/08-cli-and-nodes.md), [D-075](../../decisions.md), [D-076](../../decisions.md)) |
+| `src/nodes/` | One adapter per 02 §2 node ([08 Part B](../framework/08-cli-and-nodes.md)); `lint-overlay/` is the ESLint overlay the template's `eslint.config.mjs` imports |
+| `src/generator/`, `src/spec/` | The [09 §2](../framework/09-rail.md) renderer and manifest; the spec machine-block parser |
+| `src/db/`, `src/model/`, `src/packet/`, `src/vitest/` | Scratch databases and `sql-typed` describe; the model nodes' CLI drivers and evidence; packet rules; the C.5 Vitest reporter |
+| `src/schema.ts`, `schema/devai.schema.json`, `schema/use-case.schema.json` | The D-056 projections and their committed output (`pnpm project` rewrites them; the test fails when they differ) |
+| `tsconfig.json`, `vitest.config.ts`, `test/` | `tsc -b` build on `@stynx-nyx/tsconfig/node24.json`; Vitest 4.1.11 tests that spawn the built `dist/main.js` ([D-057](../../decisions.md)); the database tests use `DEVAI_TEST_DATABASE_URL` (default `postgresql://localhost:5432/postgres`) and skip, saying why, when it does not answer |
 
-No command runs yet beyond `--version`: the commands arrive wave by wave (R6 W1–W8).
+### `packages/cli/template/`
 
-### `packages/cli/template/` at the seed
-
-These are the [09 §1.1](../framework/09-rail.md) rows whose bytes the foundation fixed
+The seed carried the [09 §1.1](../framework/09-rail.md) rows whose bytes the foundation fixed
 (12 §2):
 
 | Path | Fixed by |
@@ -70,10 +73,10 @@ These are the [09 §1.1](../framework/09-rail.md) rows whose bytes the foundatio
 | `packets/CMP-DEMO-001/campaign.md`, `PKT-DEMO-001.md` … `PKT-DEMO-004.md` | [05 §7](../framework/05-task-packet.md); `base` is rendered by `init` |
 | `database/README.md`, `.stynxrc.json`, `gitignore` (written as `.gitignore` by `init`; npm and pnpm drop `.gitignore` when packing, [D-074](../../decisions.md)), `compose.yaml` | [09 §1.1](../framework/09-rail.md) values |
 
-The rest of 09 §1.1 (for example `devai.json`, the root `package.json` and lock, `eslint.config.mjs`,
-`vitest.config.ts`, the `apps/` shells, `database/apply.sh` and `checks.sql`, `test/`, and
-`.github/workflows/devai.yml`) arrives at R6 with the CLI. The seed carries only rows whose bytes
-the foundation fixed, and nothing that depends on the published STYNX version `<v>`
+R6 W7 built the rest of 09 §1.1: the root `package.json` and `pnpm-lock.yaml` at STYNX 3.0.0,
+`eslint.config.mjs`, `vitest.config.ts`, `playwright.config.ts`, the `apps/api` and `apps/web`
+shells, `database/apply.sh` and `checks.sql`, `test/`, `tools/` and `.github/workflows/devai.yml`.
+`devai.json` and the packets' `base` are rendered by `devai init`, not stored
 ([D-065](../../decisions.md); 12 §2).
 
 ## `packages/decorators` → `@devai-nyx/decorators`
@@ -81,7 +84,7 @@ the foundation fixed, and nothing that depends on the published STYNX version `<
 | Path | Today |
 |---|---|
 | `package.json` | Version 3.0.0, `type: module`, Apache-2.0; one peer, `@nestjs/common ^11.1.19` |
-| `src/index.ts` | `ErrorContract`, `UseCase` and `Slo`: three `SetMetadata` wrappers, with argument shapes from [06 §2](../framework/06-spec-format.md) |
+| `src/index.ts`, `src/error-contract.ts`, `src/use-case.ts`, `src/slo.ts` | `ErrorContract`, `UseCase` and `Slo`: three `SetMetadata` wrappers, with argument shapes from [06 §2](../framework/06-spec-format.md) |
 
 The decorators are a sibling package, not a CLI subpath: product runtime code imports them, and a
 subpath would make every product API install the CLI's TypeScript, `pg` and SQL parser. They import
@@ -90,9 +93,9 @@ statically ([02 §1](../framework/02-architecture.md), [08 B.9](../framework/08-
 12 §1.1). Both packages share one version, so `generatorVersion` also names the decorators a module
 was generated against ([09 §2](../framework/09-rail.md)).
 
-## What arrives at R6
+## What R6 built
 
-Per 12 §2 and §4, and [D-065](../../decisions.md):
+Per 12 §2 and §4, and [D-065](../../decisions.md), in waves W0–W9:
 
 - `src/main.ts` and the CLI per [08](../framework/08-cli-and-nodes.md);
 - the generator per [09 §2](../framework/09-rail.md), with the STYNX generator code carried under
@@ -101,7 +104,7 @@ Per 12 §2 and §4, and [D-065](../../decisions.md):
 - the packages' `tsconfig.json`, extending the published `@stynx-nyx/tsconfig/node24.json`;
 - `devai.schema.json` and `use-case.schema.json`, emitted from zod, with the projection test
   ([D-056](../../decisions.md));
-- the remaining template files and the template's `package.json` and lock at STYNX `<v>`.
+- the remaining template files and the template's `package.json` and lock at STYNX 3.0.0.
 
 No v2 code enters the repository at any point (12 §2).
 
