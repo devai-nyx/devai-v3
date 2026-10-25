@@ -99,7 +99,7 @@ export function argvOf(a: ArgvSpec): [string, ...string[]] {
     const head = rest.includes('-p') || rest.includes('--print') ? rest : ['-p', ...rest];
     const base = ['--output-format', 'stream-json', '--verbose', '--json-schema', a.schema, '--no-session-persistence', '--setting-sources', '', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}'];
     const mode =
-      a.mode === 'sensor' ? ['--tools', '', '--restricted', '--bare']
+      a.mode === 'sensor' ? ['--tools', '', '--restricted'] // D-101: no --bare; the host's own authentication
       : a.mode === 'phase1' ? ['--tools', '']
       : ['--restricted', '--tools', 'Read,Grep,Glob,Bash', '--allowedTools', PHASE2_ALLOWED, '--disallowedTools', 'Edit,Write,NotebookEdit,WebFetch,WebSearch', '--settings', PHASE2_SETTINGS];
     return [bin, ...head, ...base, ...mode];

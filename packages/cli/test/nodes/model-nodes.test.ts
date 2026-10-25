@@ -188,12 +188,13 @@ describe('B.24 permissions-pattern', () => {
     expect(o.findings[0]!.message).toBe('permissions-pattern UNKNOWN (capability-missing): the reviewer CLI cannot enforce read-only, no-network isolation (sandbox or flag missing); install the version 12 pins');
   });
 
-  it('UNKNOWN capability-missing: claude init shows tools the flags remove (gpt worker → claude sensor with --bare)', async () => {
+  it('UNKNOWN capability-missing: claude init shows tools the flags remove (gpt worker → claude sensor; no --bare, D-101)', async () => {
     const ws = workspace([GPT]);
     fake.plan({ sensor: { stdout: claudeStream(COMPLIANT, { tools: ['Bash', 'StructuredOutput'] }) } });
     const o = await run(permissionsPattern, await ctxOf(ws, permissionsPattern));
     expect(o).toMatchObject({ status: 'UNKNOWN', reason: 'capability-missing' });
-    expect(fake.calls()[0]!.argv).toEqual(expect.arrayContaining(['--tools', '', '--restricted', '--bare']));
+    expect(fake.calls()[0]!.argv).toEqual(expect.arrayContaining(['--tools', '', '--restricted']));
+    expect(fake.calls()[0]!.argv).not.toContain('--bare');
   });
 
   it('UNKNOWN tool-use-observed: a command item in the sensor stream', async () => {

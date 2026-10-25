@@ -62,6 +62,26 @@ const git = (dir: string, ...args: string[]) => {
 };
 const headOf = (dir: string) => gitIn(dir, 'rev-parse', 'HEAD').trim();
 
+describe('A.7 on a repository\'s first commit (D-097: init commits with the hooks live)', () => {
+  it('an unborn HEAD is the empty tree: pre-commit checks every staged file, commit-msg runs, the commit lands', () => {
+    const dir = hookWorkspace();
+    // An orphan branch has no commit yet and keeps the index: the first-commit state init is in.
+    gitIn(dir, 'checkout', '-q', '--orphan', 'first');
+    gitIn(dir, 'rm', '-r', '-q', '--cached', '.');
+    write(dir, 'docs/note.md', '#  Note\n');
+    git(dir, 'add', 'package.json', 'pnpm-workspace.yaml', 'apps/api/package.json', 'docs/note.md');
+    let r = git(dir, 'commit', '-m', 'chore: first commit');
+    expect(r.status).not.toBe(0);
+    expect(r.out).toContain('devai check --hook pre-commit   runtime=bare   base=none  head=4b82…');
+    expect(r.out).toContain('      docs/note.md:1  not formatted   [S-41]');
+    write(dir, 'docs/note.md', '# Note\n');
+    git(dir, 'add', 'docs/note.md');
+    r = git(dir, 'commit', '-m', 'chore: first commit');
+    expect([r.status, r.out]).toEqual([0, expect.stringContaining('devai commit-msg PASS\nexit 0\n')]);
+    expect(gitIn(dir, 'rev-list', '--count', 'HEAD').trim()).toBe('1');
+  }, 300_000);
+});
+
 describe('A.7 end to end through git commit and git push', () => {
   let dir: string;
   beforeAll(() => {
@@ -185,7 +205,7 @@ describe('A.7 pre-push in process (stub adapters for the nodes other waves own)'
     expect(lines).toContain('protected:ci — .github/workflows/ci.yml (no packet)');
     expect(lines.at(-2)).toBe(`devai pre-push PASS — 13 nodes over ${base.slice(0, 7)}..${head.slice(0, 7)}`);
 
-    // unresolvable base: protected-paths UNKNOWN base-unreadable (exit 2: C.2 has no non-gating UNKNOWN row)
+    // unresolvable base: protected-paths UNKNOWN base-unreadable, exit 2 like any gating UNKNOWN (D-099: C.2 over A.7's notice)
     const u = await check(['--hook', 'pre-push'], { hook: 'pre-push', stdin: '' }, 'json', ws);
     const report = Report.parse(JSON.parse(u.stdout));
     expect(report.nodes.find((n) => n.id === 'protected-paths')).toMatchObject({ status: 'UNKNOWN', reason: 'base-unreadable' });

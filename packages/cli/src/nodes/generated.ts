@@ -90,7 +90,7 @@ async function replay(ctx: RunContext, manifestPath: string, present: ReadonlySe
   // Step 4: render to memory.
   let rendered;
   try {
-    rendered = renderBlock(parsed.block, m.options, m.generatorVersion);
+    rendered = await renderBlock(parsed.block, m.options, m.generatorVersion);
   } catch (e) {
     if (!(e instanceof RenderError)) throw e;
     unavailable(`recorded options do not render: ${e.message}`);

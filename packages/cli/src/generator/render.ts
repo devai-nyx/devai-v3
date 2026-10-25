@@ -6,8 +6,9 @@
 // 09 §2: the pure `render(specBytes, options, version) → Map<path, bytes>` of `devai new module`, with
 // the 09 §2.1 mapping and the controller lowering; the `generated` replay (08 B.16, 09 §3) calls the
 // same function. No clock, no environment, no file system: identical inputs give identical bytes
-// (INV-CLI-002). Output follows the template's prettier block (printWidth 100, single quotes,
-// trailing commas) for the shapes it emits [fact: `stynx:package.json:130-135`].
+// (INV-CLI-002). Every file but SQL is then passed through Prettier 3.9.6 with the template's prettier
+// block, so the output is `format`-clean (09 §2, D-096) [fact: `stynx:package.json:130-135`].
+import { format as prettierFormat } from 'prettier';
 import { sha256 } from '../candidate/digest.js';
 import type { MachineBlock } from '../spec/machine-block.js';
 import { parseSpec } from '../spec/parse-spec.js';
@@ -395,7 +396,7 @@ function renderWeb(spec: Ctx, put: (path: string, mode: FileMode, text: string) 
     '  }',
     '}',
   ].join('\n') + '\n');
-  put('web/tsconfig.json', 'generated', lines(`// ${spec.header}`, '{', '  "extends": "@stynx-nyx/tsconfig/angular18.json",', '  "compilerOptions": { "outDir": "dist" },', '  "include": ["src"]', '}'));
+  put('web/tsconfig.json', 'generated', lines(`// ${spec.header}`, '{', '  "extends": "@stynx-nyx/tsconfig/angular18.json",', '  "compilerOptions": { "rootDir": "src", "outDir": "dist", "composite": true },', '  "include": ["src"]', '}'));
   put('web/src/index.ts', 'generated', lines(`// ${spec.header}`, `export { ${routesName} } from './${block.module.slug}.routes.js';`));
   const detail = models.find((m) => m.route.method === 'GET' && pathParams(m.route.path).length > 0);
   const list = models.find((m) => m.route.method === 'GET' && pathParams(m.route.path).length === 0);
@@ -457,6 +458,66 @@ function renderWeb(spec: Ctx, put: (path: string, mode: FileMode, text: string) 
 
 // ---- render --------------------------------------------------------------------------------------
 
+/** The template's `prettier` block (`template/package.json`; 09 §1.1 root row). */
+export const PRETTIER_OPTIONS = { printWidth: 100, tabWidth: 2, singleQuote: true, trailingComma: 'all', semi: true } as const;
+
+/**
+ * D-094: the exact pins of every package emitted module code may import (07 §2 Nest and zod rows; the
+ * STYNX fixed group at 3.0.0, D-089, 12 §3); `@devai-nyx/decorators` is pinned at `generatorVersion`.
+ */
+export const MODULE_PINS: Readonly<Record<string, string>> = {
+  '@nestjs/common': '11.2.3',
+  '@stynx-nyx/backend': '3.0.0',
+  '@stynx-nyx/data': '3.0.0',
+  '@stynx-nyx/flow': '3.0.0',
+  '@stynx-nyx/idempotency': '3.0.0',
+  zod: '4.4.3',
+};
+
+/** Bare package names a TypeScript text imports (`from '<pkg>'`), scoped names kept whole. */
+function importedPackages(text: string): string[] {
+  const out: string[] = [];
+  for (const m of text.matchAll(/\bfrom '([^'.][^']*)'/g)) {
+    const spec = m[1]!;
+    const parts = spec.split('/');
+    out.push(spec.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0]!);
+  }
+  return out;
+}
+
+/** `api/package.json` (seed): every package `api/src/**` imports, exact (09 §2, D-094). */
+function renderApiPackage(files: Rendered, options: RenderOptions, slug: string, version: string): string {
+  const used = new Set<string>(['@devai-nyx/decorators']);
+  for (const [path, f] of files) if (path.startsWith('api/src/') && path.endsWith('.ts')) for (const p of importedPackages(f.bytes.toString('utf8'))) used.add(p);
+  const deps = [...used].sort().map((name) => {
+    const pin = name === '@devai-nyx/decorators' ? version : MODULE_PINS[name];
+    if (pin === undefined) throw new RenderError(`emitted code imports ${name}, which has no 07 §2 pin`);
+    return `    ${JSON.stringify(name)}: ${JSON.stringify(pin)}`;
+  });
+  return [
+    '{',
+    `  "name": "@${options.productPrefix}/${slug}-api",`,
+    '  "private": true,',
+    '  "type": "module",',
+    '  "exports": { ".": "./dist/index.js" },',
+    '  "dependencies": {',
+    deps.join(',\n'),
+    '  }',
+    '}',
+  ].join('\n') + '\n';
+}
+
+/** D-096: every emitted file but SQL, formatted as `prettier --list-different` would accept it. */
+async function formatted(files: Rendered, root: string): Promise<Rendered> {
+  const out: Rendered = new Map();
+  for (const [path, f] of files) {
+    if (path.endsWith('.sql')) { out.set(path, f); continue; }
+    const text = await prettierFormat(f.bytes.toString('utf8'), { ...PRETTIER_OPTIONS, filepath: `${root}/${path}` });
+    out.set(path, { mode: f.mode, bytes: Buffer.from(text, 'utf8') });
+  }
+  return out;
+}
+
 interface Ctx {
   block: MachineBlock;
   options: RenderOptions;
@@ -466,8 +527,8 @@ interface Ctx {
   columns: Map<string, Column>;
 }
 
-/** The module files of one valid machine block (09 §2.1), module-relative and sorted. */
-export function renderBlock(block: MachineBlock, options: RenderOptions, version: string): Rendered {
+/** The module files of one valid machine block (09 §2.1), module-relative, sorted and formatted. */
+export async function renderBlock(block: MachineBlock, options: RenderOptions, version: string): Promise<Rendered> {
   for (const [key, byLocale] of Object.entries(block.i18n)) {
     for (const l of options.locales) if (!(l in byLocale)) throw new RenderError(`i18n ${key}: missing locale ${l}`);
   }
@@ -478,20 +539,11 @@ export function renderBlock(block: MachineBlock, options: RenderOptions, version
   const G = `// ${spec.header}`;
 
   put('README.md', 'generated', renderReadme(spec));
-  put('api/package.json', 'seed', [
-    '{',
-    `  "name": "@${options.productPrefix}/${slug}-api",`,
-    '  "private": true,',
-    '  "type": "module",',
-    '  "exports": { ".": "./dist/index.js" },',
-    `  "dependencies": { "@devai-nyx/decorators": "${version}" }`,
-    '}',
-  ].join('\n') + '\n');
   put('api/tsconfig.json', 'generated', lines(
     G,
     '{',
     '  "extends": "@stynx-nyx/tsconfig/node24.json",',
-    braces('  ', '"compilerOptions": ', ['"outDir": "dist"', '"experimentalDecorators": true', '"emitDecoratorMetadata": true'], ',', true),
+    braces('  ', '"compilerOptions": ', ['"rootDir": "src"', '"outDir": "dist"', '"composite": true', '"experimentalDecorators": true', '"emitDecoratorMetadata": true'], ',', true),
     '  "include": ["src"]',
     '}',
   ));
@@ -516,14 +568,16 @@ export function renderBlock(block: MachineBlock, options: RenderOptions, version
   for (const l of options.locales) put(catalogFile(slug, l), 'generated', renderCatalog(spec, l));
   const controllerSpec = renderControllerSpec(spec);
   if (controllerSpec) put(`api/test/${slug}.controller.spec.ts`, 'seed', controllerSpec);
-  put('api/test/acceptance/.gitkeep', 'seed', '');
+  // D-095: no `api/test/acceptance/` folder; the `test` packet creates it with the acceptance file.
   put(`db/${block.module.namespace}_${slug}.sql`, 'generated', renderDdl(spec));
   if (options.web) renderWeb(spec, put);
-  return new Map([...files].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+  put('api/package.json', 'seed', renderApiPackage(files, options, slug, version));
+  const sorted: Rendered = new Map([...files].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
+  return formatted(sorted, `domain/${slug}`);
 }
 
-/** 09 §2 `render(specBytes, options, version)`; throws `RenderError` on bytes that are not a valid spec. */
-export function render(specBytes: Buffer, options: RenderOptions, version: string): Rendered {
+/** 09 §2 `render(specBytes, options, version)`; rejects with `RenderError` on bytes that are not a valid spec. */
+export async function render(specBytes: Buffer, options: RenderOptions, version: string): Promise<Rendered> {
   const parsed = parseSpec(specBytes.toString('utf8'));
   if (parsed.kind !== 'valid') throw new RenderError('spec machine block is not valid (06 §2)');
   return renderBlock(parsed.block, options, version);

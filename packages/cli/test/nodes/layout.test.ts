@@ -62,6 +62,15 @@ describe('B.6 layout', () => {
     expect(row.findings).toEqual([{ locator: 'vitest.config.ts:1', message: 'tier glob: test/e2e/**/*.e2e.spec.ts matches no file', standard: '04 §4', hint: "add the tier's first file or remove the glob (S-62)" }]);
   });
 
+  it('D-092: the 09 §1.1 seed globs and tier literals matching nothing are no finding; another literal still is', async () => {
+    const shipped = "const tiers = { unit: ['domain/*/api/test/*.spec.ts', 'domain/*/web/test/*.spec.ts', 'apps/*/test/*.spec.ts'], acceptance: ['domain/*/api/test/acceptance/*.acceptance.spec.ts'], extra: ['tools/test/*.spec.ts'] };\nexport default tiers;\n";
+    const { row } = await runOnly(templateWorkspace({
+      'vitest.config.ts': shipped,
+      'pnpm-workspace.yaml': "packages:\n  - 'apps/*'\n  - 'domain/*/api'\n  - 'domain/*/web'\n",
+    }), 'layout');
+    expect(row.findings).toEqual([{ locator: 'vitest.config.ts:1', message: 'tier glob: tools/test/*.spec.ts matches no file', standard: '04 §4', hint: "add the tier's first file or remove the glob (S-62)" }]);
+  });
+
   it('UNKNOWN io when a declared input cannot be read (a listed spec gone from disk)', async () => {
     const dir = templateWorkspace();
     const listing = await workingTree(dir, null);

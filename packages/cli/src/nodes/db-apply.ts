@@ -128,6 +128,7 @@ export const dbApply: NodeAdapter = {
     writeDescriptor(ctx.root, desc); // before applying: a crash leaves a database --prune can still find
 
     const scratch = scratchOf(server, database);
+    ctx.scratch = scratch; // known before applying, so the --full cleanup drops it also on failure (B.20)
     const env = { ...process.env, ...pgEnv(server, database), DATABASE_URL: scratch.url, PSQL: 'psql -v ON_ERROR_STOP=1' };
     const expected = expectedFiles(ctx);
     const findings: Finding[] = [];

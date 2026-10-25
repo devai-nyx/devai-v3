@@ -83,6 +83,15 @@ const namedExportsOnly: Rule = {
   },
 };
 
+/**
+ * The mount census root (B.1): `AppModule` in `apps/<app>/src/app.module.ts`, the one class whose exact
+ * name `inventory` walks (devai-v3#66 Open 3, ratified by D-102). It is not a public module of the
+ * product, and without this exemption the template's first commit, which D-097 makes with the hooks
+ * live, could never pass `lint`.
+ */
+const censusRoot = (name: string, filename: string): boolean =>
+  name === 'AppModule' && /(^|\/)apps\/[^/]+\/src\/app\.module\.ts$/.test(filename.split('\\').join('/'));
+
 /** D-032: selectors `<prefix>-`, DI tokens `<PREFIX>_`, classes `<Prefix>` (S-36: public modules, services, components). */
 const PREFIXED_CLASS_DECORATORS = new Set(['Component', 'Injectable', 'Module', 'Controller']);
 const productPrefix: Rule = {
@@ -106,7 +115,7 @@ const productPrefix: Rule = {
         const decorators = ((node['decorators'] as Node[] | undefined) ?? []);
         const names = decorators.map(decoratorName);
         const name = identName(node['id']);
-        if (name && node.parent?.type === 'ExportNamedDeclaration' && names.some((n) => n !== null && PREFIXED_CLASS_DECORATORS.has(n)) && !name.startsWith(Prefix)) {
+        if (name && node.parent?.type === 'ExportNamedDeclaration' && names.some((n) => n !== null && PREFIXED_CLASS_DECORATORS.has(n)) && !name.startsWith(Prefix) && !censusRoot(name, context.filename)) {
           context.report({ node, messageId: 'class', data: { name, prefix: Prefix } });
         }
         for (const d of decorators) {

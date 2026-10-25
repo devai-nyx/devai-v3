@@ -14,12 +14,15 @@ paths:
     - database/seed/**
     - apps/api/package.json
     - apps/api/src/app.module.ts
+    - apps/api/tsconfig.json
     - apps/web/package.json
-    - apps/web/src/app.routes.ts
+    - apps/web/src/app/app.routes.ts
+    - apps/web/tsconfig.json
+    - .stynxrc.json
     - pnpm-lock.yaml
     - docs/framework/contracts/**
     - packets/CMP-DEMO-001/PKT-DEMO-002.md
-protected: [spec]
+protected: [spec, standards, acceptance]
 observations:
   unimplemented: []
 ---
@@ -31,5 +34,8 @@ mounted in `apps/api`, with its SQL listed in `database/seed/modules.txt`.
 ## Deliverables
 - `domain/notes/**` and `generation-manifest.json` from the generator, unedited.
 - Routes `POST /notes` and `GET /notes/:id` mounted: `@demo/notes-api` in
-  `apps/api/package.json`, `DemoNotesModule` in `apps/api/src/app.module.ts` imports.
+  `apps/api/package.json`, `DemoNotesModule` in `apps/api/src/app.module.ts` imports,
+  `{ "path": "../../domain/notes/api" }` in `apps/api/tsconfig.json` `references`.
+- `.stynxrc.json`: `domain/notes/api/src` in `apiCoverage.sourceRoots`, `domain/notes` in
+  `publicApi.packageRoots`.
 - `pnpm-lock.yaml` and `docs/framework/contracts/**` from `pnpm install` and the write pairs.

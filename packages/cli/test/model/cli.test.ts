@@ -16,11 +16,12 @@ const call = (over: Partial<Parameters<typeof replay>[0]> = {}) => ({
 });
 
 describe('argument vectors', () => {
-  it('B.24 Claude sensor: the 07 §6 list plus --tools "" --restricted --bare, stream requested', () => {
+  it('B.24 Claude sensor: the 07 §6 list plus --tools "" --restricted, no --bare (D-101), stream requested', () => {
     const a = argvOf({ prefix: 'claude -p --model claude-opus-5-5', harness: 'claude', mode: 'sensor', schema: '{}', cd: '/e' });
-    expect(a).toEqual(['claude', '-p', '--model', 'claude-opus-5-5', '--output-format', 'stream-json', '--verbose', '--json-schema', '{}', '--no-session-persistence', '--setting-sources', '', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}', '--tools', '', '--restricted', '--bare']);
+    expect(a).toEqual(['claude', '-p', '--model', 'claude-opus-5-5', '--output-format', 'stream-json', '--verbose', '--json-schema', '{}', '--no-session-persistence', '--setting-sources', '', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}', '--tools', '', '--restricted']);
+    expect(a).not.toContain('--bare');
     // every flag B.24 names is present (law text, not this test, is the oracle)
-    for (const flag of ['--output-format', 'stream-json', '--verbose', '--json-schema', '--no-session-persistence', '--setting-sources', '--strict-mcp-config', '--mcp-config', '--tools', '--restricted', '--bare']) expect(law08).toContain(flag);
+    for (const flag of ['--output-format', 'stream-json', '--verbose', '--json-schema', '--no-session-persistence', '--setting-sources', '--strict-mcp-config', '--mcp-config', '--tools', '--restricted']) expect(law08).toContain(flag);
   });
 
   it('B.24 Codex sensor: read-only sandbox in an empty --cd, prompt on stdin', () => {

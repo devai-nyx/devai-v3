@@ -36,7 +36,8 @@ export function defaultGlobs(kind: Kind, slug: string | null, specPath: string |
     case 'test':
       return [`domain/${slug}/api/test/acceptance/**`];
     case 'generate':
-      return [`domain/${slug}/**`, 'database/seed/**', 'apps/api/package.json', 'apps/api/src/app.module.ts', 'apps/web/package.json', 'apps/web/src/app.routes.ts', 'pnpm-lock.yaml', 'docs/framework/contracts/**'];
+      // D-093, D-095: the app tsconfigs (`references` mount lines), the routes file at its 09 §1.1 path, `.stynxrc.json`.
+      return [`domain/${slug}/**`, 'database/seed/**', 'apps/api/package.json', 'apps/api/src/app.module.ts', 'apps/api/tsconfig.json', 'apps/web/package.json', 'apps/web/src/app/app.routes.ts', 'apps/web/tsconfig.json', '.stynxrc.json', 'pnpm-lock.yaml', 'docs/framework/contracts/**'];
     case 'spec':
       return [`${dirname(specPath!)}/**`];
     case 'standards':

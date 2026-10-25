@@ -2,11 +2,12 @@
 // (bare mode, DATABASE_URL = the admin URL). Every scratch database is created by the node under its
 // `devai_<digest12>` name and dropped afterwards through its descriptor; the roles carry a per-file
 // prefix. 09 §4 N4b included. The cases that need no server run everywhere.
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { Server } from '../../src/db/provide.js';
 import { createScratch } from '../../src/db/scratch.js';
+import { Report } from '../../src/report.js';
 import { commitAll, gitIn } from '../repo.js';
 import {
   ADMIN_URL, check, cleanup, databaseExists, dbWorkspace, descriptors, devai, fakeBin, MODULE_SQL_PATH, moduleSql, newPrefix, pathWith, probePostgres,
@@ -64,6 +65,23 @@ describe.skipIf(!server)('B.20 db-apply on PostgreSQL (bare)', () => {
     // Same schema from the same inputs: the digest is a function of the schema, not of the database name (C.4).
     expect((again.row.details as { schemaDigest: string }).schemaDigest).toBe((first.row.details as { schemaDigest: string }).schemaDigest);
   });
+
+  it('--full (D-100, B.20): db-apply is never reused, its database is dropped after the last consumer, the text run writes its report', async () => {
+    const edit = check(dir, 'db-apply', env); // the edit loop keeps a database for reuse
+    const kept = (edit.row.details as { database: string }).database;
+    const r = devai(dir, ['check', '--full'], env);
+    expect(r.stdout.split('\n').at(-2)).toMatch(/^exit [12]$/);
+    const reports = readdirSync(resolve(dir, '.devai/cache/reports')).map((f) => Report.parse(JSON.parse(readFileSync(resolve(dir, '.devai/cache/reports', f), 'utf8'))));
+    const full = reports.find((x) => /\s--full$/.test(x.command))!;
+    expect(full).toMatchObject({ accepted: false, exitCode: r.status });
+    const row = full.nodes.find((n) => n.id === 'db-apply')!;
+    expect(row).toMatchObject({ status: 'PASS', cached: false, details: { dropped: true } });
+    const used = (row.details as { database: string }).database;
+    expect(used).not.toBe(kept);
+    expect(await databaseExists(used)).toBe(false);
+    expect(await databaseExists(kept)).toBe(true);
+    expect(descriptors(dir).map((f) => `devai_${f.slice(0, 12)}`)).not.toContain(used);
+  }, 300_000);
 
   it('--prune drops exactly the databases the descriptors name and deletes the descriptors (A.3)', async () => {
     const named = descriptors(dir).map((f) => `devai_${f.slice(0, 12)}`);
