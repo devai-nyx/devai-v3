@@ -2,10 +2,16 @@
   "extends": "@stynx-nyx/tsconfig/node24.json",
   "compilerOptions": {
     "noEmit": true,
+    "incremental": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "types": ["node"]
   },
-  "include": ["test/**/*.ts", "apps/*/test/**/*.ts", "domain/*/*/test/**/*.ts"],
+  "include": [
+    "test/**/*.ts",
+    "apps/*/test/**/*.ts",
+    "domain/*/api/test/**/*.ts",
+    "domain/*/web/test/**/*.ts"
+  ],
   "references": [{ "path": "apps/api" }, { "path": "apps/web" }]
 }
