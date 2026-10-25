@@ -1989,9 +1989,15 @@ lines)`, and steps 7–8 and the packet form of the negative rows stay blocked (
 devai-v3#85 Open 2). Options: (a) the entry drops its `lines` range, so it names the whole file; (b)
 `lines: "1-29"`; (c) PL-14 clamps a range to the file. Recommended: (a). The repository is the file
 PKT-DEMO-004 fills, and a range pinned to the seed's length breaks when the generator's output
-changes; (c) weakens a rule to fit one packet. Amends 05 §7 (PKT-DEMO-004 `context`). Code follow-up
-(R8c): `packages/cli/template/packets/CMP-DEMO-001/PKT-DEMO-004.md:24`. No law test or 09 §6 fixture
-pins those bytes, so no marker is added. Chosen: (a). Source: Owner (panels, 2026-10-25; packet `PACKET-2026-10-25-R8.md`, third round, Owner's
+changes; (c) weakens a rule to fit one packet. [fact] 05 §2 showed the entry as `{ path, lines: "a-b",
+why }`, and the parser requires `lines` (`packages/cli/src/model/packet.ts:187`, PL-01), so the ruling
+also reads (addendum, same option): 05 §2's `context` entry form makes `lines` optional; an entry
+without it names the whole file; PL-14 counts such an entry at the file's own length against §2's
+bounds. Amends 05 §2 (`context[]` row, schema comment), 05 §5 (PL-14), 05 §6 (reading order), 05 §7
+(PKT-DEMO-004 `context`), docs/reference/packet-format.md. Code follow-up (R8c): the parser and PL-14
+(`packages/cli/src/packet/rules.ts:97-110`), and
+`packages/cli/template/packets/CMP-DEMO-001/PKT-DEMO-004.md:24`. No law test or 09 §6 fixture pins
+those bytes, so no marker is added. Chosen: (a). Source: Owner (panels, 2026-10-25; packet `PACKET-2026-10-25-R8.md`, third round, Owner's
 workspace).
 
 ## D-136 · 2026-10-25 · D-129's mechanism: a recording guard, the filter, and a filter module imported last
@@ -2035,7 +2041,3 @@ workspace).
 - Mutation testing's home (D-004: outside the cycle or not at all) — not blocking v3.0.
 - 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck (D-058) — not blocking v3.0.
 - STYNX local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 (D-069) — STYNX item, not blocking 3.0.0.
-- D-135 drops PKT-DEMO-004's `lines` range, but 05 §2 gives a `context` entry the shape
-  `{ path, lines: "a-b", why }` with `lines` required and ≤ 40 lines each, and 05 §6 reads each entry "at
-  the given lines"; the parser requires `lines` too (PL-01). Not ruled: whether `lines` becomes optional
-  (whole file), and how a whole-file entry counts against the 40- and 200-line bounds.
