@@ -118,7 +118,7 @@ the cited standards without the diff for `kind: standards`; phase 2 opens the ca
 | `kind` | Deliverable | Required `PASS` (derived; `SKIPPED` ⇒ `accept` FAIL) | `SKIPPED` acceptable when `inventory` reports the empty population |
 |---|---|---|---|
 | `spec` | `specs/…/SPEC-*.md` at `status: draft` or `approved`; approval is the pilot's annotation (01 Charter), in the same PR or after the merge | `spec-lint` | code, SQL and test nodes (`no changed *.ts`, `no changed *.sql`, `no changed test/**`); `spec-tests` (`no acceptance file for <spec id>`) |
-| `generate` | `domain/<m>/**` from the spec's machine block, `generation-manifest.json`, seed-manifest entry (D-023) | `generated`, `layout`, `lint`, `typecheck`, `unit` (seed unit specs), `sql-lint`, `db-apply`; `route-contract` when the spec's `routes[]` is non-empty; `sql-typed` when `queries[]` is non-empty | `spec-tests` (`no acceptance file for <spec id>`; the generator emits `acceptance/.gitkeep` only, 02 §7); `test-integrity` (`no changed test/**`); `i18n` (`no opted-in locale beyond en-US and no Angular app`); `e2e`, `openapi` (`no test/e2e files`, `no app binding changed`) |
+| `generate` | `domain/<m>/**` from the spec's machine block, `generation-manifest.json`, seed-manifest entry (D-023) | `generated`, `layout`, `lint`, `typecheck`, `unit` (seed unit specs), `sql-lint`, `db-apply`; `route-contract` when the spec's `routes[]` is non-empty; `sql-typed` when `queries[]` is non-empty | `spec-tests` (`no acceptance file for <spec id>`; the generator emits no acceptance folder, the `test` packet creates it, 02 §7, D-095); `test-integrity` (`no changed test/**`); `i18n` (`no opted-in locale beyond en-US and no Angular app`); `e2e`, `openapi` (`no test/e2e files`, `no app binding changed`) |
 | `test` | `domain/<m>/api/test/acceptance/<lowercase-spec-id>.acceptance.spec.ts`, one top-level `it('R-n: …')` per `acceptance: yes` requirement (S-63, 06 §5) | `spec-tests` (expected red on `observations.unimplemented`), `test-integrity`, `lint-tests`, `typecheck`, `db-apply` | `unit`, `route-contract`, `sql-typed`, `generated`, `openapi`, `integration`, `e2e` only when their population is empty (`no affected project`, `no mounted routes in domain/<m>`, …); with a populated module they run and a cached `PASS` from `base` stands |
 | `code` | seed files under `domain/<m>/{api,web}/src/**`, new migrations under `domain/<m>/db/` | `spec-tests`, `unit`, `lint`, `typecheck`, `db-apply`, `permissions-pattern` (cached `PASS` counts); `route-contract` when `routes[]` is non-empty; `sql-typed` when `queries[]` is non-empty | `test-integrity` (`no changed test/**`), `i18n`, `sql-lint` (`no changed *.sql`), `generated` (`no changed @generated file or manifest`), `actionlint` (`no changed .github/**`), `e2e` |
 | `fix` | a correction against the **unchanged** spec; same shape as `code` | as `code` | as `code` |
@@ -299,8 +299,12 @@ The campaign folder as `devai init` ships it: `campaign.md` (goal, business sour
 ids in order), `PKT-DEMO-001` (`spec`, wrote `SPEC-DEMO-001`; complete, since the approved spec is in
 the template commit, whose message carries `Packet: PKT-DEMO-001`), `PKT-DEMO-002` (`generate`),
 `PKT-DEMO-003` (`test`, §3), `PKT-DEMO-004` (`code`, below). `devai init` commits the template first,
-then renders the packets with `base` = that commit and commits them (`chore(packets): seed
-CMP-DEMO-001`). `spec.sha256` is the digest of the shipped `specs/notes/SPEC-DEMO-001.md` (06 NOTES);
+then renders the packets and commits them (`chore(packets): seed CMP-DEMO-001`): `base` is the
+template commit for `PKT-DEMO-001` and the packets commit for `PKT-DEMO-002`, `003` and `004`, so
+`init`'s second commit is outside their `base..candidate` (D-095). `PKT-DEMO-002` declares
+`protected: [spec, standards, acceptance]`, the classes a `generate` packet touches by construction
+(`.stynxrc.json` is `standards`; its own file is `spec`), and its `paths.allowed` are 08 A.4's
+`generate` globs (D-095). `spec.sha256` is the digest of the shipped `specs/notes/SPEC-DEMO-001.md` (06 NOTES);
 `base` below is an illustrative sha1, not a real commit. The file ships without the
 `## Review dispositions` section; the line shown is how a disposition looks after a review round,
 with an illustrative fingerprint. Module slug, requirement ids and route table come from 06's

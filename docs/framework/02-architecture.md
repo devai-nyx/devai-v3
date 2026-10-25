@@ -342,7 +342,7 @@ namespace, entities with fields/types/constraints/PII, routes with their five co
 blueprint, and 06's zod definition (D-056) validates that block, carrying STYNX's `validateBlueprint` constraints (`generate-module.ts:108`) as refinements. Missing
 business behaviour is not filled with plausible CRUD defaults; it stays a red acceptance test.
 
-**Outputs.** Exactly 04-layout §2, including `api/test/acceptance/.gitkeep` and `web/**` with `--web`.
+**Outputs.** Exactly 04-layout §2 and `web/**` with `--web`; no `api/test/acceptance/` folder, which the `test` packet creates (D-095).
 Emitted code uses `defineQuery` (§3), `parseDto` with zod DTOs, `@RequireRoles(roles, 'all')` imported from `@stynx-nyx/backend` (06 maps `roles` to it; D-087: an import origin `list-routes` accepts; until `list-routes` reads it as role-binding, an S10 item, `route-contract` reports a generated route `UNKNOWN: tooling-missing`),
 `@Idempotent/@NoIdempotent`, `@ErrorContract`, `@UseCase`, `@Slo` on every write route,
 `ENABLE`+`FORCE ROW LEVEL SECURITY` with `app.tenant_id` policies in the same file (LINT001, S-17),
@@ -371,7 +371,7 @@ from SPEC-… do not edit` in TypeScript, `-- @generated from SPEC-…` in SQL [
 renders `header` and `sqlHeader` separately, `generate-module.ts:431-432`]. They are wholly owned by
 deterministic regeneration and **byte-verified by `generated` against the pinned generator version
 and the recorded inputs**, not against the manifest's own hash. A hand edit fails with "regenerate
-(`devai new module --regenerate`) or move the logic to a seed file". `seed` files (`package.json`, `acceptance/.gitkeep`, `service.ts`,
+(`devai new module --regenerate`) or move the logic to a seed file". `seed` files (`package.json`, `service.ts`,
 `repository.ts`, `controller.ts`, components, unit specs) are emitted once and then hand-owned; the
 manifest keeps their initial digest so `--regenerate` reports "seed unchanged, safe to overwrite"
 versus "seed edited, left alone". No three-way merge assistant in v3.0.

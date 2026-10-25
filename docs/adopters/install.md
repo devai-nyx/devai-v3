@@ -56,17 +56,22 @@ There is no `--web` on `init`: both the API and the web shell ship from day one
 ([09 §1](../framework/09-rail.md), [08 A.1](../framework/08-cli-and-nodes.md)):
 
 1. writes the template tree of 09 §1.1, running `git init` if needed;
-2. commits it as `chore(template): devai init <product>` with the trailer `Packet: PKT-DEMO-001`;
-3. renders the four `CMP-DEMO-001` packets with `base` set to that commit and commits them as
-   `chore(packets): seed CMP-DEMO-001`;
-4. sets, in the current worktree's git config, `core.hooksPath scripts/hooks`,
+2. runs `pnpm add -D --save-exact @devai-nyx/cli@<its own version>`, which installs the workspace
+   and completes `pnpm-lock.yaml` ([D-097](../../decisions.md));
+3. commits the tree as `chore(template): devai init <product>` with the trailer
+   `Packet: PKT-DEMO-001`, with the hooks live;
+4. renders the four `CMP-DEMO-001` packets and commits them as `chore(packets): seed CMP-DEMO-001`;
+   `base` is the template commit for `PKT-DEMO-001` and the packets commit for the other three
+   ([D-095](../../decisions.md));
+5. sets, in the current worktree's git config, `core.hooksPath scripts/hooks`,
    `user.name <product>-agent` and `user.email agent@<product>.local`
    ([02 §5](../framework/02-architecture.md));
-5. runs the preflight and prints one `UNKNOWN: tooling-missing — <node>: install with <command>`
+6. runs the preflight and prints one `UNKNOWN: tooling-missing — <node>: install with <command>`
    line per missing tool.
 
 Exit `0` means everything was written and every tool resolved. Exit `2` means either the files were
-written but at least one tool is missing (`tooling-missing`), or nothing was written because of
+written but at least one tool is missing or the install failed (`tooling-missing`, with the
+`pnpm add` command as the remedy), or nothing was written because of
 `dir-not-empty` or `usage`. `init` never exits `1`.
 
 The repository then contains a fictional `demo` product: business rules under `product/`, the

@@ -12,8 +12,9 @@ Tags: `[fact]` cited source, `[inference]` consequence, `[opinion]` contract cho
 
 [opinion] **Modes.** *Materialise* (`devai.json` absent): `devai init --product <slug>` validates every input before it writes anything. It then:
 1. Writes the §1.1 tree, running `git init` if needed.
-2. Commits it as `chore(template): devai init <product>` with the trailer `Packet: PKT-DEMO-001`.
-3. Renders the four `CMP-DEMO-001` packets with `base` = that commit and commits them as `chore(packets): seed CMP-DEMO-001` (08 A.1).
+2. Runs `pnpm add -D --save-exact @devai-nyx/cli@<its own version>`, which installs the workspace and completes `pnpm-lock.yaml`; a failed install is exit 2 `tooling-missing` with that command as the remedy (D-097).
+3. Commits the tree as `chore(template): devai init <product>` with the trailer `Packet: PKT-DEMO-001`, with the hooks live (no `--no-verify`).
+4. Renders the four `CMP-DEMO-001` packets, `base` = the template commit for PKT-DEMO-001 and the packets commit for PKT-DEMO-002/003/004 (D-095), and commits them as `chore(packets): seed CMP-DEMO-001` (08 A.1).
 
 *Attach* (`devai.json` present, e.g. a fresh clone): writes only the three hooks and sets `core.hooksPath scripts/hooks`, `user.name` and `user.email` in the worktree config (D-057, D-058).
 
@@ -38,7 +39,7 @@ Module baselines therefore precede any root migration that alters them. No conne
 
 [opinion] **Fixture and packets.** The five fixture bodies are 06 §7's, byte for byte, in every configuration. The spec is 10,035 bytes, sha256 `12e9041f…f30a` (en-US and pt-BR, D-059; R-5/R-6 split, D-064). Init never translates or re-pins them.
 
-The shipped spec carries en-US and pt-BR `i18n` values (06 §7, D-059), so `--locales en-US,pt-BR` passes SL12 and an en-US-only workspace accepts the extra D-014 locale (06 §2). The packets are 05 §7's, with `base` = the template commit. On a fresh template, `--packet PKT-DEMO-002 --full` prints PL-15's `required node skipped for kind: generate: generated (inventory: no generation-manifest.json under domain/)`.
+The shipped spec carries en-US and pt-BR `i18n` values (06 §7, D-059), so `--locales en-US,pt-BR` passes SL12 and an en-US-only workspace accepts the extra D-014 locale (06 §2). The packets are 05 §7's, with `base` = the template commit for PKT-DEMO-001 and the packets commit for the other three (D-095). On a fresh template, `--packet PKT-DEMO-002 --full` prints PL-15's `required node skipped for kind: generate: generated (inventory: no generation-manifest.json under domain/)`.
 
 ### 1.1 Template file table
 
@@ -51,11 +52,12 @@ Mode is `seed` unless stated. "init-owned" marks the files attach mode rewrites.
 | `CLAUDE.md` | One line: `@AGENTS.md` | Claude Code | seed | — |
 | `decisions.md` | Pilot's decision log; three-line skeleton | `protected-paths` class `decisions` (D-031) | seed | — |
 | `devai.json` | 08 A.8 object: `$schema: "https://devai.nyx/schema/devai.json/3"`; `productPrefix` from `--product`; `locales` from `--locales` (default `["en-US"]`); `lgpd` from `--lgpd` (default `false`); `runtime.mode` from `--runtime` (default `bare`), `services.postgres = { bare: "env:DATABASE_URL", docker: "compose:postgres" }`; `protected` = the seven 02 §5 glob sets; `review = { mustRun: false, reviewers: { claude: "codex exec --model gpt-6-astra", gpt: "claude -p --model claude-opus-5-5" } }`; `agentic.permissionsPattern = { minConfidence: 0.7, maxInputTokens: 60000 }`; `check.editLoopCeilingMs = 90000` (D-047, D-058, provisional) | every command (08 Part A) | seed | — |
-| `package.json` | Workspace root: `type: module`, `engines >=24 <25`, `packageManager pnpm@9.15.0`, `scripts.test: "devai check --only unit"` (02 §10), STYNX's `prettier` block [fact: `stynx:package.json:130-135`], 07 §2 dev pins (exact), `@devai-nyx/cli` exact at the release version (B.16), only the STYNX packages emitted code imports, at the versions 12 fixes | `inventory` S-07/S-31 · `format` · `lint` · `deadcode` | seed | — |
+| `package.json` | Workspace root: `type: module`, `engines >=24 <25`, `packageManager pnpm@9.15.0`, `scripts.test: "devai check --only unit"` (02 §10), STYNX's `prettier` block [fact: `stynx:package.json:130-135`], 07 §2 dev pins (exact); tooling only: the packages emitted code imports are each module package's (D-094); `@devai-nyx/cli` is not in the shipped manifest: materialise `init` adds it exact at its own version (B.16, D-097) | `inventory` S-07/S-31 · `format` · `lint` · `deadcode` | seed | — |
 | `pnpm-workspace.yaml` | `apps/*`, `domain/*/api`, `domain/*/web` | `inventory` S-06 · `layout` (real packages only) | seed | — |
-| `pnpm-lock.yaml` | Lock produced at the DEVAI release from the template manifests (12) | `inventory` `toolchainDigest` | seed | — |
+| `pnpm-lock.yaml` | Lock produced at the DEVAI release from the template manifests (12); it covers everything but `@devai-nyx/cli`, which materialise `init` adds, completing the lock in the scaffold (D-097) | `inventory` `toolchainDigest` | seed | — |
 | `.gitignore` | `node_modules/ dist/ coverage/ .angular/ .playwright/ .devai/cache/ .DS_Store Thumbs.db` (never `.devai/review/`; the two stray names keep the working-tree digest equal to the commit's, D-076); stored as `template/gitignore` and written as `.gitignore`, because npm and pnpm drop `.gitignore` from the packed CLI (D-074) | `inventory` untracked census · C.6 | seed | — |
 | `.npmrc` | `@devai-nyx:registry=https://npm.pkg.github.com` · `@stynx-nyx:registry=https://npm.pkg.github.com` · `//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}` [fact: `stynx:.npmrc:1-3`] | pnpm install · 09 §4 clean install | seed | — |
+| `.prettierignore` | `AGENTS.md` · `CLAUDE.md` · `.agents/**` · `database/README.md` · `packets/**` · `specs/**` · `product/**` · `.stynxrc.json`, one per line: the fixed-byte law texts, which are not Prettier-clean and must keep their bytes (D-096) | `format` (08 B.2 input) | seed | — |
 | `.stynxrc.json` | `{ "boundary": { "roots": ["apps","domain"], "allowedPackages": ["@stynx-nyx/"], "forbiddenImports": [] }, "apiCoverage": { "sourceRoots": ["apps/api/src"] }, "publicApi": { "packageRoots": [] } }`; `sourceRoots` are literal paths and `packageRoots` are scanned one level deep, so `devai new module` prints two more mount lines per module, `domain/<slug>/api/src` for `sourceRoots` and `domain/<slug>` for `packageRoots` (§2); DEVAI validates the file with a zod definition of these keys before any `stynx` call (08 B.17, D-087) [fact: keys read by `P:@stynx-nyx/cli@3.0.0/engines/stynx-boundary.mjs:9-19`, `engines/api-coverage.mjs:19-25`, `dist/cli/src/checks.js:201-205`] | `boundary` S-44 (absence is FAIL, D-058) · `openapi` (D-087) | seed | — |
 | `tsconfig.test.json` | Extends `@stynx-nyx/tsconfig/node24.json`; includes `test/**`, `apps/*/test/**`, `domain/*/*/test/**`; references the package projects | `typecheck` · `lint-tests` | seed | — |
 | `eslint.config.mjs` | Default export (S-38) of blocks by folder: `createNestConfig()` for `apps/api/**`, `domain/*/api/**`; `createAngularConfig()` for `apps/web/**`, `domain/*/web/**`; scripts profile for `scripts/**`, `tools/**` [fact: `stynx:tools/eslint-config/index.mjs:395-405`]; the `./test` profile; the `devai/*` overlay of 08 B.3 | `lint` · `lint-tests` · `i18n` (template rule) | seed | — |
@@ -84,7 +86,7 @@ Mode is `seed` unless stated. "init-owned" marks the files attach mode rewrites.
 | `.agents/skills/{devai-task,devai-spec,devai-test,devai-review}/SKILL.md` | Skill texts (10's) | harness on invocation (02 §10) | seed | front matter |
 | `product/demo/README.md` · `rules/RN-DEMO-001.md` · `rules/RN-DEMO-002.md` · `product/use-cases/UC-DEMO-001.json` | 06 §7 bodies, byte-identical | `spec-lint` SL02, SL07 · `route-contract` · `protected:product` | seed (bytes fixed) | — |
 | `specs/notes/SPEC-DEMO-001.md` | 06 §7 body, 10,035 bytes, `12e9041f…f30a` | generator · `spec-lint` · `route-contract` · `spec-tests` · `packet-scope` | seed (bytes fixed) | — |
-| `packets/CMP-DEMO-001/campaign.md` · `PKT-DEMO-001…004.md` | 05 §7 campaign: `001` spec (complete), `002` generate, `003` test with `unimplemented: [R-1, R-2, R-4]`, `004` code; `base` = template commit; `002`'s globs per E-5-07 | `packet-scope` · `accept` · `packets status` | seed | front matter |
+| `packets/CMP-DEMO-001/campaign.md` · `PKT-DEMO-001…004.md` | 05 §7 campaign: `001` spec (complete), `002` generate, `003` test with `unimplemented: [R-1, R-2, R-4]`, `004` code; `base` = template commit for `001`, packets commit for `002`–`004` (D-095); `002`'s globs per E-5-07 and 08 A.4, `protected: [spec, standards, acceptance]` (D-095) | `packet-scope` · `accept` · `packets status` | seed | front matter |
 
 Not created, because nothing reads them (D-055, P-5-09):
 - `CONTRIBUTING.md`, which `layout`'s root-guide allowlist excludes (04 §1, E-5-05).
@@ -112,18 +114,18 @@ Not created, because nothing reads them (D-055, P-5-09):
 - **Queries** follow 06 §2's operation forms: `insert … values ($1…) returning …` and `select … where <pk> = $1`. The tenant is never a parameter.
 - **Catalogs** are TypeScript (P-5-01). D-033 requires a header in the language's comment syntax, and JSON has none. 04 §2 keeps `api/src` flat. Each is `api/src/<slug>.i18n.<locale>.ts` (locale lowercased: `en-us`, `pt-br`) and exports an `as const` object with keys sorted. `i18n` reads it statically (08 B.13, E-5-11).
 
-[opinion] **No acceptance skeleton.** 02 §7 emits `api/test/acceptance/.gitkeep`, and 05 §3 accepts `spec-tests` `SKIPPED` for `generate` on exactly that ground. S-63 and D-035 give derivation to the test agent. A skeleton of failing `it('R-n: …')` bodies would make `spec-tests` FAIL in a kind that cannot expect red (S-67, D-051).
+[opinion] **No acceptance skeleton.** The generator emits no `api/test/acceptance/` folder; the `test` packet creates it with the acceptance file (D-095), and 05 §3 accepts `spec-tests` `SKIPPED` for `generate` on exactly that ground. S-63 and D-035 give derivation to the test agent. A skeleton of failing `it('R-n: …')` bodies would make `spec-tests` FAIL in a kind that cannot expect red (S-67, D-051).
 
 [opinion] **Generated versus seed.** A file is `generated` when the block and the options fix every byte and no behaviour will be added. It is `seed` when a packet will write into it.
 - **Header** (02 §7, literal; P-5-03): `// @generated from SPEC-<ID> do not edit` in TS and JSONC, `-- …` in SQL, `<!-- … -->` in Markdown. Seeds carry no header.
-- **generated:** `README.md`, `api/tsconfig.json`, `index.ts`, the module file, `dto/*`, the catalogs, and `db/<ns>_<slug>.sql` until it is base-present. With `--web`: `web/tsconfig.json`, `web/src/index.ts`, `<slug>.routes.ts`.
+- **Formatting.** Every emitted file except SQL is Prettier-formatted with the template's `prettier` options before it is written, so the output is `format`-clean (D-096).
+- **generated:** `README.md`, `api/tsconfig.json` (with `"rootDir": "src"` and `"composite": true`, so `tsc -b` builds it and emits `dist/index.js`, D-093), `index.ts`, the module file, `dto/*`, the catalogs, and `db/<ns>_<slug>.sql` until it is base-present. With `--web`: `web/tsconfig.json` (same two options, D-093), `web/src/index.ts`, `<slug>.routes.ts`.
 - **seed:**
-  - `api/package.json`, whose dependencies accrue (checked by `depcheck` and `boundary`), starting with `@devai-nyx/decorators` exact at `generatorVersion`; an upgrade edits the pin by hand and `generated` FAILs while it differs from the manifest (D-074).
+  - `api/package.json`, whose dependencies accrue (checked by `depcheck` and `boundary`), starting with every package the emitted code imports, exact: `@devai-nyx/decorators` at `generatorVersion`, `@nestjs/common`, `@stynx-nyx/{backend,data,flow,idempotency}` and `zod` at the 07 §2 / 12 §3 pins (D-094); `web/package.json` likewise with `--web`; an upgrade edits the pin by hand and `generated` FAILs while it differs from the manifest (D-074).
   - The controller: bodies get written; `route-contract` keeps verifying the decorators.
   - The service: one stub per route, `throw new NotImplementedException('SPEC-<ID> R-n: implement in a code packet')`.
   - The repository. `sql-typed` already compares every `defineQuery` with `queries[]` (08 B.10).
   - `api/test/<slug>.controller.spec.ts`, which asserts an undeclared field → 400 `VALIDATION`, the stub's one rail behaviour.
-  - `acceptance/.gitkeep`, because an empty file cannot carry a header (P-5-10).
   - The `--web` components, service and service spec.
 - **No API service spec.** A stub has nothing to test, and a test of the stub would have to be deleted by the correct implementation (P-5-08, E-5-04).
 
@@ -142,7 +144,7 @@ So the alias resolves at runtime only as a workspace package name, `@<product>/<
 
 It is written as two-space JSON with no timestamp (INV-CLI-002).
 
-The generator appends to `modules.txt` and prints, without acting on them, the mount lines: the `workspace:*` dependency and the `imports` entry in `apps/api`, the `.stynxrc.json` entries `domain/<slug>/api/src` for `apiCoverage.sourceRoots` and `domain/<slug>` for `publicApi.packageRoots` (D-087), plus `app.routes.ts` with `--web`. [inference] Editing seed files it does not own would make the generator a merge assistant (D-033), and `route-contract` already fails unmounted routes (08 B.9). Mounting is therefore the `generate` packet's job. Its default globs must admit the app files, `pnpm-lock.yaml` and the write-pair contract outputs (E-5-07).
+The generator appends to `modules.txt` and prints, without acting on them, the mount lines: the `workspace:*` dependency and the `imports` entry in `apps/api`, `{ "path": "../../domain/<slug>/api" }` in `apps/api/tsconfig.json` `references` (D-093), the `.stynxrc.json` entries `domain/<slug>/api/src` for `apiCoverage.sourceRoots` and `domain/<slug>` for `publicApi.packageRoots` (D-087), plus, with `--web`, `apps/web/src/app/app.routes.ts` and `{ "path": "../../domain/<slug>/web" }` in `apps/web/tsconfig.json` `references` (D-093). [inference] Editing seed files it does not own would make the generator a merge assistant (D-033), and `route-contract` already fails unmounted routes (08 B.9). Mounting is therefore the `generate` packet's job. Its default globs must admit the app files, the two app `tsconfig.json`, `.stynxrc.json`, `pnpm-lock.yaml` and the write-pair contract outputs (E-5-07, 08 A.4, D-095).
 
 ### 2.1 Generator mapping table
 
@@ -150,7 +152,7 @@ The generator appends to `modules.txt` and prints, without acting on them, the m
 |---|---|---|---|
 | `id` · `status` · `approved-by` | Admission (refuse unless approved); header text; manifest `specId`, `specSha256`, `machineBlockSha256` | — | `generated`, `packet-scope` PL-04 |
 | `product` | Nothing; the prefix comes from `devai.json` `productPrefix` (02 §7) | — | `lint` `devai/product-prefix` |
-| `module.{name,slug,namespace}` | `domain/<slug>/`; classes `<Prefix><Name>{Module,Controller,Service,Repository}`; files `<slug>.*.ts`; schema `<namespace>` (STYNX reserved set applies, §5); `db/<namespace>_<slug>.sql`; package `@<product>/<slug>-api` | — | `layout`, `lint` S-36, generator admission |
+| `module.{name,slug,namespace}` | `domain/<slug>/`; classes `<Prefix><Name>{Module,Controller,Service,Repository}`; files `<slug>.*.ts`; schema `<namespace>` (STYNX reserved set applies, §5); `db/<namespace>_<slug>.sql`; package `@<product>/<slug>-api`, whose `api/package.json` lists every package the emitted code imports (D-094) | — | `layout`, `lint` S-36, generator admission |
 | `routes[]` (method, path, `idempotency`, `roles`, `errorContract`, `useCase`, `slo`) | `api/src/<slug>.controller.ts`: one handler per route; `@Idempotent({headerName,ttlMs})` or `@NoIdempotent()`, `@RequireRoles(roles,'all')` from `@stynx-nyx/backend` (D-087), `@ErrorContract([...])`, `@UseCase(id)`, `@Slo({...})`; `@HttpCode(response.status)`; `parseDto` on every boundary | seed | `route-contract` S-25/S-26/S-28, `lint` (`require-idempotent-route-decorator`) |
 | `routes[].request` + `data` | `api/src/dto/<verb>-<noun>.dto.ts`: strict zod body/query/params objects (types, limits, nullability, requiredness) | generated | `route-contract` S-26, `generated` |
 | `routes[].response` | Strict response schema in the same DTO file; handler return type | generated | `typecheck` |
@@ -158,7 +160,7 @@ The generator appends to `modules.txt` and prints, without acting on them, the m
 | `data.tables[]` | `db/<ns>_<slug>.sql`: schema, grants to the three product roles, table, defaults, CHECKs, FK `tenancy.tenants`, tenant index, ENABLE + FORCE RLS, `app.tenant_id` USING and WITH CHECK policy in the same file; `-- @pii` when `lgpd` | generated until base-present, then immutable (LINT013) | `sql-lint` LINT001/011/012/013, `db-apply`, `sql-typed` DB |
 | `queries[]` | `api/src/<slug>.repository.ts`: `defineQuery` per entry (`name`, `sql` text by operation form, params tuple with limits, row schema, `expects`) | seed | `sql-typed` static + DB, `lint` `define-query-location`/`no-raw-query` |
 | `i18n` | `api/src/<slug>.i18n.<locale>.ts` per configured locale, keys sorted | generated | `i18n` S-16, `generated`, `spec-lint` SL12 |
-| `requirements[]` | `api/test/acceptance/.gitkeep` only (§2) | seed (empty) | `spec-tests` population, `test-integrity` |
+| `requirements[]` | Nothing; the `test` packet creates `api/test/acceptance/` (§2, D-095) | — | `spec-tests` population, `test-integrity` |
 | `unimplemented[]` · `sources[]` · `supersedes` | Nothing (README lists ids) | — | `spec-lint`, `packet-scope` |
 | whole block | `README.md` ≤ 30 lines · `generation-manifest.json` · `api/package.json` · `api/tsconfig.json` · `api/src/index.ts` · `api/src/<slug>.module.ts` (static arrays) · `api/src/<slug>.service.ts` (stubs) · `api/test/<slug>.controller.spec.ts` · one `database/seed/modules.txt` line | generated · — · seed · generated · generated · generated · seed · seed · appended | `generated`, `layout`, `inventory`, `typecheck`, `unit`, `db-apply` |
 | `--web` | `web/package.json` (seed); `web/tsconfig.json`, `web/src/index.ts`, `web/src/<slug>.routes.ts` (generated); `web/src/<entity>-detail.component.ts` when a parameterised GET is declared and `<entity>-list.component.ts` when a collection GET is declared (seed; standalone, OnPush, `input.required()`, selector `<prefix>-<entity>-…`; P-5-07); `web/src/<entity>.service.ts`, one method per route, and `web/test/<entity>.service.spec.ts` (seed) | as listed | `lint` S-50/S-51, `i18n`, `typecheck`, `unit`, `generated` |
@@ -193,10 +195,12 @@ Controller drift is `route-contract`'s finding (02 §7).
 1. `init`.
 2. `--packet PKT-DEMO-002 --full`: PL-15 line, exit 1.
 3. `new module [--web]`, then mount, `pnpm install` and the write pairs. Commit with `Packet: PKT-DEMO-002`.
-4. `--packet PKT-DEMO-002 --full`: exit 0.
-5. `packet rebase PKT-DEMO-003 --to HEAD`, add the reference acceptance file, commit.
+4. `--packet PKT-DEMO-002 --full`: exit 0, or, until STYNX ships the S10 list (D-100), exit 2 whose only non-PASS rows are `UNKNOWN tooling-missing` or FAILs traced to the S10 list (D-100 also reads an exit 1 whose FAILs are all traced).
+5. `packet rebase PKT-DEMO-003 --to HEAD`, add the reference acceptance file `packages/cli/fixtures/campaign/SPEC-DEMO-001.acceptance.spec.ts` as `domain/notes/api/test/acceptance/spec-demo-001.acceptance.spec.ts` (05 §3), commit.
 6. `--packet PKT-DEMO-003 --full --expect-red`: exit 0, `expect-red 3 (R-1, R-2, R-4)`.
-7. Rebase PKT-DEMO-004, add the reference service and repository bodies, commit.
+7. Rebase PKT-DEMO-004, add the reference service and repository bodies `packages/cli/fixtures/campaign/notes.service.ts` and `notes.repository.ts` as `domain/notes/api/src/`'s two seeds, commit.
+
+The three reference files are DEVAI fixtures that R8 authors (D-098).
 8. `--packet PKT-DEMO-004 --full`: exit 0.
 
 Each commit carries its trailer, which PL-12 reads.
@@ -206,17 +210,17 @@ Each commit carries its trailer, which PL-12 reads.
 - `permissions-pattern` evidence (`.devai/review/PKT-DEMO-00n.permissions.json`) is produced per cell and packet on the release author's machine before push, then committed. CI verifies its slice digest. Missing or stale evidence is UNKNOWN and fails the PR (02 §7).
 - The reference acceptance file keeps rail assertions out of R-1, R-2 and R-4 (D-058); the fixture carries them in R-3, R-5 and R-6 (06 §7, D-064).
 
-Negative cells mutate the default cell (bare, no `--web`, `lgpd: true`, en-US) after PKT-DEMO-004.
+Negative cells mutate the default cell, O2 (`init --lgpd`: bare, no `--web`, `lgpd: true`, en-US; `init`'s own default stays `lgpd: false`), after PKT-DEMO-004 (D-098).
 
 | # | Cell | Options · runtime | Expected outcome |
 |---|---|---|---|
-| O1–O8 | option matrix | `{--web} × {--lgpd} × {pt-BR}` · bare | en-US cells: PKT-DEMO-002/003/004 as above; `--lgpd` cells run LINT012 over the `author_alias` annotation; `--web` cells populate `e2e` and the detail component. pt-BR cells: as en-US, with `i18n` over `notes.i18n.pt-br.ts` (D-059) |
+| O1–O8 | option matrix: O1 none · O2 `--lgpd` · O3 pt-BR · O4 `--lgpd` pt-BR · O5–O8 the same four with `--web` (pt-BR = `init --locales en-US,pt-BR`; D-098) | `{--web} × {--lgpd} × {pt-BR}` · bare | en-US cells: PKT-DEMO-002/003/004 as above; `--lgpd` cells run LINT012 over the `author_alias` annotation; `--web` cells populate `e2e` and the detail component. pt-BR cells: as en-US, with `i18n` over `notes.i18n.pt-br.ts` (D-059) |
 | O9–O16 | option matrix | same eight · docker | identical verdicts; `schemaDigest` equal to the bare cell's (D-039, C.4) |
-| N1 | one contract decorator removed from `notes.controller.ts` (five runs, one per decorator) | default | `route-contract` FAIL `lacks @<Decorator> [S-28]`; `lint` FAIL too for `@NoIdempotent` |
+| N1 | one contract decorator removed from `notes.controller.ts` (five runs, one per decorator) | default | `route-contract` FAIL `lacks @<Decorator> [S-28]` for `@NoIdempotent`, `@RequireRoles`, `@ErrorContract`, `@UseCase`, and for `@RequireRoles` also `neither role-bound nor @Public() [S-11]`; `@Slo` removed → `@Slo missing (spec: p95 500 ms) [S-25]`; `lint` FAIL too for `@NoIdempotent`; each run also carries D-087's `UNKNOWN: tooling-missing` lines (D-098) |
 | N2 | `parseDto(` removed from the POST body parameter | default | `route-contract` FAIL `@Body() without parseDto [S-26]` |
 | N3 | repository `z.string().max(80)` → `max(1024)` | default | `sql-typed` FAIL static (`≠ spec limit`) and DB (`exceeds varchar(80)`) |
-| N4a–c | `ENABLE`, `FORCE`, policy lines removed separately from `db/demo_notes_notes.sql` | default | `sql-lint` FAIL LINT001 and LINT013 (base-present); `db-apply` FAIL `checks.sql` forced-RLS assertion |
-| N5 | `-- @pii` line removed | default | `sql-lint` FAIL LINT012 and LINT013 |
+| N4a–c | `ENABLE`, `FORCE`, policy lines removed separately from `db/demo_notes_notes.sql` | default | `sql-lint` FAIL LINT013 ×2 (`Applied migration … changed`, `present at base differs at head`; base-present), and LINT001 after STYNX S10 fixes identifier quoting and PII tokens (D-100); `db-apply` FAIL `checks.sql` forced-RLS assertion once S10 fixes the platform-migration path (D-098) |
+| N5 | `-- @pii` line removed | default | `sql-lint` FAIL LINT013 ×2, and LINT012 after STYNX S10 fixes identifier quoting and PII tokens (D-098, D-100) |
 | N6 | `demo.notes.missing` removed from `notes.i18n.en-us.ts` | default | `i18n` FAIL `spec key absent from en-US`; `generated` FAIL |
 | N7a | one `it('R-3: …')` removed | default | `spec-tests` FAIL `uncovered R-3 [S-65]`; `test-integrity` FAIL |
 | N7b | acceptance file deleted | default | `spec-tests` SKIPPED → `accept` FAIL PL-15 `required node skipped for kind: code`; `test-integrity` FAIL (deleted `test/acceptance/**` without `@acceptance-change`) |
@@ -224,7 +228,7 @@ Negative cells mutate the default cell (bare, no `--web`, `lgpd: true`, en-US) a
 | N9 | `notes.service.ts` edited, then `--regenerate` (same id) | default | exit 0; `seed edited, left alone`; generated files rewritten byte-identical |
 | N10 | spec `status: draft` | default | `devai new module` exit 2 `spec-not-approved` |
 | N11 | successor spec adds a column, `--regenerate` | default | exit 0; TS regenerated; base-present `db/*.sql` untouched; migration line printed; `sql-typed` DB FAIL until the hand migration exists; editing old SQL → LINT013 FAIL |
-| N12 | `@stynx-nyx/cli` uninstalled | default | `route-contract`, `openapi`, `boundary`, `db-apply` `UNKNOWN: tooling-missing` with install lines; exit 2 |
+| N12 | `@stynx-nyx/cli` uninstalled | default | `route-contract`, `boundary` `UNKNOWN: tooling-missing` (`stynx not resolvable from node_modules/.bin`) with install lines; `openapi` SKIPPED when its population is empty; `db-apply` FAIL (`apply.sh exited 1: node_modules/.bin/stynx: No such file`) with `UNKNOWN: tooling-missing (rls-negative)`; exit 1 (D-098) |
 | N13 | `code` packet with `protected: []`; the branch touches `.github/**`, then widens `protected: [ci]` in the same branch | default | `protected-paths` `declared: false` for `ci`; `protected:unplanned`; `review` gating (D-078) |
 | N14 | `apps/api/src/validation.filter.ts` edited after a green `--full` | default | `spec-tests` and `integration` cache miss and re-run; `unit` for unaffected projects is a hit (D-076) |
 | N15 | `pnpm-lock.yaml` bumped (toolchain) after a green `--full` | default | every node including `review` is a cache miss; `review` re-runs (D-076) |
@@ -282,8 +286,9 @@ Configuration is 06 §7's: `productPrefix: demo`, `lgpd: true`, `locales: ["en-U
 domain/notes/README.md                         generated  <!-- @generated from SPEC-DEMO-001 do not edit -->  # Notes — SPEC-DEMO-001
 domain/notes/generation-manifest.json          —          { "generator": "@devai-nyx/cli", "generatorVersion": "<release>", "specId": "SPEC-DEMO-001", …
 domain/notes/api/package.json                  seed       { "name": "@demo/notes-api", "private": true, "type": "module", "exports": { ".": "./dist/index.js" }, …
+                                                          "dependencies": { "@devai-nyx/decorators": "<release>", "@nestjs/common": "11.2.3", "@stynx-nyx/backend": "3.0.0", "@stynx-nyx/data": "3.0.0", "@stynx-nyx/flow": "3.0.0", "@stynx-nyx/idempotency": "3.0.0", "zod": "4.4.3" }
 domain/notes/api/tsconfig.json                 generated  G
-                                                          { "extends": "@stynx-nyx/tsconfig/node24.json", "compilerOptions": { "outDir": "dist", "experimentalDecorators": true, "emitDecoratorMetadata": true }, "include": ["src"] }
+                                                          { "extends": "@stynx-nyx/tsconfig/node24.json", "compilerOptions": { "rootDir": "src", "outDir": "dist", "composite": true, "experimentalDecorators": true, "emitDecoratorMetadata": true }, "include": ["src"] }
 domain/notes/api/src/index.ts                  generated  G
                                                           export { DemoNotesModule } from './notes.module.js';  export { demoNotesEnUs } from './notes.i18n.en-us.js';
 domain/notes/api/src/notes.module.ts           generated  G
@@ -307,7 +312,6 @@ domain/notes/api/src/dto/get-note.dto.ts       generated  G
 domain/notes/api/src/notes.i18n.en-us.ts       generated  G
                                                           export const demoNotesEnUs = { 'demo.notes.forbidden': 'You cannot access these notes.', 'demo.notes.invalid': 'Invalid note request.', … } as const;
 domain/notes/api/test/notes.controller.spec.ts seed       it('rejects an undeclared body field with 400 VALIDATION', …
-domain/notes/api/test/acceptance/.gitkeep      seed       (empty)
 domain/notes/db/demo_notes_notes.sql           generated  -- @generated from SPEC-DEMO-001 do not edit
                                                           CREATE SCHEMA "demo_notes" AUTHORIZATION demo_owner;
                                                           CREATE TABLE "demo_notes"."note" ( "id" UUID NOT NULL DEFAULT gen_random_uuid(), "tenant_id" UUID NOT NULL DEFAULT NULLIF(current_setting('app.tenant_id', true), '')::uuid REFERENCES "tenancy"."tenants"("id"),
