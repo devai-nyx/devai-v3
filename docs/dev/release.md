@@ -65,6 +65,8 @@ shell's filter wiring, add the public health controller to S10 (#8; the probes a
 let the test config reach the modules through the apps.
 [D-139](../../decisions.md) adds `-w` to `init`'s install (`pnpm add -w -D --save-exact @devai-nyx/cli@<own version>`):
 without it pnpm 9.15.0 refuses to add to the workspace root, and R10's `init` would exit 2.
+[D-140](../../decisions.md) follows the add with `pnpm install`, since `add -w` links only the root importer;
+every printed `pnpm add` remedy takes the `-w … && pnpm install` shape.
 R7 is confirmed on the release host.
 
 **Not blocking 3.0.0** (12 §4): the D-047 edit-loop p95 measurement (3.0.0 ships 90000); the first
