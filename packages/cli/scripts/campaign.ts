@@ -627,7 +627,10 @@ function baseEnv(work: string, runtime: Runtime): NodeJS.ProcessEnv {
     '  return pkg;',
     '} } };',
   ].join('\n'));
-  const env: NodeJS.ProcessEnv = { ...shim.env, npm_config_global_pnpmfile: pnpmfile };
+  // The shim's stand-in for init's `pnpm add` writes the pin into package.json but not the lock, as the real
+  // add would; pnpm's CI default (--frozen-lockfile under CI=true) would then refuse step 3's `pnpm install`.
+  // CI itself stays set: the model nodes verify evidence there (C.1). Both lines go at R10.
+  const env: NodeJS.ProcessEnv = { ...shim.env, npm_config_global_pnpmfile: pnpmfile, npm_config_frozen_lockfile: 'false' };
   env['PATH'] = `${shim.dir}${delimiter}${dirname(process.execPath)}${delimiter}${process.env['PATH'] ?? ''}`;
   if (runtime === 'bare' && !env['DATABASE_URL']) env['DATABASE_URL'] = 'postgresql://postgres:postgres@localhost:5432/postgres';
   if (runtime === 'docker') {
@@ -669,7 +672,10 @@ export function runCells(ids: string[], runtime: Runtime, work: string): CellRes
     if (runtime !== 'bare') throw new Error('negative cells run on the default cell, O2, bare (D-098)');
     console.log(`N-base · O2 (--lgpd) · bare, steps 1–8`);
     const base = new Cell('N-base', 'bare', work, env);
+    const baseStarted = Date.now();
     const ok = campaign(base, optionCell('O2')!, work);
+    // The default cell's own steps are a result too: a broken base must not read as N cells skipped.
+    results.push(base.result('O2 (--lgpd), the default cell, steps 1–8', baseStarted));
     const head = run(['git', 'rev-parse', 'HEAD'], base.dir, base.env).stdout.trim();
     for (const id of negatives) {
       const n = NEGATIVES.find((x) => x.id === id);
