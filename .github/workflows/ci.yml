@@ -160,5 +160,8 @@ jobs:
           node-version: '24.20.0'
           registry-url: https://npm.pkg.github.com
       - run: pnpm install --frozen-lockfile && pnpm -r --if-present build
+      # 12 §5: publish with GITHUB_TOKEN; STYNX_READ_TOKEN is the install steps' token only (H4), never a publish PAT.
       - name: Publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pnpm -r publish --no-git-checks

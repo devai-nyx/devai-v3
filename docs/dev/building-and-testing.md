@@ -9,7 +9,7 @@ description: The build command, the generator release matrix CI runs, and the R2
 > **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
 
 The `pnpm` build below runs today. The CLI is built (R6); the `devai` commands on this page are the
-ones the release matrix runs once R8 writes its cells.
+ones the release matrix runs (R8, closed under [D-134](../../decisions.md)).
 
 ## Toolchain
 
@@ -65,9 +65,13 @@ This is standard S-46, and it runs in this repository's `ci.yml`, not as a secon
 In `ci.yml` this is the `matrix` job. It runs in both runtimes (`bare`, `docker`) whenever
 `packages/cli/**` changed, and on every `v*` tag. The change test is a job condition, never a
 workflow-level `paths` filter, because an absent required check blocks merges silently (12 §5).
-**Today the job is a placeholder:** `src/main.ts` (R6) and STYNX 3.0.0 (R5) exist, and the cells are
-written into the job at R8. Until then the job passes on branches and fails on tags,
-so `publish` cannot run on an unfilled matrix.
+The cells run as five shards (`matrix (<runtime>, <shard>)`) through `packages/cli/scripts/campaign.ts`;
+one aggregate job named `matrix` passes when every shard passed, or when none was due, and that is the
+check H5 requires and `publish` needs ([D-127](../../decisions.md)).
+
+Until R10 publishes `@devai-nyx/{cli,decorators}` 3.0.0, the cells install both from this repository's
+build: a `pnpm` first on `PATH` stands in for `init`'s `pnpm add`, and a global pnpmfile `link:`s both
+packages ([D-107](../../decisions.md) Open 4).
 
 Each cell runs in a temporary workspace with a clean registry install, no STYNX checkout, product
 `demo` and browsers provisioned. It replays the fixture campaign as commits
@@ -87,7 +91,7 @@ Each cell runs in a temporary workspace with a clean registry install, no STYNX 
 |---|---|---|
 | O1–O8 | `{--web} × {--lgpd} × {pt-BR}`, bare | The campaign above in each configuration |
 | O9–O16 | The same eight, docker | Identical verdicts; `schemaDigest` equal to the bare cell's |
-| N1–N12 | Negative cells on the default configuration: a contract decorator removed, `parseDto` removed, a query limit widened, RLS lines removed, the `@pii` line removed, an i18n key removed, an acceptance case or file removed, a generated file hand-edited, a seed edited then regenerated, a draft spec, a successor spec, `@stynx-nyx/cli` uninstalled | Each produces the expected `FAIL` or `UNKNOWN` from the expected node (N9 and N11 exit 0 with the printed outcome) |
+| N1–N20 | Negative cells on the default configuration ([D-130](../../decisions.md)), among them: a contract decorator removed, `parseDto` removed, a query limit widened, RLS lines removed, the `@pii` line removed, an i18n key removed, an acceptance case or file removed, a generated file hand-edited, a seed edited then regenerated, a draft spec, a successor spec, `@stynx-nyx/cli` uninstalled | Each produces the expected `FAIL` or `UNKNOWN` from the expected node (N9 and N11 exit 0 with the printed outcome) |
 
 The full table, with the node and message each negative cell must produce, is
 [09 §4](../framework/09-rail.md). The negative cells test checker and generator together against
@@ -98,10 +102,11 @@ gate because the template has `mustRun: false`; it is tallied. The `permissions-
 (`.devai/review/PKT-DEMO-00n.permissions.json`) is produced per cell and packet on the release
 author's machine before the push and committed, and CI verifies its slice digest. Missing or stale
 evidence is `UNKNOWN` and fails the PR ([09 §4](../framework/09-rail.md),
-[D-060](../../decisions.md)).
+[D-060](../../decisions.md)). That evidence is pending S10 #4 and D-124: both model nodes are
+`prerequisite-failed` in every cell today ([D-128](../../decisions.md), [D-134](../../decisions.md)).
 
-A green matrix on CI, with that evidence committed, is release prerequisite R8; making `matrix` a
-required check is R9 ([Release](release.md)).
+A green matrix on CI in both runtimes closed release prerequisite R8 ([D-134](../../decisions.md));
+`matrix` became a required check at R9 ([Release](release.md)).
 
 ## The R2 prototype
 
