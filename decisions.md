@@ -1569,24 +1569,90 @@ Open 10, 11), 09 §4 (R8's token helper; Open 3). Open 4 changes no law text; th
 No code change: W10 already behaves as ratified. Source: Owner (panels, 2026-10-25; packet
 `PACKET-2026-10-24-R6-CLOSE.md` Part C, Owner's workspace).
 
+## D-108 · 2026-10-25 · The app manifests carry `scripts.build: "tsc -b"`, so D-106's `pnpm -r build` builds the module
+[fact] D-106 has campaign step 3 run `pnpm -r build`, "the apps' `tsc -b` builds the referenced module"
+(D-106), but no template package has a `build` script: the root `scripts` holds only `test`
+(`packages/cli/template/package.json:10-12`), and `apps/api/package.json` and `apps/web/package.json` have
+no `scripts`. pnpm 9.15.0 then prints `None of the selected packages has a "build" script` and exits 0,
+building nothing (devai-v3#70 Open 1). Options: (a) `apps/api/package.json` and `apps/web/package.json`
+gain `scripts.build: "tsc -b"`; (b) step 3 runs `pnpm exec tsc -b apps/api/tsconfig.json` directly;
+(c) the module manifests get the script. Recommended: (a). The apps' `tsc -b` follows D-093's
+`references` into every mounted module, so one script per app builds the graph and D-106's line
+stays true; (b) leaves the printed mount line without effect; (c) puts the script in each generated
+seed and still builds nothing the apps reference unless they build too. 09 §6 shows no app manifest,
+so its bytes do not change. Amends 09 §1.1 (`apps/api` and `apps/web` rows). Code follow-up (W11): the
+two template manifests. Chosen: (a). Source: Owner (panels, 2026-10-25; packet
+`PACKET-2026-10-24-R6-CLOSE.md` Part D, Owner's workspace).
+
+## D-109 · 2026-10-25 · D-106's printed line is exactly `mount: then pnpm -r build`
+[fact] D-106 has `new module` print `then pnpm -r build` "as the last mount line" without fixing the
+line's form; 09 §2 and §6 read it as its own line `mount: then pnpm -r build` (devai-v3#70 Open 2).
+Options: (a) the last printed line is exactly `mount: then pnpm -r build`; (b) the line drops the
+`mount:` prefix. Recommended: (a). Every printed mount line carries the prefix, so a reader that
+collects them gets the build too. Confirms 09 §6 as amended by D-106; 09 §2 now says "exactly".
+Chosen: (a). Source: Owner (panels, 2026-10-25; packet `PACKET-2026-10-24-R6-CLOSE.md` Part D,
+Owner's workspace).
+
+## D-110 · 2026-10-25 · The `unit` tier is two Vitest projects in the one root config: `unit-api` and `unit-web` (refines D-105)
+[fact] D-105 gives the `unit` tier `setupFiles: ['test/support/angular.setup.ts']` "for web specs", but
+Vitest applies a config's `setupFiles` to every file it runs, so the one root config would load the
+Angular setup for API and app specs too; the setup's TestBed comes from `@angular/core/testing`, while
+`@angular/core` is in `apps/web/package.json` only; and no DOM environment was named for
+`BrowserTestingModule` (devai-v3#70 Open 3). Options: (a) the `unit` tier is two Vitest projects in the
+one root config: `unit-api` (node environment; `domain/*/api/test/*.spec.ts`, `apps/*/test/*.spec.ts`)
+and `unit-web` (`environment: 'jsdom'`, `setupFiles: ['test/support/angular.setup.ts']`,
+`domain/*/web/test/*.spec.ts`); root devDependencies gain `@angular/core` at the Angular pin 22.2.1 and
+`jsdom` at an exact pin resolved from the registry; one `unit` tier literal (S-62 unchanged); (b) a
+self-guarding setup plus a generator-emitted `// @vitest-environment jsdom` pragma; (c) revert to
+D-105 (b), the generated web spec avoids Angular DI. Recommended: (a). It scopes the setup and the DOM
+to the web specs in configuration, with no per-file pragma; (b) makes each generated spec carry its
+environment; (c) undoes D-105. [fact] The exact pin is `jsdom` 30.1.3, the registry's `latest`
+(published 2026-10-15; `engines.node` `^22.22.2 || ^24.15.0 || >=26.0.0`, which admits Node 24;
+Vitest 4.1.11 peers `jsdom: "*"`; `npm view jsdom@30.1.3`, `npm view vitest@4.1.11 peerDependencies`,
+2026-10-25). [inference] "One `unit` tier literal" reads as: `TEST_TIER=unit` stays one tier over the
+same three patterns, now split between the two projects, so S-62 and 08 B.6's six tier literals
+(D-107) are unchanged. D-105 is not edited; this entry states how its setup is scoped. Amends 09 §1.1
+(root `package.json` row, `vitest.config.ts` row, `test/support/angular.setup.ts` row). Code follow-up
+(W11): the template config and manifest, and the lock. Chosen: (a). Source: Owner (panels,
+2026-10-25; packet `PACKET-2026-10-24-R6-CLOSE.md` Part D, Owner's workspace).
+
+## D-111 · 2026-10-25 · The `/** @public */` tag is permanent in `generated` DTO files, removable only in seed files (refines D-104)
+[fact] D-104 says the code packet "may remove the tag when it wires" the tagged exports, but the
+response schemas live in `generated` DTO files, where a hand edit FAILs `generated` (S-45) and
+regeneration puts the tag back (devai-v3#70 Open 4). Options: (a) the tag is permanent in `generated`
+DTO files and removable only in seed files such as `*.repository.ts`; 09 §2.1 says so; (b) the
+generator drops the tag once the export is wired. Recommended: (a). (b) is not implementable: the
+renderer reads only the spec and the options (09 §2), never whether a seed imports an export. Amends
+09 §2 (generated and seed bullets), 09 §2.1 (`queries[]`, `routes[].response` rows). No code change:
+the renderer emits the tag either way. Chosen: (a). Source: Owner (panels, 2026-10-25; packet
+`PACKET-2026-10-24-R6-CLOSE.md` Part D, Owner's workspace).
+
+## D-112 · 2026-10-25 · A re-run of `init` on a repository without a `Packet:` commit is a first run, not attach mode (narrows D-107's Open 8 reading)
+[fact] D-107 ratified W10's reading that after a failed install or a hook-refused commit "`devai init`
+again is attach mode and commits nothing" (devai-v3#69 Open 8), and amended 08 A.1 to say so; who then
+makes the template and packets commits was not stated (devai-v3#70 Open 5). Options: (a) attach mode
+makes the missing commits; (b) `init` prints the commit commands; (c) a re-run of `init` on a
+repository whose `HEAD` is unborn or that has no `Packet:` commit is a first run, not attach mode;
+D-107's attach reading is narrowed to repositories with a `Packet:` commit. Recommended: (c). It keeps
+attach mode to "hooks and git config only" (08 A.1) and lets the same command finish what it started;
+(a) gives attach mode a write path; (b) moves the pilot's first commits out of DEVAI. D-107 is not
+edited; this entry narrows its Open 8 reading: attach mode is a repository with `devai.json` and a
+commit carrying a `Packet:` trailer. Amends 08 A.1 (Modes, Exit), 09 §1 (Modes),
+docs/adopters/install.md (attach mode). Chosen: (c). Source: Owner (panels, 2026-10-25; packet
+`PACKET-2026-10-24-R6-CLOSE.md` Part D, Owner's workspace).
+
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
 - Mutation testing's home (D-004: outside the cycle or not at all) — not blocking v3.0.
 - 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck (D-058) — not blocking v3.0.
 - STYNX local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 (D-069) — STYNX item, not blocking 3.0.0.
-- D-106's `pnpm -r build` builds nothing on the template as it stands: no template package has a
-  `build` script (root `scripts` is `test` only; `apps/api`, `apps/web` and 09 §6's module manifest have
-  none), and pnpm 9.15.0 then prints `None of the selected packages has a "build" script` and exits 0.
-  Which manifests gain `build: tsc -b` (or whether step 3 runs `tsc -b` itself) is not ruled.
-- D-106's printed line is read as its own last line, `mount: then pnpm -r build` (09 §2, §6); its exact
-  text is not ruled.
-- D-105: Vitest's `setupFiles` applies to every file of the `unit` tier, so "for web specs" in one root
-  config also loads the setup for API specs, unless the tier is split; the setup imports
-  `@angular/core/testing`, but `@angular/core` is not among the two root devDependencies D-105 adds;
-  and no DOM environment (jsdom, happy-dom) is named for `BrowserTestingModule`. Not ruled.
-- D-104: the response schemas live in `generated` DTO files, where the code packet cannot remove the
-  tag (`generated` FAILs a hand edit, S-45; regeneration restores it), so there the tag is permanent.
-  Not ruled.
-- D-107 (devai-v3#69 Open 8): after a failed `init` install or a hook-refused commit, the re-run is
-  attach mode and commits nothing; who then makes the template and packets commits is not stated.
+- D-112's first-run re-run meets two 08 A.1 rules written for an empty `--dir`: `--product` is
+  "rejected when [`devai.json`] exists", and materialise needs `--dir` "empty or absent"
+  (`dir-not-empty`); and whether the re-run rewrites the template or keeps the files on disk is not
+  stated. Not ruled.
+- D-110 against 08 B.11: its Invokes row passes `--project <affected…>`, and with Vitest projects
+  `--project` selects `unit-api`/`unit-web` by name, not workspace packages (the implementation passes
+  the population's files, `packages/cli/src/nodes/unit.ts:2`). Whether B.11's text changes, and
+  whether a project whose patterns match no file is left out of the config (as an empty tier is), is
+  not ruled.

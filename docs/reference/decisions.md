@@ -1,14 +1,14 @@
 ---
 title: Decisions
 sidebar_position: 12
-description: Index of the 107 numbered decisions D-001 to D-107 in decisions.md, with date and title.
+description: Index of the 112 numbered decisions D-001 to D-112 in decisions.md, with date and title.
 ---
 
 # Decisions
 
-[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **107 decisions** (D-001…D-107), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
+[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **112 decisions** (D-001…D-112), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
 
-Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 28 on 2026-10-24 (D-075…D-102), 5 on 2026-10-25 (D-103…D-107). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
+Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 28 on 2026-10-24 (D-075…D-102), 10 on 2026-10-25 (D-103…D-112). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
 
 | Id | Date | Title |
 |---|---|---|
@@ -119,21 +119,23 @@ Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-0
 | D-105 | 2026-10-25 | The `unit` tier initialises Angular's TestBed for web specs from a template setup file |
 | D-106 | 2026-10-25 | Campaign step 3 builds the workspace before the generate commit; `new module` prints the build last |
 | D-107 | 2026-10-25 | W10's readings are ratified as recorded (devai-v3#69 Open 3, 4, 6–11) |
+| D-108 | 2026-10-25 | The app manifests carry `scripts.build: "tsc -b"`, so D-106's `pnpm -r build` builds the module |
+| D-109 | 2026-10-25 | D-106's printed line is exactly `mount: then pnpm -r build` |
+| D-110 | 2026-10-25 | The `unit` tier is two Vitest projects in the one root config: `unit-api` and `unit-web` (refines D-105) |
+| D-111 | 2026-10-25 | The `/** @public */` tag is permanent in `generated` DTO files, removable only in seed files (refines D-104) |
+| D-112 | 2026-10-25 | A re-run of `init` on a repository without a `Packet:` commit is a first run, not attach mode (narrows D-107's Open 8 reading) |
 
 ## Still open
 
-The file's closing "Open" section lists ten items ([decisions.md](../../decisions.md)):
+The file's closing "Open" section lists seven items ([decisions.md](../../decisions.md)):
 
 - [D-026](../../decisions.md) (`kind:` packets) is provisional until the first DETRAN module is built with `kind:` packets.
 - [D-047](../../decisions.md) (edit-loop ceiling) is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
 - Mutation testing's home ([D-004](../../decisions.md)): outside the cycle or not at all; not blocking v3.0.
 - The 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck ([D-058](../../decisions.md)); not blocking v3.0.
 - STYNX's local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 ([D-069](../../decisions.md)); a STYNX item, not blocking 3.0.0.
-- [D-106](../../decisions.md)'s `pnpm -r build` builds nothing while no template package has a `build` script; not ruled.
-- [D-106](../../decisions.md)'s printed line, read as `mount: then pnpm -r build`; its exact text is not ruled.
-- [D-105](../../decisions.md)'s setup file: whether it loads for API specs too, `@angular/core` at the root, and the DOM environment; not ruled.
-- [D-104](../../decisions.md)'s tag on response schemas in `generated` DTO files cannot be removed by the code packet; not ruled.
-- [D-107](../../decisions.md): who makes `init`'s commits after a failed install or a hook-refused commit; not stated.
+- [D-112](../../decisions.md)'s first-run re-run against 08 A.1's `--product` and `dir-not-empty` rules, and whether it rewrites the template; not ruled.
+- [D-110](../../decisions.md) against 08 B.11's `--project <affected…>`, and whether an empty Vitest project is left out; not ruled.
 
 ## How decisions are made
 
