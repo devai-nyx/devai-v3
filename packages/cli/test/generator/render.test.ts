@@ -6,7 +6,7 @@ import { check } from 'prettier';
 import ts from 'typescript';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { entriesOf, manifestOf, manifestText } from '../../src/generator/manifest.js';
-import { MODULE_PINS, PRETTIER_OPTIONS, render, renderBlock, type Rendered, type RenderOptions } from '../../src/generator/render.js';
+import { MODULE_DEV_PINS, MODULE_PINS, PRETTIER_OPTIONS, render, renderBlock, type Rendered, type RenderOptions } from '../../src/generator/render.js';
 import { cliVersion } from '../../src/main.js';
 import { MachineBlock } from '../../src/spec/machine-block.js';
 import { parseSpec } from '../../src/spec/parse-spec.js';
@@ -37,8 +37,7 @@ describe('09 §6 worked example', () => {
     expect(module.find((r) => r.path === 'domain/notes/generation-manifest.json')!.mode).toBe('—');
   });
 
-  // W11: remove .fails once the generator follows D-103/D-104.
-  it.fails('every file carries §6’s text, in §6’s order', async () => {
+  it('every file carries §6’s text, in §6’s order', async () => {
     const p = valid();
     const manifest = manifestText(manifestOf({ id: 'SPEC-DEMO-001', sha256: '0'.repeat(64), machineBlockSha256: p.machineBlockSha256 }, S6, version, entriesOf(rendered)));
     for (const r of module) {
@@ -61,6 +60,20 @@ describe('09 §6 worked example', () => {
     const imported = new Set<string>();
     for (const [p, f] of rendered) if (p.startsWith('api/src/')) for (const m of f.bytes.toString('utf8').matchAll(/from '(@[^/']+\/[^/']+|[^.@'][^/']*)'/g)) imported.add(m[1]!);
     expect([...imported].sort()).toEqual(Object.keys(pkg.dependencies).sort());
+  });
+
+  it('both module manifests carry @stynx-nyx/tsconfig, the preset their tsconfig extends, as a devDependency (D-103)', async () => {
+    const r = await render(specBytes, { ...S6, web: true }, version);
+    for (const p of ['api/package.json', 'web/package.json']) expect([p, (JSON.parse(text(r, p)) as { devDependencies: unknown }).devDependencies]).toEqual([p, MODULE_DEV_PINS]);
+    expect(MODULE_DEV_PINS).toEqual({ '@stynx-nyx/tsconfig': '3.0.0' });
+  });
+
+  it('the seeded exports a code packet consumes carry `/** @public */`: queries[] and routes[].response (D-104)', async () => {
+    const tagged = (t: string) => [...t.matchAll(/\/\*\* @public \*\/\nexport const (\w+)/g)].map((m) => m[1]);
+    expect(tagged(text(rendered, 'api/src/notes.repository.ts'))).toEqual(['insertNote', 'getNote']);
+    expect(tagged(text(rendered, 'api/src/dto/create-note.dto.ts'))).toEqual(['createNoteResponse']);
+    expect(tagged(text(rendered, 'api/src/dto/get-note.dto.ts'))).toEqual(['getNoteResponse']);
+    expect([...rendered.values()].map((f) => f.bytes.toString('utf8').split('@public').length - 1).reduce((a, b) => a + b)).toBe(4);
   });
 
   it('headers: `//` in TS and JSONC, `--` in SQL, `<!-- -->` in Markdown; seeds carry none (02 §7, P-5-03)', async () => {

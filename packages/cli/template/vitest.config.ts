@@ -19,6 +19,25 @@ if (patterns === undefined)
 const files = patterns
   .flatMap((p) => globSync(p))
   .filter((f) => tier !== 'unit' || !f.endsWith('.acceptance.spec.ts'));
+// D-110: the unit tier is two projects, each enabled iff its patterns match a file, as a tier is.
+const isWeb = (f: string) => f.startsWith('domain/') && f.includes('/web/test/');
+const projects =
+  tier === 'unit'
+    ? [
+        {
+          name: 'unit-api',
+          include: files.filter((f) => !isWeb(f)),
+          environment: 'node',
+          setupFiles: [],
+        },
+        {
+          name: 'unit-web',
+          include: files.filter(isWeb),
+          environment: 'jsdom',
+          setupFiles: ['test/support/angular.setup.ts'],
+        },
+      ].filter((p) => p.include.length > 0)
+    : [];
 
 export default defineConfig({
   plugins: [
@@ -34,5 +53,8 @@ export default defineConfig({
       module: { type: 'es6' },
     }),
   ],
-  test: { include: files.length > 0 ? files : [], passWithNoTests: false },
+  test:
+    projects.length > 0
+      ? { passWithNoTests: false, projects: projects.map((test) => ({ extends: true, test })) }
+      : { include: files.length > 0 ? files : [], passWithNoTests: false },
 });

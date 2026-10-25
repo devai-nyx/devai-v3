@@ -42,12 +42,21 @@ describe('devai init refusals (A.1 Failure → reason)', () => {
     writeFileSync(resolve(dir, 'notes.txt'), 'x\n');
     expect(refusal(dir, '--product', 'demo')).toMatchObject({ status: 2, reason: 'dir-not-empty' });
   });
-  it('attach mode rejects --product', () => {
+  /** A repository whose devai.json is `text`, with one `Packet:` commit (attach mode, D-112). */
+  const attached = (text: string) => {
     const dir = tmp();
-    writeFileSync(resolve(dir, 'devai.json'), '{}');
-    expect(refusal(dir, '--product', 'demo')).toMatchObject({ status: 2, reason: 'usage' });
+    writeFileSync(resolve(dir, 'devai.json'), text);
+    spawnSync('git', ['init', '-q'], { cwd: dir });
+    spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '--allow-empty', '-m', 'chore: x\n\nPacket: PKT-DEMO-001'], { cwd: dir });
+    return dir;
+  };
+  it('attach mode rejects --product', () => {
+    expect(refusal(attached('{}'), '--product', 'demo')).toMatchObject({ status: 2, reason: 'usage' });
   });
   it('attach mode with an invalid devai.json is config-invalid', () => {
+    expect(refusal(attached('{}'))).toMatchObject({ status: 2, reason: 'config-invalid' });
+  });
+  it('devai.json without a Packet: commit is a first run, which reads it: an invalid one is config-invalid (D-112)', () => {
     const dir = tmp();
     writeFileSync(resolve(dir, 'devai.json'), '{}');
     expect(refusal(dir)).toMatchObject({ status: 2, reason: 'config-invalid' });
@@ -144,6 +153,17 @@ describe('devai init when the install fails (D-097)', () => {
     const out = JSON.parse(json.stdout) as { exitCode: number; reason: string; preflight: { binary: string; status: string; remedy?: string }[] };
     expect(out).toMatchObject({ exitCode: 2, reason: 'tooling-missing' });
     expect(out.preflight.find((p) => p.binary === '@devai-nyx/cli')).toMatchObject({ status: 'missing', remedy: 'pnpm add -D --save-exact @devai-nyx/cli@3.0.0' });
+    // D-112: unborn HEAD, so the re-run is a first run; another --product is refused, the recorded one is not.
+    const stub = pnpmShim('stub');
+    expect(JSON.parse(run(stub.env, dir, 'init', '--product', 'other', '--format', 'json').stdout)).toMatchObject({ reason: 'usage' });
+    expect(spawnSync('git', ['rev-parse', '--verify', 'HEAD'], { cwd: dir }).status).not.toBe(0);
+    const again = JSON.parse(run(stub.env, dir, 'init', '--format', 'json').stdout) as { mode: string; written: string[] };
+    expect(again.mode).toBe('materialise');
+    expect(again.written.filter((p) => !p.startsWith('packets/'))).toEqual([]);
+    expect(readFileSync(stub.log, 'utf8')).toContain('add -D --save-exact @devai-nyx/cli@3.0.0');
+    expect(git(dir, 'log', '--format=%s|%(trailers:key=Packet,valueonly)')).toBe('chore(packets): seed CMP-DEMO-001|\nchore(template): devai init demo|PKT-DEMO-001');
+    expect(git(dir, 'status', '--porcelain')).toBe('');
+    expect(JSON.parse(run(stub.env, dir, 'init', '--format', 'json').stdout)).toMatchObject({ mode: 'attach' });
   });
 });
 

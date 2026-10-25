@@ -24,7 +24,7 @@ const ROWS: string[] = [
   'apps/api/package.json', 'apps/api/tsconfig.json', 'apps/api/src/main.ts', 'apps/api/src/app.module.ts', 'apps/api/src/validation.filter.ts',
   'apps/web/package.json', 'apps/web/tsconfig.json', 'apps/web/angular.json', 'apps/web/src/main.ts', 'apps/web/src/index.html',
   'apps/web/src/app/app.component.ts', 'apps/web/src/app/app.config.ts', 'apps/web/src/app/app.routes.ts',
-  'test/support/utils/runtime.ts', 'test/integration/request-id.integration.spec.ts', 'test/db/rls-isolation.db.spec.ts', 'test/e2e/shell.playwright.ts',
+  'test/support/utils/runtime.ts', 'test/support/angular.setup.ts', 'test/integration/request-id.integration.spec.ts', 'test/db/rls-isolation.db.spec.ts', 'test/e2e/shell.playwright.ts',
   'docs/adopters/layout.md', 'docs/_ia/categories.json',
   'docs/framework/contracts/openapi.json', 'docs/framework/contracts/public-api-baselines.json',
   '.agents/skills/devai-task/SKILL.md', '.agents/skills/devai-spec/SKILL.md', '.agents/skills/devai-test/SKILL.md', '.agents/skills/devai-review/SKILL.md',
@@ -187,6 +187,20 @@ describe('template pins (07 §2, 09 §5)', () => {
     expect(lock).toMatch(/^lockfileVersion: '9.0'$/m);
     for (const importer of ['.', 'apps/api', 'apps/web']) expect(lock).toContain(`\n  ${importer}:\n`);
     expect(lock).toContain("'@stynx-nyx/eslint-config@3.0.0'");
+  });
+
+  it('the unit tier is two projects: unit-api (node) and unit-web (jsdom, Angular setup file) (D-105, D-110)', () => {
+    const config = tpl('vitest.config.ts');
+    for (const s of ["name: 'unit-api'", "environment: 'node'", "name: 'unit-web'", "environment: 'jsdom'", "setupFiles: ['test/support/angular.setup.ts']"]) expect(config).toContain(s);
+    const setup = tpl('test/support/angular.setup.ts');
+    for (const s of ["import '@angular/compiler';", 'provideZonelessChangeDetection()', 'BrowserTestingModule', 'platformBrowserTesting()']) expect(setup).toContain(s);
+    const dev = (JSON.parse(tpl('package.json')) as { devDependencies: Record<string, string> }).devDependencies;
+    for (const n of ['@angular/compiler', '@angular/core', '@angular/platform-browser']) expect([n, dev[n]]).toEqual([n, dev['@angular/compiler-cli']]);
+    expect(dev['jsdom']).toBe('30.1.3'); // D-110
+  });
+
+  it('apps/api and apps/web build with tsc -b, so pnpm -r build builds each referenced module first (D-108)', () => {
+    for (const app of ['api', 'web']) expect([app, (JSON.parse(tpl(`apps/${app}/package.json`)) as { scripts?: unknown }).scripts]).toEqual([app, { build: 'tsc -b' }]);
   });
 
   it('tsconfigs extend the published presets (09 §1.1)', () => {

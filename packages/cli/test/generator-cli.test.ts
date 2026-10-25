@@ -56,6 +56,8 @@ describe('09 §4 campaign steps 3–4 (PKT-DEMO-002)', () => {
     expect(out.some((l) => l.includes('apps/web/tsconfig.json'))).toBe(false);
     expect(out).toContain('mount: add "domain/notes/api/src" to .stynxrc.json apiCoverage.sourceRoots');
     expect(out).toContain('mount: add "domain/notes" to .stynxrc.json publicApi.packageRoots');
+    // D-106: the build is the last mount line, after the install the first line names
+    expect(out.filter((l) => l.startsWith('mount: ')).at(-1)).toBe('mount: then pnpm -r build');
     // 09 §6 row `database/seed/modules.txt  appended  <sha256>  domain/notes/db/demo_notes_notes.sql`
     const line = s6.find((x) => x.path === 'database/seed/modules.txt')!.synopsis[0]!.replace('<sha256>', sha256(readFileSync(resolve(dir, SQL))));
     expect(read(dir, 'database/seed/modules.txt')).toBe(`${line}\n`);

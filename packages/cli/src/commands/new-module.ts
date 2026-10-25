@@ -190,13 +190,15 @@ export async function newModule(flags: NewModuleFlags, format: Format, root: str
   const appended = sqlEntry !== undefined && sqlBytes !== null && appendModulesTxt(root, `${out}/${sql}`, sha256(sqlBytes));
   const cls = `${pascal(config.productPrefix)}${block.module.name}`;
   const pkg = `@${config.productPrefix}/${block.module.slug}`;
-  // 09 §2, D-087, D-093: printed, never acted on; mounting is the generate packet's job.
+  // 09 §2, D-087, D-093, D-106: printed, never acted on; mounting is the generate packet's job.
   const mount = [
     `mount: add "${pkg}-api": "workspace:*" to apps/api/package.json and ${cls}Module to apps/api/src/app.module.ts imports, then pnpm install`,
     `mount: add { "path": "../../${out}/api" } to apps/api/tsconfig.json references`,
     `mount: add "${out}/api/src" to .stynxrc.json apiCoverage.sourceRoots`,
     `mount: add "${out}" to .stynxrc.json publicApi.packageRoots`,
     ...(options.web ? [`mount: add "${pkg}-web": "workspace:*" to apps/web/package.json and ${cls.charAt(0).toLowerCase()}${cls.slice(1)}Routes to apps/web/src/app/app.routes.ts, then pnpm install`, `mount: add { "path": "../../${out}/web" } to apps/web/tsconfig.json references`] : []),
+    // D-106: the apps import the module packages through their built `exports` (09 §4 step 3).
+    'mount: then pnpm -r build',
   ];
   if (format === 'json') {
     const doc = { specId: spec.id, specSha256: spec.sha256, machineBlockSha256: spec.machineBlockSha256, out, files: lines.map(({ path, mode, sha256: s, action }) => ({ path, mode, sha256: s, action })), accepted: false, exitCode: 0 };
