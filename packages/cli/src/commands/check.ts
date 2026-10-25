@@ -10,7 +10,7 @@ import { CacheStore, prune } from '../cache/store.js';
 import type { DevaiConfig } from '../config.js';
 import { reachable, running } from '../db/provide.js';
 import { dropScratch, pruneScratch, SCRATCH_DIR } from '../db/scratch.js';
-import { diffNameStatus, GitFailed, GitMissing, lsFilesTracked, lsFilesUntracked, revParse, show, topLevel } from '../git/git.js';
+import { diffNameStatus, EMPTY_TREE, GitFailed, GitMissing, lsFilesTracked, lsFilesUntracked, revParse, show, topLevel } from '../git/git.js';
 import { CommandRefusal, cliVersion, type Format, loadConfig, resolveRuntime } from '../main.js';
 import { acceptOutcome } from '../nodes/accept.js';
 import { actionlint } from '../nodes/actionlint.js';
@@ -105,9 +105,6 @@ export interface CheckResult {
   stdout: string;
   exitCode: 0 | 1 | 2;
 }
-
-/** git's empty tree: what the index is compared with before a repository's first commit. */
-export const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
 
 /**
  * The repository root and HEAD. `unborn` admits a HEAD without a commit, read as the empty tree: the

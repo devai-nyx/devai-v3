@@ -7,7 +7,7 @@ import ignore from 'ignore';
 import { parse as parseYaml } from 'yaml';
 import { sha256 } from '../candidate/digest.js';
 import { frame } from '../cache/key.js';
-import { diffNameStatus, log } from '../git/git.js';
+import { diffNameStatus, EMPTY_TREE, log } from '../git/git.js';
 import { spawn } from '../proc/spawn.js';
 import { type NodeId, NODE_IDS } from '../runner/edges.js';
 import type { InventoryData, NodeOutcome, Population, RunContext } from '../runner/run.js';
@@ -316,7 +316,7 @@ export async function runInventory(ctx: RunContext): Promise<{ outcome: NodeOutc
   const changedSet = new Set<string>(ctx.hook === 'pre-commit'
     ? (await diffNameStatus(root, { cached: true, diffFilter: 'ACMRD' })).map((d) => d.path)
     : [
-      ...(await diffNameStatus(root, { from: ctx.head })).map((d) => d.path),
+      ...(await diffNameStatus(root, { from: ctx.head === EMPTY_TREE ? EMPTY_TREE : 'HEAD' })).map((d) => d.path),
       ...listing.untracked,
       ...(ctx.base ? (await diffNameStatus(root, { from: ctx.base, to: 'HEAD' })).map((d) => d.path) : []),
     ]);

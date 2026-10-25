@@ -16,6 +16,9 @@ export class GitFailed extends Error {
   }
 }
 
+/** git's empty tree: what the index is compared with before a repository's first commit. */
+export const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+
 const GIT_MAX_BYTES = 1024 * 1024 * 1024;
 const GIT_TIMEOUT_MS = 300_000;
 
