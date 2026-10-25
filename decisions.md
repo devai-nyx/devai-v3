@@ -1428,7 +1428,7 @@ of STYNX work on the critical path; (c) reports a missing verification as "nothi
    LINT002 it then raises on 09 §6's DDL is settled (devai-v3#58 Open 1–3);
 6. LINT010 reads both prefix groups of `YYYYMMDD_NN_` (D-085).
 7. the guard rejects a token whose `tenant_id` is no platform tenant with 403 (added by D-129,
-   2026-10-25; devai-v3#81 Open 3).
+   2026-10-25; devai-v3#81 Open 3; numbered 7, not 6, by D-134).
 The first panel's (a) read step 4 as "exit 0, or exit 2 whose only non-PASS rows are `UNKNOWN
 tooling-missing` or FAILs traced to the S10 list"; the recording PR (devai-v3#68) found it
 self-contradictory, since a `FAIL` row makes the exit 1 (02 §8). A second panel the same day restated
@@ -1938,13 +1938,49 @@ paragraph). Code follow-up (R8): `packages/cli/fixtures/campaign/notes.service.s
 runner. Chosen: (a). Source: Owner (panels, 2026-10-25; packet `PACKET-2026-10-25-R8.md`, Owner's
 workspace).
 
+## D-132 · 2026-10-25 · The template's `tsconfig.test.json` is a `typecheck` project
+[fact] 05 §3's `test` row requires `typecheck` to PASS, but an acceptance file is in no `tsc -b`
+project: the module's `tsconfig.json` includes `src` only (09 §6), and `inventory` does not build the
+template's `tsconfig.test.json`. Once `typecheck`'s population became the closure (devai-v3#82;
+D-125), a `test` packet's `typecheck` is always `SKIPPED` `no affected project` and PL-15 fails it, so
+campaign step 6 cannot reach exit 0 (devai-v3#82 Open 1). Options: (a) the template's
+`tsconfig.test.json` is a `typecheck` project: it `references` the module tsconfigs and includes
+`domain/*/api/test/**`, `domain/*/web/test/**`, `apps/*/test/**` and `test/**`; `inventory`'s `tsc -b`
+closure includes it when a test file changes, so a `test` packet's `typecheck` runs and PL-15 is
+satisfiable; (b) 05 §3's `test` row drops `typecheck`; (c) `lint-tests` stands in for the acceptance
+file. Recommended: (a). The acceptance file is TypeScript the cycle runs, and 09 §1.1 already puts every
+`test/` tree under `typecheck`; (b) leaves it unchecked; (c) lints without type-checking. This is not
+D-093's rejected (c): the test config is one project in the closure, not the single `tsc -b` entry.
+Amends 09 §1.1 (the `tsconfig.test.json` row), 08 B.1 (`typecheck` population). 05 §3 and PL-15 are
+unchanged. Code follow-up: the template's `tsconfig.test.json` and `inventory`'s closure. Chosen: (a).
+Source: Owner (panels, 2026-10-25; packet `PACKET-2026-10-25-R8.md`, second round, Owner's
+workspace).
+
+## D-133 · 2026-10-25 · `unit`'s population is spec files in a package containing a changed file or an affected project
+[fact] 08 B.1 gives `unit`'s population as "`*.spec.ts` … in a `typecheck`-affected package"; the code
+selects spec files in changed packages (`unitFiles`), which devai-v3#82 left unchanged while moving
+`typecheck` to the closure (devai-v3#82 Open 2). Options: (a) `unit`'s population stays "spec files in
+a changed package" as coded; 08 B.1's "`typecheck`-affected package" is reworded to "a package
+containing a changed file or an affected project"; (b) follow the closure exactly. Recommended: (a).
+(b) would `SKIP` `unit` on a test-only diff whose spec file sits in no project's closure. Amends 08 B.1
+(`unit` population). No code change. Chosen: (a). Source: Owner (panels, 2026-10-25; packet `PACKET-2026-10-25-R8.md`, second round, Owner's
+workspace).
+
+## D-134 · 2026-10-25 · The tenant check is S10 #7; R8 closes on a green `matrix` in both runtimes with its Open list ruled
+[fact] D-129 ruled the tenant check "item #6" while D-100's list already has an item 6 (LINT010); the
+recording PR numbered it 7 (devai-v3#83 Open 1). 12 §4's R8 row requires "sensor evidence committed;
+§3.1 filled", which D-128 defers until S10 #4 and D-124 (devai-v3#83 Open 2). Options: (a) the D-129
+STYNX item is S10 **#7** as recorded (no renumbering); 12 §4's R8 row is amended so R8 closes on a green
+`matrix` in both runtimes with its Open list ruled, while "sensor evidence committed" and 12 §3.1's
+token rows are marked pending S10 #4 and D-124 and re-checked at R9; (b) R8 stays open until the
+evidence exists; (c) renumber S10. Recommended: (a). The evidence waits on STYNX, which (b) would put
+on the release's critical path; (c) changes citations already made. Amends 12 §4 (R8 row), 12 §3.1
+(pending mark), D-100 (item 7's note). Chosen: (a). Source: Owner (panels, 2026-10-25; packet `PACKET-2026-10-25-R8.md`, second round, Owner's
+workspace).
+
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
 - Mutation testing's home (D-004: outside the cycle or not at all) — not blocking v3.0.
 - 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck (D-058) — not blocking v3.0.
 - STYNX local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 (D-069) — STYNX item, not blocking 3.0.0.
-- D-129's new S10 item was ruled as "item #6", but D-100's list already has an item 6 (LINT010's prefix
-  groups); it is recorded as item 7. Whether the Owner meant a renumbering is not stated.
-- D-128 defers the sensor evidence and 12 §3.1's model rows, while 12 §4's R8 row still reads "with sensor
-  evidence committed; §3.1 filled". Whether R8 closes before the evidence exists is not ruled.

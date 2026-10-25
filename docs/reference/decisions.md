@@ -1,14 +1,14 @@
 ---
 title: Decisions
 sidebar_position: 12
-description: Index of the 131 numbered decisions D-001 to D-131 in decisions.md, with date and title.
+description: Index of the 134 numbered decisions D-001 to D-134 in decisions.md, with date and title.
 ---
 
 # Decisions
 
-[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **131 decisions** (D-001…D-131), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
+[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **134 decisions** (D-001…D-134), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
 
-Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 28 on 2026-10-24 (D-075…D-102), 29 on 2026-10-25 (D-103…D-131). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
+Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 28 on 2026-10-24 (D-075…D-102), 32 on 2026-10-25 (D-103…D-134). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
 
 | Id | Date | Title |
 |---|---|---|
@@ -143,18 +143,19 @@ Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-0
 | D-129 | 2026-10-25 | The shell maps 401/403 to the route's error contract and adds `requestId`; the S10 list gains the tenant check |
 | D-130 | 2026-10-25 | R8's campaign readings are ratified (devai-v3#81 Open 6, 7, 8, 12, 13, 17); 12 §4's R8 row names N1–N20 |
 | D-131 | 2026-10-25 | The token helper is a section of the acceptance file; D-098's fixtures gain `notes.service.spec.ts` |
+| D-132 | 2026-10-25 | The template's `tsconfig.test.json` is a `typecheck` project |
+| D-133 | 2026-10-25 | `unit`'s population is spec files in a package containing a changed file or an affected project |
+| D-134 | 2026-10-25 | The tenant check is S10 #7; R8 closes on a green `matrix` in both runtimes with its Open list ruled |
 
 ## Still open
 
-The file's closing "Open" section lists seven items ([decisions.md](../../decisions.md)):
+The file's closing "Open" section lists five items ([decisions.md](../../decisions.md)):
 
 - [D-026](../../decisions.md) (`kind:` packets) is provisional until the first DETRAN module is built with `kind:` packets.
 - [D-047](../../decisions.md) (edit-loop ceiling) is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
 - Mutation testing's home ([D-004](../../decisions.md)): outside the cycle or not at all; not blocking v3.0.
 - The 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck ([D-058](../../decisions.md)); not blocking v3.0.
 - STYNX's local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 ([D-069](../../decisions.md)); a STYNX item, not blocking 3.0.0.
-- [D-129](../../decisions.md)'s new S10 item, ruled as "#6" while D-100's list already has an item 6, is recorded as item 7; not stated whether a renumbering was meant.
-- [D-128](../../decisions.md) defers the sensor evidence while 12 §4's R8 row still requires it; whether R8 closes without it is not ruled.
 
 ## How decisions are made
 
