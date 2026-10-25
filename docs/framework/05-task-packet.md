@@ -299,9 +299,9 @@ The campaign folder as `devai init` ships it: `campaign.md` (goal, business sour
 ids in order), `PKT-DEMO-001` (`spec`, wrote `SPEC-DEMO-001`; complete, since the approved spec is in
 the template commit, whose message carries `Packet: PKT-DEMO-001`), `PKT-DEMO-002` (`generate`),
 `PKT-DEMO-003` (`test`, §3), `PKT-DEMO-004` (`code`, below). `devai init` commits the template first,
-then renders the packets and commits them (`chore(packets): seed CMP-DEMO-001`): `base` is the
-template commit for `PKT-DEMO-001` and the packets commit for `PKT-DEMO-002`, `003` and `004`, so
-`init`'s second commit is outside their `base..candidate` (D-095). `PKT-DEMO-002` declares
+then renders the packets with `base` = that commit and commits them (`chore(packets): seed
+CMP-DEMO-001`). The campaign moves `PKT-DEMO-002`, `003` and `004` past that second commit with
+`devai packet rebase … --to HEAD` before each one's first run (09 §4 steps 3, 5, 7; D-095). `PKT-DEMO-002` declares
 `protected: [spec, standards, acceptance]`, the classes a `generate` packet touches by construction
 (`.stynxrc.json` is `standards`; its own file is `spec`), and its `paths.allowed` are 08 A.4's
 `generate` globs (D-095). `spec.sha256` is the digest of the shipped `specs/notes/SPEC-DEMO-001.md` (06 NOTES);

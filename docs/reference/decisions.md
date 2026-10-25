@@ -103,7 +103,7 @@ Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-0
 | D-089 | 2026-10-24 | Stale citations after STYNX 3.0.0 (R6 W2 fact sheet a1–a9; a10 added in review) |
 | D-090 | 2026-10-24 | v2 keeps a bounded stabilization window until the first adopter module is green on v3; H7 moves after it (devai-v3#39; amends D-065 items 13 and 16) |
 | D-091 | 2026-10-24 | DEVAI requires nothing beyond GitHub Free; D-080's ruleset is retired |
-| D-092 | 2026-10-24 | The two `domain/*` workspace globs are seed globs: no finding while no module is listed (refines D-084 item 7) |
+| D-092 | 2026-10-24 | The two `domain/*` workspace globs are seed globs and never raise the no-match finding (refines D-084 item 7) |
 | D-093 | 2026-10-24 | Module tsconfigs carry `rootDir` and `composite`; the mount adds the module to the app's `references` |
 | D-094 | 2026-10-24 | Each module package declares what its emitted code imports; the root carries tooling only |
 | D-095 | 2026-10-24 | The `generate` packet's globs, protected classes and `base` |
@@ -117,15 +117,13 @@ Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-0
 
 ## Still open
 
-The file's closing "Open" section lists seven items ([decisions.md](../../decisions.md)):
+The file's closing "Open" section lists five items ([decisions.md](../../decisions.md)):
 
 - [D-026](../../decisions.md) (`kind:` packets) is provisional until the first DETRAN module is built with `kind:` packets.
 - [D-047](../../decisions.md) (edit-loop ceiling) is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
 - Mutation testing's home ([D-004](../../decisions.md)): outside the cycle or not at all; not blocking v3.0.
 - The 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck ([D-058](../../decisions.md)); not blocking v3.0.
 - STYNX's local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 ([D-069](../../decisions.md)); a STYNX item, not blocking 3.0.0.
-- [D-095](../../decisions.md)'s `base` = the packets commit for PKT-DEMO-002/003/004: a packet file cannot name the commit that contains it; how it is reached is not ruled.
-- [D-092](../../decisions.md)'s seed-glob exemption ends at the first module, so `domain/*/web` fails `inventory` after a module generated without `--web`; not ruled.
 
 ## How decisions are made
 

@@ -14,7 +14,7 @@ Tags: `[fact]` cited source, `[inference]` consequence, `[opinion]` contract cho
 1. Writes the §1.1 tree, running `git init` if needed.
 2. Runs `pnpm add -D --save-exact @devai-nyx/cli@<its own version>`, which installs the workspace and completes `pnpm-lock.yaml`; a failed install is exit 2 `tooling-missing` with that command as the remedy (D-097).
 3. Commits the tree as `chore(template): devai init <product>` with the trailer `Packet: PKT-DEMO-001`, with the hooks live (no `--no-verify`).
-4. Renders the four `CMP-DEMO-001` packets, `base` = the template commit for PKT-DEMO-001 and the packets commit for PKT-DEMO-002/003/004 (D-095), and commits them as `chore(packets): seed CMP-DEMO-001` (08 A.1).
+4. Renders the four `CMP-DEMO-001` packets with `base` = the template commit and commits them as `chore(packets): seed CMP-DEMO-001` (08 A.1).
 
 *Attach* (`devai.json` present, e.g. a fresh clone): writes only the three hooks and sets `core.hooksPath scripts/hooks`, `user.name` and `user.email` in the worktree config (D-057, D-058).
 
@@ -39,7 +39,7 @@ Module baselines therefore precede any root migration that alters them. No conne
 
 [opinion] **Fixture and packets.** The five fixture bodies are 06 §7's, byte for byte, in every configuration. The spec is 10,035 bytes, sha256 `12e9041f…f30a` (en-US and pt-BR, D-059; R-5/R-6 split, D-064). Init never translates or re-pins them.
 
-The shipped spec carries en-US and pt-BR `i18n` values (06 §7, D-059), so `--locales en-US,pt-BR` passes SL12 and an en-US-only workspace accepts the extra D-014 locale (06 §2). The packets are 05 §7's, with `base` = the template commit for PKT-DEMO-001 and the packets commit for the other three (D-095). On a fresh template, `--packet PKT-DEMO-002 --full` prints PL-15's `required node skipped for kind: generate: generated (inventory: no generation-manifest.json under domain/)`.
+The shipped spec carries en-US and pt-BR `i18n` values (06 §7, D-059), so `--locales en-US,pt-BR` passes SL12 and an en-US-only workspace accepts the extra D-014 locale (06 §2). The packets are 05 §7's, with `base` = the template commit; the campaign rebases PKT-DEMO-002/003/004 before their runs (§4, D-095). On a fresh template, `--packet PKT-DEMO-002 --full` prints PL-15's `required node skipped for kind: generate: generated (inventory: no generation-manifest.json under domain/)`.
 
 ### 1.1 Template file table
 
@@ -86,7 +86,7 @@ Mode is `seed` unless stated. "init-owned" marks the files attach mode rewrites.
 | `.agents/skills/{devai-task,devai-spec,devai-test,devai-review}/SKILL.md` | Skill texts (10's) | harness on invocation (02 §10) | seed | front matter |
 | `product/demo/README.md` · `rules/RN-DEMO-001.md` · `rules/RN-DEMO-002.md` · `product/use-cases/UC-DEMO-001.json` | 06 §7 bodies, byte-identical | `spec-lint` SL02, SL07 · `route-contract` · `protected:product` | seed (bytes fixed) | — |
 | `specs/notes/SPEC-DEMO-001.md` | 06 §7 body, 10,035 bytes, `12e9041f…f30a` | generator · `spec-lint` · `route-contract` · `spec-tests` · `packet-scope` | seed (bytes fixed) | — |
-| `packets/CMP-DEMO-001/campaign.md` · `PKT-DEMO-001…004.md` | 05 §7 campaign: `001` spec (complete), `002` generate, `003` test with `unimplemented: [R-1, R-2, R-4]`, `004` code; `base` = template commit for `001`, packets commit for `002`–`004` (D-095); `002`'s globs per E-5-07 and 08 A.4, `protected: [spec, standards, acceptance]` (D-095) | `packet-scope` · `accept` · `packets status` | seed | front matter |
+| `packets/CMP-DEMO-001/campaign.md` · `PKT-DEMO-001…004.md` | 05 §7 campaign: `001` spec (complete), `002` generate, `003` test with `unimplemented: [R-1, R-2, R-4]`, `004` code; `base` = template commit; `002`'s globs per E-5-07 and 08 A.4, `protected: [spec, standards, acceptance]` (D-095) | `packet-scope` · `accept` · `packets status` | seed | front matter |
 
 Not created, because nothing reads them (D-055, P-5-09):
 - `CONTRIBUTING.md`, which `layout`'s root-guide allowlist excludes (04 §1, E-5-05).
@@ -194,8 +194,8 @@ Controller drift is `route-contract`'s finding (02 §7).
 [opinion] Every cell runs in a temporary workspace: clean registry install, no STYNX checkout, product `demo`, browsers provisioned. Each option cell runs the campaign as commits:
 1. `init`.
 2. `--packet PKT-DEMO-002 --full`: PL-15 line, exit 1.
-3. `new module [--web]`, then mount, `pnpm install` and the write pairs. Commit with `Packet: PKT-DEMO-002`.
-4. `--packet PKT-DEMO-002 --full`: exit 0, or, until STYNX ships the S10 list (D-100), exit 2 whose only non-PASS rows are `UNKNOWN tooling-missing` or FAILs traced to the S10 list (D-100 also reads an exit 1 whose FAILs are all traced).
+3. `devai packet rebase packets/CMP-DEMO-001/PKT-DEMO-002.md --to HEAD` (moves its `base` past `init`'s packets commit, D-095), `new module [--web]`, then mount, `pnpm install` and the write pairs. Commit with `Packet: PKT-DEMO-002`.
+4. `--packet PKT-DEMO-002 --full`: exit 0, or exit 1 or 2 where every `FAIL` row traces to the S10 list and every other non-PASS row is `UNKNOWN tooling-missing` or `prerequisite-failed` behind a traced row, until STYNX ships the S10 list (D-100).
 5. `packet rebase PKT-DEMO-003 --to HEAD`, add the reference acceptance file `packages/cli/fixtures/campaign/SPEC-DEMO-001.acceptance.spec.ts` as `domain/notes/api/test/acceptance/spec-demo-001.acceptance.spec.ts` (05 §3), commit.
 6. `--packet PKT-DEMO-003 --full --expect-red`: exit 0, `expect-red 3 (R-1, R-2, R-4)`.
 7. Rebase PKT-DEMO-004, add the reference service and repository bodies `packages/cli/fixtures/campaign/notes.service.ts` and `notes.repository.ts` as `domain/notes/api/src/`'s two seeds, commit.

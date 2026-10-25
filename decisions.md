@@ -1214,7 +1214,7 @@ D-003's amendment line, 08 A.1 (Output: one host line), 09 §1.1 (`devai.yml` ro
 none; H3 is complete with the protection read-back `[["build"],true]`.
 Source: Owner (H3 session, 2026-10-24).
 
-## D-092 · 2026-10-24 · The two `domain/*` workspace globs are seed globs: no finding while no module is listed (refines D-084 item 7)
+## D-092 · 2026-10-24 · The two `domain/*` workspace globs are seed globs and never raise the no-match finding (refines D-084 item 7)
 [fact] 09 §1.1 fixes `pnpm-workspace.yaml` as `apps/*`, `domain/*/api`, `domain/*/web` (`09-rail.md:55`),
 and D-084 item 7 makes a glob that matches no package a `FAIL` (`glob <g> matches no package`,
 `decisions.md:1025`; `08-cli-and-nodes.md:185`). Before the first module both `domain/*` globs match
@@ -1222,19 +1222,24 @@ nothing, so on every fresh scaffold `inventory` FAILs, every other node is `prer
 pre-commit hook refuses the pilot's first commit, and campaign step 2 never reaches PL-15
 (devai-v3#66 Open 1, devai-v3#59 Open 3, devai-v3#67 R8 seed: step 2 exit 1 in all eight cells).
 Options: (a) refine D-084 item 7: the two 09 §1.1 `domain/*` globs are *seed globs*, and a seed glob
-that matches no package is not a finding while `database/seed/modules.txt` lists no module or is
-absent; any other no-match glob, and a seed glob once a module is listed, stays `FAIL`; no template
-or generator change; (b) the template ships `apps/*` only and `devai new module` prints a mount line
+that matches no package is never a finding, whatever `database/seed/modules.txt` lists; any other
+no-match glob stays `FAIL`; no template or generator change; (b) the template ships `apps/*` only and `devai new module` prints a mount line
 adding `domain/*/api` (and `domain/*/web` with `--web`), with `pnpm-workspace.yaml` joining the
 `generate` globs; (c) keep the rule and document that the first module must be generated before the
 first commit. Recommended: (a). It changes one predicate and no bytes; (b) adds mount work and edits
 09 §1.1, 09 §2 and 08 A.4; (c) blocks the pilot's `init` → commit → PR flow and 12 §4 R6's `init`
-clause. D-084 is not edited; this entry states what it refines: item 7's `FAIL` keeps every glob
-except a seed glob in the state above. [inference] `layout`'s predicate "workspace globs name real
+clause. The first panel's (a) kept the exemption only while `modules.txt` lists no module; the
+recording PR (devai-v3#68) found that a module generated without `--web` then leaves `domain/*/web`
+matching nothing, so `inventory` FAILs at campaign step 4 of every non-`--web` cell, the default cell
+O2 included (devai-v3#67 R8 seed). A second panel the same day chose between (i) the seed globs never
+raise the finding and (ii) the generator edits `pnpm-workspace.yaml`; Chosen: (i), the text of (a)
+above; (ii) makes the generator edit a seed file it does not own (09 §2, D-033). D-084 is not edited;
+this entry states what it refines: item 7's `FAIL` keeps every glob except the two seed globs. [inference] `layout`'s predicate "workspace globs name real
 packages" (08 B.6) reads the same globs, so the same exemption applies there, or a fresh scaffold
 fails `layout` instead. Amends 08 B.1 (Status, Observation), 08 B.6 (Observation). No template
 doc states the rule (`docs/adopters/layout.md` ships in the template and names the globs only).
-Chosen: (a). Source: Owner (panels in the devai3 readiness session, 2026-10-24).
+Chosen: (a), with the second panel's (i). Source: Owner (panels in the devai3 readiness session,
+2026-10-24; exemption scope, second panel, 2026-10-24).
 
 ## D-093 · 2026-10-24 · Module tsconfigs carry `rootDir` and `composite`; the mount adds the module to the app's `references`
 [fact] 09 §6 gives `domain/notes/api/tsconfig.json` whole, without `rootDir` or `composite`
@@ -1276,7 +1281,9 @@ carries tooling only and 09 §1.1's root row drops "the STYNX packages emitted c
 only, with depcheck told to ignore workspace-package `missing dependency` for packages the root holds;
 (c) both places. Recommended: (a). It is what depcheck reads and pnpm installs once; (b) hides real
 gaps; (c) keeps two pins equal by hand. Amends 09 §6 (`api/package.json` row), 09 §1.1 (root
-`package.json` row), 09 §2 (seed `api/package.json`), 09 §2.1 (`module.*` row). Chosen: (a). Source:
+`package.json` row), 09 §2 (seed `api/package.json`), 09 §2.1 (`module.*` row), and 07 §2's app/testing
+packages row, which still read "current manifests 1.6.2" after D-089 and now names 3.0.0 (a D-089
+stale-text fix carried here). Chosen: (a). Source:
 Owner (panels in the devai3 readiness session, 2026-10-24).
 
 ## D-095 · 2026-10-24 · The `generate` packet's globs, protected classes and `base`
@@ -1294,19 +1301,27 @@ the second commit (`chore(packets): seed CMP-DEMO-001`) is inside `base..candida
 (`apps/web/src/app/app.routes.ts`, `.stynxrc.json`, `apps/api/tsconfig.json`,
 `apps/web/tsconfig.json`); PKT-DEMO-002 declares `protected: [spec, standards, acceptance]`, the
 classes a `generate` packet touches by construction; 09 §6 drops `api/test/acceptance/.gitkeep`, since
-the `test` packet creates the folder; `init` renders `base` = the packets commit for
-PKT-DEMO-002/003/004 and keeps the template commit for PKT-DEMO-001; (b) as (a), but `.stynxrc.json`
+the `test` packet creates the folder; `init` keeps `base` = the template commit for all four
+packets, and campaign step 3 runs `devai packet rebase packets/CMP-DEMO-001/PKT-DEMO-002.md --to HEAD`
+before the generate commit, as steps 5 and 7 already rebase PKT-DEMO-003 and PKT-DEMO-004, so
+`init`'s second commit is outside PKT-DEMO-002's `base..candidate`; (b) as (a), but `.stynxrc.json`
 leaves the `standards` class (02 §5), so no declaration is needed; (c) globs and `base` only,
 PKT-DEMO-002 keeps `protected: [spec]` and `review` gates on the mount. Recommended: (a). (b) weakens
 `protected-paths` on a file that gates `boundary` and `openapi`; (c) makes campaign step 4 need a
 model run, which 09 §4 keeps out of CI. [inference] Dropping `.gitkeep` also strikes it from 02 §7's
 outputs and seed list and from 05 §3's `generate` row, which named it as the ground for `spec-tests`
-`SKIPPED`; the ground is now the absent acceptance file. Amends 08 A.4 (`generate` globs), 08 A.1
-(Modes: `base`), 05 §3 (`generate` row), 05 §7 (campaign prose, PKT-DEMO-002's `protected`), 09 §1
-(Modes step 3, fixture paragraph), 09 §1.1 (packets row), 09 §2 (acceptance folder), 09 §2.1
-(`requirements[]` row), 09 §6 (`.gitkeep` row struck), 02 §7 (outputs, seed list),
-docs/adopters/install.md (`init` steps). Chosen: (a).
-Source: Owner (panels in the devai3 readiness session, 2026-10-24).
+`SKIPPED`; the ground is now the absent acceptance file. The first panel's (a) read "`init` renders
+`base` = the packets commit for PKT-DEMO-002/003/004"; the recording PR (devai-v3#68) found that a
+packet file inside that commit cannot name it, since the commit's sha depends on the file's bytes. A
+second panel the same day chose for that clause between (i) `init` keeps the template commit as every
+packet's `base` and campaign step 3 rebases PKT-DEMO-002 onto HEAD before the generate commit, and
+(ii) the `generate` globs admit `packets/**`; Chosen: (i), the text of (a) above; (ii) would let a
+`generate` packet edit every packet of its campaign. Amends 08 A.4 (`generate` globs), 05 §3
+(`generate` row), 05 §7 (campaign prose, PKT-DEMO-002's `protected`), 09 §1.1 (packets row), 09 §2
+(acceptance folder), 09 §2.1 (`requirements[]` row), 09 §4 (step 3), 09 §6 (`.gitkeep` row struck),
+02 §7 (outputs, seed list). Chosen: (a), with the second panel's (i).
+Source: Owner (panels in the devai3 readiness session, 2026-10-24; `base` clause, second panel,
+2026-10-24).
 
 ## D-096 · 2026-10-24 · `.prettierignore` names the fixed-byte law texts; the generator formats its own output
 [fact] `format` runs Prettier 3.9.6 with the template options over every changed file (08 B.2). The
@@ -1396,9 +1411,10 @@ route (D-087); the migration linter matches unquoted identifiers only, lacks `au
 token, and will raise LINT002 on 09 §6's DDL once fixed (devai-v3#58 Open 1–3); LINT010 reads one
 prefix group (D-085). `--full` is lifted but incomplete (devai-v3#67 Open 8). Options: (a) R6 closes
 when W9's clause check is green modulo the S10 list: a cell whose only non-PASS rows are
-`UNKNOWN: tooling-missing` or FAILs traced to a listed STYNX defect counts as met; 09 §4 step 4 reads
-"exit 0, or exit 2 whose only non-PASS rows are `UNKNOWN tooling-missing` or FAILs traced to the S10
-list, until STYNX ships"; the S10 list is recorded here; `--full` completion is W10 code work; (b) R6
+`UNKNOWN: tooling-missing` or FAILs traced to a listed STYNX defect counts as met; until STYNX ships,
+09 §4 step 4 is met when the exit is 0, or 1 or 2 where every `FAIL` row traces to the S10 list and
+every other non-PASS row is `UNKNOWN: tooling-missing` or `prerequisite-failed` behind a traced row;
+the S10 list is recorded here; `--full` completion is W10 code work; (b) R6
 stays open until STYNX ships S10 and R7–R10 wait; (c) D-088 revised: absent STYNX pairs make the
 observations `SKIPPED`, so `generated` can PASS on the replay alone. Recommended: (a). (b) puts months
 of STYNX work on the critical path; (c) reports a missing verification as "nothing to do".
@@ -1411,16 +1427,16 @@ of STYNX work on the critical path; (c) reports a missing verification as "nothi
 5. the migration linter matches quoted identifiers, counts `author_alias` as a PII token, and the
    LINT002 it then raises on 09 §6's DDL is settled (devai-v3#58 Open 1–3);
 6. LINT010 reads both prefix groups of `YYYYMMDD_NN_` (D-085).
-[inference] A FAIL row makes the exit 1 (02 §8), so a cell whose non-PASS rows include a traced FAIL
-exits 1, not 2; the reading recorded in 09 §4 and 12 §4 is the rows, not the code: exit 0, exit 2 with
-only `tooling-missing` rows, or exit 1 whose FAILs are all traced, the other non-PASS rows being such
-`tooling-missing` rows or `prerequisite-failed` rows whose prerequisite is a traced row. The ruling
-names the first two; the third follows from "FAILs traced to the S10 list" and is listed for the
-Owner. D-088 is not edited; its `tooling-missing` rows are item 1 of the list. Amends 12 §4 (R6 row,
+The first panel's (a) read step 4 as "exit 0, or exit 2 whose only non-PASS rows are `UNKNOWN
+tooling-missing` or FAILs traced to the S10 list"; the recording PR (devai-v3#68) found it
+self-contradictory, since a `FAIL` row makes the exit 1 (02 §8). A second panel the same day restated
+it as the text of (a) above (exit 0, or 1 or 2 with every `FAIL` traced and every other non-PASS row
+`tooling-missing` or `prerequisite-failed` behind a traced row); Chosen. D-088 is not edited; its `tooling-missing` rows are item 1 of the list. Amends 12 §4 (R6 row,
 in place: `docs/history/12-succession.md` header note), 09 §4 (step 4), `docs/history/index.md` (12's
 status line), docs/dev/release.md (where things stand). Code follow-up (W10): `--full` completion (`accepted: true` on exit 0, the report write
 on text-format `--full`, `db-apply` reuse, the scratch database dropped after the last consumer;
-devai-v3#67 Open 8). Chosen: (a). Source: Owner (panels in the devai3 readiness session, 2026-10-24).
+devai-v3#67 Open 8). Chosen: (a), as restated by the second panel. Source: Owner (panels in the
+devai3 readiness session, 2026-10-24; step 4 exit, second panel, 2026-10-24).
 
 ## D-101 · 2026-10-24 · The sensor runs without `--bare`
 [fact] `claude --help` 2.1.292: `--bare` makes authentication strictly `ANTHROPIC_API_KEY` or
@@ -1461,5 +1477,3 @@ session, 2026-10-24).
 - Mutation testing's home (D-004: outside the cycle or not at all) — not blocking v3.0.
 - 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck (D-058) — not blocking v3.0.
 - STYNX local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 (D-069) — STYNX item, not blocking 3.0.0.
-- D-095's `base` for PKT-DEMO-002/003/004 is "the packets commit", which a packet file inside that commit cannot name (its sha depends on the file's bytes); how `init` or the campaign reaches it (e.g. `packet rebase PKT-DEMO-002 --to HEAD` in campaign step 3's commit) is not ruled — blocks campaign step 4 in every R8 cell.
-- D-092's seed-glob exemption ends once `database/seed/modules.txt` lists a module, so a module generated without `--web` leaves `domain/*/web` matching no package and `inventory` FAILs at campaign step 4 of every non-`--web` cell (devai-v3#67 R8 seed) — not ruled.

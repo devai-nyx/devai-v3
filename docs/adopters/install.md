@@ -60,9 +60,9 @@ There is no `--web` on `init`: both the API and the web shell ship from day one
    and completes `pnpm-lock.yaml` ([D-097](../../decisions.md));
 3. commits the tree as `chore(template): devai init <product>` with the trailer
    `Packet: PKT-DEMO-001`, with the hooks live;
-4. renders the four `CMP-DEMO-001` packets and commits them as `chore(packets): seed CMP-DEMO-001`;
-   `base` is the template commit for `PKT-DEMO-001` and the packets commit for the other three
-   ([D-095](../../decisions.md));
+4. renders the four `CMP-DEMO-001` packets with `base` set to the template commit and commits them
+   as `chore(packets): seed CMP-DEMO-001`; each later packet is rebased onto `HEAD` before its first
+   run ([D-095](../../decisions.md));
 5. sets, in the current worktree's git config, `core.hooksPath scripts/hooks`,
    `user.name <product>-agent` and `user.email agent@<product>.local`
    ([02 §5](../framework/02-architecture.md));
