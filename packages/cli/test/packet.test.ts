@@ -31,6 +31,11 @@ describe('05 §2 / PL-01: front matter and sections', () => {
     expect(p.lineOf(['base'])).toBe(9);
   });
 
+  it('after and supersedes admit packet ids only, so a CMP- trailer value never satisfies PL-12 (D-122)', () => {
+    expect(refused(packetText({ extra: 'after: [CMP-DEMO-001]' }))).toMatchObject({ reason: 'packet-invalid' });
+    expect(refused(packetText({ extra: 'supersedes: CMP-DEMO-001' }))).toMatchObject({ reason: 'packet-invalid' });
+  });
+
   it('FAIL: packet invalid: <path>:<line> <yaml error | unknown field | blank | missing section>', () => {
     expect(refused(packetText({ extra: 'owner: me' }))).toEqual({ rule: 'PL-01', reason: 'packet-invalid', message: `packet invalid: ${PACKET}:10 unknown field 'owner'` });
     expect(refused(packetText({ base: '' })).message).toBe(`packet invalid: ${PACKET}:9 blank 'base'`);

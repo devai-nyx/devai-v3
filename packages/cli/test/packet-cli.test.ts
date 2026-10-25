@@ -149,6 +149,18 @@ describe('devai packets status (A.5)', () => {
   });
 });
 
+describe('devai packets status: init\'s Packet: CMP-DEMO-001 carries no packet (D-122)', () => {
+  it('a packet file whose id is a campaign id never takes the CMP trailer commit as its evidence', () => {
+    const { dir, base, sha } = packetWorkspace();
+    gitIn(dir, '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '--allow-empty', '-m', 'chore(packets): seed CMP-DEMO-001', '-m', 'Packet: CMP-DEMO-001');
+    commitPacket(dir, packetText({ id: 'CMP-DEMO-001', base, sha }), 'packets/CMP-DEMO-001/PKT-DEMO-007.md');
+    const p = (json(dir, 'packets', 'status').out['campaigns'] as { packets: { id: string; state: string; evidence: string }[] }[])[0]!.packets.find((x) => x.id === 'CMP-DEMO-001')!;
+    expect(p.state).not.toBe('merged');
+    expect(p.state).not.toBe('candidate');
+    expect(p.evidence).not.toMatch(/carries Packet: CMP-DEMO-001|carrying Packet/);
+  });
+});
+
 describe('devai check --packet (A.3, B.25, B.26)', () => {
   it('packet-scope PASS and protected-paths over base..candidate; C.2-valid; exit 0', () => {
     const { dir, base, sha } = packetWorkspace();
