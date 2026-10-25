@@ -52,6 +52,9 @@ open (app `build` scripts, the `unit-api`/`unit-web` projects, `init` re-runs); 
 **R6 is closed** at 10/10 modulo the S10 list ([D-119](../../decisions.md), [D-100](../../decisions.md)) once
 devai-v3#74 merges: clause 2 is met at 09 §4 steps 1–4, and steps 5–8 are R8 acceptance
 ([D-098](../../decisions.md)).
+[D-120](../../decisions.md) and [D-121](../../decisions.md) settle how `init` recognises its two commits and
+ratify W11's `config-mismatch` readings; [D-122](../../decisions.md) admits the campaign id in that commit's
+`Packet:` trailer. With it, R6 leaves no open law question.
 R7 is confirmed on the release host.
 
 **Not blocking 3.0.0** (12 §4): the D-047 edit-loop p95 measurement (3.0.0 ships 90000); the first

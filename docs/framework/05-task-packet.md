@@ -28,7 +28,7 @@ Consumers are 02 §2 nodes; "dashboard" is the `--summary` line and the PR body 
 
 | Field | Type | Req. | Consumer | Meaning |
 |---|---|---|---|---|
-| `id` | `PKT-<PRODUCT>-<nnn>` | yes | all, dashboard | D-050. Equals the file stem; unique under `packets/**`; the `Packet:` commit trailer (02 §5) |
+| `id` | `PKT-<PRODUCT>-<nnn>` | yes | all, dashboard | D-050. Equals the file stem; unique under `packets/**`; the `Packet:` commit trailer (02 §5). The trailer's one other form, the campaign id `CMP-<PRODUCT>-nnn` on `init`'s packets commit only, is not an `id`: readers skip it and count that commit as carrying no packet (D-122) |
 | `title` | string ≤ 80 chars | yes | dashboard, `review` | Imperative, one line |
 | `kind` | `spec · generate · test · code · fix · standards` | yes | `accept`, `packet-scope`, `spec-tests` | Selects the required set (§3). D-026 provisional |
 | `spec.id` | `SPEC-<PRODUCT>-<nnn>` | yes unless `kind: standards` | `packet-scope`, `spec-tests`, `review`, dashboard | The setpoint; for `kind: spec` the spec this packet writes |
@@ -219,7 +219,7 @@ plus the working-tree copy. `packet-scope` executes 06's SL09 and SL10 here beca
 | PL-09 | Each `RV` line parses; its fingerprint prefix resolves to exactly one finding in the committed review history; the line's `R-n` and locator equal that finding's | `RV ac9f878d7da8 not found in .devai/review/PKT-DEMO-004.json or its history since base: dispositions bind to fingerprints; copy one from the report` · `RV ac9f… ambiguous (2 findings); use a longer prefix` | 1 | `packet-scope` |
 | PL-10 | `not-a-defect` claims hold against the **current** review: the finding is absent or contradicted by `basis: observed` evidence; `accepted-risk` downgrades that fingerprint only and never a deterministic node (D-035) | `RV ac9f… claimed not-a-defect, finding recurs (basis: observed) → verdict blockers` | 1 when `review` gates; else tallied in `review.json` | `review` |
 | PL-11 | Every named `R-n` is an `acceptance: yes` requirement of the spec at `spec.sha256` and appears in its `unimplemented[]` under `requirement:` (06); `--expect-red` given with an empty list, or a non-empty list on a kind other than `test`, is an error | `R-9 is not a requirement of SPEC-DEMO-001` · `R-3 is not in SPEC-DEMO-001 unimplemented[]: a test packet may expect red only for cases the spec declares unimplemented` · `--expect-red given but observations.unimplemented is empty` | 1 · 2 `expect-red-nothing-named` | `packet-scope` |
-| PL-12 | Each `after` id appears as a `Packet:` trailer in `git log <base>`; `supersedes` names an existing packet | `after: PKT-DEMO-003 is not merged below base 21d6…; advance base with devai packet rebase` | 1, `--full` only | `accept` |
+| PL-12 | Each `after` id appears as a `Packet:` trailer in `git log <base>` (`CMP-` values skipped, D-122); `supersedes` names an existing packet | `after: PKT-DEMO-003 is not merged below base 21d6…; advance base with devai packet rebase` | 1, `--full` only | `accept` |
 | PL-13 | `id`, `kind`, `spec.*`, `supersedes` equal their values at the introducing commit | `frozen field 'spec.sha256' changed since 9e41…; write a successor packet` | 1 | `packet-scope` |
 | PL-14 | `context` entries resolve at `base`, ranges inside the file, bounds of §2 kept; the packet is ≤ 200 lines | `context[0] product/demo/rules/RN-DEMO-001.md lines 1-40 exceeds the file (5 lines)` · `packet is 231 lines (limit 200): move prose to the spec or the module README` | 2 `packet-invalid` | `packet-scope` |
 | PL-15 | No node in the required set (§3) is `SKIPPED` | `required node skipped for kind: code: route-contract (inventory: no mounted routes in domain/notes)`; hint `deliver what the kind requires (05 §3); an empty population means the deliverable is missing` (D-084) | 1 | `accept` |
@@ -300,7 +300,7 @@ ids in order), `PKT-DEMO-001` (`spec`, wrote `SPEC-DEMO-001`; complete, since th
 the template commit, whose message carries `Packet: PKT-DEMO-001`), `PKT-DEMO-002` (`generate`),
 `PKT-DEMO-003` (`test`, §3), `PKT-DEMO-004` (`code`, below). `devai init` commits the template first,
 then renders the packets with `base` = that commit and commits them (`chore(packets): seed
-CMP-DEMO-001`). The campaign moves `PKT-DEMO-002`, `003` and `004` past that second commit with
+CMP-DEMO-001`, trailer `Packet: CMP-DEMO-001`, D-120). The campaign moves `PKT-DEMO-002`, `003` and `004` past that second commit with
 `devai packet rebase … --to HEAD` before each one's first run (09 §4 steps 3, 5, 7; D-095). `PKT-DEMO-002` declares
 `protected: [spec, standards, acceptance]`, the classes a `generate` packet touches by construction
 (`.stynxrc.json` is `standards`; its own file is `spec`), and its `paths.allowed` are 08 A.4's

@@ -14,9 +14,9 @@ Tags: `[fact]` cited source, `[inference]` consequence, `[opinion]` contract cho
 1. Writes the §1.1 tree, running `git init` if needed.
 2. Runs `pnpm add -D --save-exact @devai-nyx/cli@<its own version>`, which installs the workspace and completes `pnpm-lock.yaml`; a failed install is exit 2 `tooling-missing` with that command as the remedy (D-097).
 3. Commits the tree as `chore(template): devai init <product>` with the trailer `Packet: PKT-DEMO-001`, with the hooks live (no `--no-verify`).
-4. Renders the four `CMP-DEMO-001` packets with `base` = the template commit and commits them as `chore(packets): seed CMP-DEMO-001` (08 A.1).
+4. Renders the four `CMP-DEMO-001` packets with `base` = the template commit and commits them as `chore(packets): seed CMP-DEMO-001` with the trailer `Packet: CMP-DEMO-001` (08 A.1, D-120).
 
-A re-run on a repository whose `HEAD` is unborn or lacks either commit of steps 3–4 (a failed install or a hook-refused commit, D-107) is a first run, not attach mode (D-112, D-115): it keeps the files on disk and skips step 1, accepts the existing `devai.json` and template (`--product`, `--locales`, `--lgpd`, `--runtime` omitted or equal to their recorded values, else exit 2 `config-mismatch`; D-116), re-runs step 2 and makes whichever commit of steps 3–4 is missing; nothing is rewritten (D-113, D-115).
+A re-run on a repository whose `HEAD` is unborn or lacks either commit of steps 3–4, recognised by their `Packet:` trailers (D-120) (a failed install or a hook-refused commit, D-107) is a first run, not attach mode (D-112, D-115): it keeps the files on disk and skips step 1, accepts the existing `devai.json` and template (`--product`, `--locales`, `--lgpd`, `--runtime` omitted or equal to their recorded values, else exit 2 `config-mismatch`; D-116), re-runs step 2 and makes whichever commit of steps 3–4 is missing; nothing is rewritten (D-113, D-115).
 
 *Attach* (`devai.json` present and both commits of steps 3–4 in history, e.g. a fresh clone; D-112, D-115): writes only the three hooks and sets `core.hooksPath scripts/hooks`, `user.name` and `user.email` in the worktree config (D-057, D-058).
 

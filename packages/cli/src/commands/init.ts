@@ -2,7 +2,8 @@
 // 09 §1.1 tree from the installed package's `template/`, `git init` when the folder is not a work-tree
 // root, `pnpm add -D --save-exact @devai-nyx/cli@<own version>` (installs the workspace and completes the
 // lock, D-097), commit it as `chore(template): devai init <product>` (trailer `Packet: PKT-DEMO-001`),
-// render the four CMP-DEMO-001 packets with `base` = that commit and commit them, both commits with the
+// render the four CMP-DEMO-001 packets with `base` = that commit and commit them (trailer
+// `Packet: CMP-DEMO-001`, D-120), both commits with the
 // hooks live. Attach (`devai.json` present and `HEAD` has both of those commits, D-115): rewrite only
 // the three hooks. Otherwise, with `devai.json` present, it is a re-run (a failed install or a hook-refused
 // commit; D-112, D-113, D-115): the files on disk stay, the given inputs must equal devai.json's (D-116),
@@ -239,14 +240,15 @@ async function install(dir: string): Promise<string | null> {
   return text.split('\n').map((l) => l.trim()).find((l) => /ERR_|error/i.test(l)) ?? (r.timedOut ? 'timed out' : `exited ${String(r.code)}`);
 }
 
-const PACKETS_SUBJECT = 'chore(packets): seed CMP-DEMO-001';
+/** D-120: init's packets commit; its trailer names the campaign it seeds. */
+const PACKETS_COMMIT = 'chore(packets): seed CMP-DEMO-001\n\nPacket: CMP-DEMO-001\n';
 
-/** D-115: init's two commits in `HEAD`'s history: the template commit (trailer `Packet: PKT-DEMO-001`) and the packets commit. */
+/** D-115, D-120: init's two commits in `HEAD`'s history, by their `Packet:` trailers (`PKT-DEMO-001`, `CMP-DEMO-001`). */
 async function initCommits(dir: string): Promise<{ template: string | null; packets: boolean }> {
   if ((await topLevel(dir)) === null || (await revParse(dir, 'HEAD')) === null) return { template: null, packets: false };
-  const records = (await log(dir, ['--format=%H%x1f%s%x1f%(trailers:key=Packet,valueonly,separator=%x2C)%x1e', 'HEAD'])).split('\x1e').map((r) => r.trim().split('\x1f'));
-  const template = records.find((r) => (r[2] ?? '').split(',').map((t) => t.trim()).includes('PKT-DEMO-001'))?.[0] ?? null;
-  return { template, packets: records.some((r) => r[1] === PACKETS_SUBJECT) };
+  const records = (await log(dir, ['--format=%H%x1f%(trailers:key=Packet,valueonly,separator=%x2C)%x1e', 'HEAD'])).split('\x1e').map((r) => r.trim().split('\x1f'));
+  const carrying = (id: string) => records.find((r) => (r[1] ?? '').split(',').map((t) => t.trim()).includes(id))?.[0] ?? null;
+  return { template: carrying('PKT-DEMO-001'), packets: carrying('CMP-DEMO-001') !== null };
 }
 
 /** D-116, D-117: on a re-run each given input equals devai.json's, else exit 2 `config-mismatch`. */
@@ -332,7 +334,7 @@ export async function init(opts: InitOptions, format: Format, cwd: string): Prom
           write(dir, { ...e, bytes: Buffer.from(e.bytes!.toString('utf8').replace(BASE_LINE, `base: ${template}`), 'utf8') });
           count('seed', e.path);
         }
-        await commit(dir, `${PACKETS_SUBJECT}\n`, ['packets']);
+        await commit(dir, PACKETS_COMMIT, ['packets']);
       }
     }
   }
