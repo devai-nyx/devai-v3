@@ -1428,7 +1428,9 @@ of STYNX work on the critical path; (c) reports a missing verification as "nothi
    LINT002 it then raises on 09 §6's DDL is settled (devai-v3#58 Open 1–3);
 6. LINT010 reads both prefix groups of `YYYYMMDD_NN_` (D-085).
 7. the guard rejects a token whose `tenant_id` is no platform tenant with 403 (added by D-129,
-   2026-10-25; devai-v3#81 Open 3; numbered 7, not 6, by D-134).
+   2026-10-25; devai-v3#81 Open 3; numbered 7, not 6, by D-134);
+8. the STYNX health controller (`/healthz`, `/readyz`) is marked `@Public()`/system, so the probes pass
+   the global guard (added by D-137, 2026-10-25; devai-v3#84 Open 3).
 The first panel's (a) read step 4 as "exit 0, or exit 2 whose only non-PASS rows are `UNKNOWN
 tooling-missing` or FAILs traced to the S10 list"; the recording PR (devai-v3#68) found it
 self-contradictory, since a `FAIL` row makes the exit 1 (02 §8). A second panel the same day restated
@@ -1944,7 +1946,8 @@ project: the module's `tsconfig.json` includes `src` only (09 §6), and `invento
 template's `tsconfig.test.json`. Once `typecheck`'s population became the closure (devai-v3#82;
 D-125), a `test` packet's `typecheck` is always `SKIPPED` `no affected project` and PL-15 fails it, so
 campaign step 6 cannot reach exit 0 (devai-v3#82 Open 1). Options: (a) the template's
-`tsconfig.test.json` is a `typecheck` project: it `references` the module tsconfigs and includes
+`tsconfig.test.json` is a `typecheck` project: it `references` the module tsconfigs (amended by D-138:
+the two app projects, reaching the modules transitively) and includes
 `domain/*/api/test/**`, `domain/*/web/test/**`, `apps/*/test/**` and `test/**`; `inventory`'s `tsc -b`
 closure includes it when a test file changes, so a `test` packet's `typecheck` runs and PL-15 is
 satisfiable; (b) 05 §3's `test` row drops `typecheck`; (c) `lint-tests` stands in for the acceptance
@@ -1976,6 +1979,60 @@ token rows are marked pending S10 #4 and D-124 and re-checked at R9; (b) R8 stay
 evidence exists; (c) renumber S10. Recommended: (a). The evidence waits on STYNX, which (b) would put
 on the release's critical path; (c) changes citations already made. Amends 12 §4 (R8 row), 12 §3.1
 (pending mark), D-100 (item 7's note). Chosen: (a). Source: Owner (panels, 2026-10-25; packet `PACKET-2026-10-25-R8.md`, second round, Owner's
+workspace).
+
+## D-135 · 2026-10-25 · PKT-DEMO-004's repository `context` entry names the whole file
+[fact] 05 §7 ships PKT-DEMO-004 with `context: { path: domain/notes/api/src/notes.repository.ts, lines:
+"1-40" }` (`docs/framework/05-task-packet.md:337`), while the seed 09 §6 generates is 29 lines; with
+PL-14 judged at `--to` (D-124), campaign step 7's rebase is exit 2 `lines 1-40 exceeds the file (29
+lines)`, and steps 7–8 and the packet form of the negative rows stay blocked (devai-v3#84 Open 1,
+devai-v3#85 Open 2). Options: (a) the entry drops its `lines` range, so it names the whole file; (b)
+`lines: "1-29"`; (c) PL-14 clamps a range to the file. Recommended: (a). The repository is the file
+PKT-DEMO-004 fills, and a range pinned to the seed's length breaks when the generator's output
+changes; (c) weakens a rule to fit one packet. [fact] 05 §2 showed the entry as `{ path, lines: "a-b",
+why }`, and the parser requires `lines` (`packages/cli/src/model/packet.ts:187`, PL-01), so the ruling
+also reads (addendum, same option): 05 §2's `context` entry form makes `lines` optional; an entry
+without it names the whole file; PL-14 counts such an entry at the file's own length against §2's
+bounds. Amends 05 §2 (`context[]` row, schema comment), 05 §5 (PL-14), 05 §6 (reading order), 05 §7
+(PKT-DEMO-004 `context`), docs/reference/packet-format.md. Code follow-up (R8c): the parser and PL-14
+(`packages/cli/src/packet/rules.ts:97-110`), and
+`packages/cli/template/packets/CMP-DEMO-001/PKT-DEMO-004.md:24`. No law test or 09 §6 fixture pins
+those bytes, so no marker is added. Chosen: (a). Source: Owner (panels, 2026-10-25; packet `PACKET-2026-10-25-R8.md`, third round, Owner's
+workspace).
+
+## D-136 · 2026-10-25 · D-129's mechanism: a recording guard, the filter, and a filter module imported last
+[fact] Nest builds the context it gives router exception filters without the handler, so a filter
+cannot read `@ErrorContract`; STYNX core registers a catch-all `APP_FILTER`, and Nest consults the
+last-registered global filter first (devai-v3#84 Open 2). R8b's shell holds three pieces in
+`validation.filter.ts`. Options: (a) D-129's mechanism is ratified: 09 §1.1's shell row names a
+recording guard registered first in `AppModule` (before `StynxAuthGuard`) that stores the handler's
+`@ErrorContract` entries on the request, the `validation.filter.ts` filter, and a module providing that
+filter imported last among the shell's imports so it registers after STYNX core's catch-all
+`APP_FILTER`; (b) another mechanism. Recommended: (a). It is the smallest wiring that works on Nest
+as it is, and R8b runs it green. Amends 09 §1.1 (`apps/api` row). No code change: R8b already wires it.
+Chosen: (a). Source: Owner (panels, 2026-10-25; packet `PACKET-2026-10-25-R8.md`, third round, Owner's
+workspace).
+
+## D-137 · 2026-10-25 · The S10 list gains the public health controller; the probes answer 401 until then
+[fact] With `StynxAuthGuard` as `APP_GUARD` (D-123), an id-less `GET /healthz` and `GET /readyz`
+answer 401, since STYNX's health controller is not marked `@Public()`/system (devai-v3#84 Open 3).
+D-072's 200 needed S10 #3 already. Options: (a) the S10 list gains item #8, "STYNX health controller
+(`/healthz`, `/readyz`) marked `@Public()`/system"; until then the probes answer 401 under the global
+guard, so D-072's 200 is pending S10 #3 and #8 and the cells assert 401; (b) the shell exempts the probe
+paths. Recommended: (a). The probes are STYNX's routes, and a shell exemption is a second auth rule
+D-029 forbids. D-072 is not edited. Amends D-100 (S10 item 8), 09 §1.1 (the request-id integration
+spec row). Code follow-up: none beyond the cells' current 401 assertion. Chosen: (a). Source: Owner (panels, 2026-10-25; packet `PACKET-2026-10-25-R8.md`, third round, Owner's
+workspace).
+
+## D-138 · 2026-10-25 · `tsconfig.test.json` references the two app projects; the modules come transitively (amends D-132)
+[fact] D-132 has `tsconfig.test.json` reference "the module tsconfigs"; referencing each module
+directly would need a mount line per generated module (09 §2, §6) that no ruling names, so R8b's
+follow-up references the app projects, which reference the modules (devai-v3#85 Open 1). Options: (a)
+`tsconfig.test.json` references the two app projects only and reaches the modules transitively; no
+per-module mount line; 09 §1.1's row says so; (b) direct references. Recommended: (a). `tsc -b`
+builds the referenced closure, and the generator already adds each module to the apps (D-093). D-132's
+wording is amended. Amends 09 §1.1 (`tsconfig.test.json` row). No code change: devai-v3#85 already
+does this. Chosen: (a). Source: Owner (panels, 2026-10-25; packet `PACKET-2026-10-25-R8.md`, third round, Owner's
 workspace).
 
 ## Open
