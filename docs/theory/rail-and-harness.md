@@ -6,8 +6,6 @@ description: What DEVAI 3 owns (packets, specs, acceptance, the rail) and what t
 
 # Rail and harness
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 ## Two words, two meanings
 
 The author asked for "something between a rail and a harness" ([00](../framework/00-intent.md)), and the

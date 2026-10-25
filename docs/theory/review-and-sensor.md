@@ -6,8 +6,6 @@ description: How DEVAI 3 uses models as checks — the independent reviewer of t
 
 # Review and sensor
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 Two of the 28 nodes call a model: `review` and `permissions-pattern`. Both are designed so that a model
 can add observation without becoming a rubber stamp, a bottleneck or an authority.
 

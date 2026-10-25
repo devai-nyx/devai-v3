@@ -6,8 +6,6 @@ description: How a DEVAI 2 adopter moves to DEVAI 3 through a fresh scaffold, wi
 
 # Moving from v2
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 DEVAI 3 is a ground-up build from a new specification. v2 is reference material, not a codebase
 that was pruned ([00](../framework/00-intent.md), [D-001](../../decisions.md)). So there is no
 upgrade path from a v2 repository. You move by creating a fresh v3 scaffold and bringing modules

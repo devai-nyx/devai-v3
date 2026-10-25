@@ -6,8 +6,6 @@ description: The template's GitHub Action, the required check, digest-verified r
 
 # CI
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 The template ships one GitHub Action, `.github/workflows/devai.yml`, and it is the adopter's
 required check ([02 §1](../framework/02-architecture.md), [09 §1.1](../framework/09-rail.md)). CI
 re-runs the deterministic checks, labels the PR and verifies the review evidence by digest. It never

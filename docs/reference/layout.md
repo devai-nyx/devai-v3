@@ -6,8 +6,6 @@ description: The product repository and module layout of 04, with the database b
 
 # Repository layout
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 This is the layout every DEVAI product repository has. `devai init` emits it and `devai new module` emits the module shape ([04 §8](../framework/04-layout.md)); the `layout` node checks it ([08 B.6](../framework/08-cli-and-nodes.md)). Everything in [04](../framework/04-layout.md) is binding; O-004…O-007 were closed by [D-021](../../decisions.md)…[D-024](../../decisions.md).
 
 **Counts:** 17 root entries in the §1 tree (4 root guides, 13 folders and files), 7 DDL bands, 9 test tiers, 5 governance areas, 7 protected classes, 9 DEVAI state locations.

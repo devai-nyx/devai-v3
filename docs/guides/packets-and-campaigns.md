@@ -6,8 +6,6 @@ description: The six packet kinds, what a packet contains, who writes each field
 
 # Packets and campaigns
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 A **packet** is one task's intent, scope and acceptance, frozen at a `base` commit. It is one
 Markdown file under `packets/<CMP>/`, the only input to `devai check --packet <p>`, and it carries
 no execution state: no status, assignee, run id or timestamp

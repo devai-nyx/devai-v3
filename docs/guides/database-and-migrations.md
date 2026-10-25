@@ -6,8 +6,6 @@ description: Where SQL lives, how it is applied, why applied migrations never ch
 
 # Database and migrations
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 The backend database is PostgreSQL, and multi-tenancy with row-level security is mandatory
 ([S-01, S-02](../framework/03-standards.md)). SQL lives in two places: the root `database/` folder
 and each module's `db/` folder.

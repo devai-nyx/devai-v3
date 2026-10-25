@@ -6,8 +6,6 @@ description: How a spec agent derives a technical spec from business rules, and 
 
 # Writing a spec
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 The technical spec is the **setpoint**: the one file every later packet is checked against. A `spec`
 packet derives it from the business rules and use cases in `product/`; you approve it; every packet
 that pins it freezes its exact bytes ([06 §1](../framework/06-spec-format.md)).

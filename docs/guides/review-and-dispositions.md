@@ -6,8 +6,6 @@ description: How the independent reviewer runs inside full acceptance, when it g
 
 # Review and dispositions
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 Every `--packet --full` run ends with an independent review by a model of a **different family**
 than the one that did the work. It is the `review` node inside the one acceptance command, not a
 second condition ([01 Charter](../framework/01-charter.md), [D-028](../../decisions.md)).

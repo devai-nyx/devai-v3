@@ -6,8 +6,6 @@ description: The task packet's front-matter fields, Markdown sections, kind-to-r
 
 # Packet format
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 A task packet is one Markdown file at `packets/<CMP>/PKT-<PRODUCT>-<nnn>.md`: one closed YAML front-matter block followed by named sections ([05 §2](../framework/05-task-packet.md), [D-027](../../decisions.md), [D-050](../../decisions.md)). It is the only input to `devai check --packet <p>` and carries no execution state ([D-018](../../decisions.md)).
 
 **Counts:** 14 front-matter fields, 4 Markdown sections, 6 kinds, 6 lifecycle states, **17 PL rules** (PL-01…PL-17).

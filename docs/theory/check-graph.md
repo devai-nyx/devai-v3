@@ -6,8 +6,6 @@ description: The 28 nodes devai check runs, where each one runs (edit loop, hook
 
 # The check graph
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 `devai check` is a runner over a fixed directed acyclic graph of 28 nodes. Each node either wraps an
 existing tool (ESLint, `tsc`, Prettier, the STYNX migration linter, Vitest, knip, actionlint…) or is one
 of the few checks DEVAI adds ([02 §2](../framework/02-architecture.md)). The node set is a closed list: a

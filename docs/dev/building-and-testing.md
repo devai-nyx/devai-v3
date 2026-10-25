@@ -6,8 +6,6 @@ description: The build command, the generator release matrix CI runs, and the R2
 
 # Building and testing
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 The `pnpm` build below runs today. The CLI is built (R6); the `devai` commands on this page are the
 ones the release matrix runs (R8, closed under [D-134](../../decisions.md)).
 

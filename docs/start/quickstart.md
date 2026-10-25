@@ -6,8 +6,6 @@ description: Scaffold a repository with devai init, then take the shipped demo c
 
 # Quickstart
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 This walk-through scaffolds a fresh repository and takes its shipped example campaign, `CMP-DEMO-001`,
 through the first packet that does real work. It follows the same steps the generator's own release
 matrix runs ([09 §4](../framework/09-rail.md)). How to obtain the CLI and the registry token is on

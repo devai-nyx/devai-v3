@@ -6,8 +6,6 @@ description: The 28 check-node contracts of 08 Part B in table form, with standa
 
 # Check nodes
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 `devai check` runs a fixed graph of **28 nodes** ([02 §2](../framework/02-architecture.md), [08 Part B](../framework/08-cli-and-nodes.md)). The ids are a closed enum (`NodeId` in [08 C.2](../framework/08-cli-and-nodes.md)); there is no plugin or node registry ([08 Part D](../framework/08-cli-and-nodes.md)). Each 08 block has nine rows: Standards, Inputs, Population, Invokes, Observation, Status, Findings, Latency/where, Needs. The tables below condense them; the 08 block is the contract.
 
 ## Conventions that hold for every node

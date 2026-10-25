@@ -6,8 +6,6 @@ description: The seven protected classes, the labels they produce, and how they 
 
 # Protected paths
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 Some paths carry intent rather than implementation: specs, business rules, decisions, standards,
 infrastructure, CI and acceptance tests. DEVAI 3 makes a touch to them **visible**. It never refuses
 it. A hook prints a notice, the Action labels the PR, and an unplanned touch makes the independent

@@ -6,8 +6,6 @@ description: How a coding agent works a code or fix packet to acceptance, and wh
 
 # Implementing
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 A `code` packet implements behaviour the spec requires; a `fix` packet corrects the implementation
 against the **unchanged** spec and has the same shape ([05 §3](../framework/05-task-packet.md)). In
 the demo, `PKT-DEMO-004` implements R-1, R-2 and R-4 of `SPEC-DEMO-001` and turns the red acceptance

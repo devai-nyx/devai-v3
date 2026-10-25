@@ -6,8 +6,6 @@ description: All 55 reason codes of the closed ReasonCode enum, where each is ra
 
 # Reason codes
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 A reason code says why something could not run or could not be observed. The set is a closed zod enum, `ReasonCode`, in [08 C.2](../framework/08-cli-and-nodes.md) (the same text is in `packages/cli/src/report.ts`). It has **55 codes**: 15 command-level and 40 node-level. No other code exists.
 
 The hints are the one-line remedies of [10 §4](../framework/10-agent-surface.md), copied verbatim; only code-span backticks were added around `<placeholders>` and commands so they render. 10 §4 marks each as *kept* (08's own remedy, 9 codes), *rewritten* (3 codes) or *new* (43 codes). Each hint is at most 160 characters.

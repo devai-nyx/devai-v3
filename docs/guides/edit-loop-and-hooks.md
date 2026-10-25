@@ -6,8 +6,6 @@ description: The three levels of devai check, how to read the report and exit co
 
 # Edit loop and hooks
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 The error state is whatever one local command reports for the current change, fast enough to run
 after every edit ([D-005](../../decisions.md)). That command is `devai check`. In the template,
 `devai` means `pnpm exec devai` ([10 §1](../framework/10-agent-surface.md)).

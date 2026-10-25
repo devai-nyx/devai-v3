@@ -6,8 +6,6 @@ description: How locales and personal-data declarations are opted in at bootstra
 
 # i18n and LGPD
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 Two standards are opted in when the project is created: extra locales and LGPD personal-data
 declarations ([D-014](../../decisions.md)). Both are declared in `devai.json`, written into the
 spec, emitted by the generator and checked by nodes.
