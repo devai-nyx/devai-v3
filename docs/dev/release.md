@@ -81,7 +81,8 @@ release lane ([D-038](../../decisions.md)).
 
 ## The `publish` job
 
-`ci.yml` has three jobs: `build`, `matrix` and `publish` (12 §5, [D-064](../../decisions.md)).
+`ci.yml` has four jobs: `build`, the matrix shards with their aggregate `matrix` check, `publish`
+(12 §5, [D-064](../../decisions.md), [D-127](../../decisions.md)), and `pages` (see [Docs site](#docs-site); D-141).
 `publish`:
 
 - runs only on a `v*` tag, with `needs: [build, matrix]`;
