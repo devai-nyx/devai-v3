@@ -104,6 +104,14 @@ There are no Changesets in this repository: two packages, one literal version, a
 changeset here ([D-065](../../decisions.md)). There are no signed tags, provenance or attestations
 ([D-002](../../decisions.md); 12 §8).
 
+## Docs site
+
+The Docusaurus site in `site/` deploys to GitHub Pages at <https://devai-nyx.github.io/devai-v3/> from
+`main`, by the `pages` job in `ci.yml` (D-141, Owner 2026-10-25). `pages` runs only on a push to `main`,
+with `needs: [build]`, so a red `main` never deploys; it is not a required check. It builds the site with
+`pnpm --filter @devai-nyx/site build`, uploads `site/build` and deploys it with `actions/deploy-pages`;
+`onBrokenLinks: 'throw'` fails the build on a broken internal link.
+
 ## Host ceremony
 
 The H-steps are the one-time GitHub actions around the release (12 §5):
@@ -134,4 +142,4 @@ Adopters move by fresh scaffold; see [Moving from v2](../adopters/moving-from-v2
 release would follow the same jobs: green `build` and `matrix` on `main`, then a `v*` tag. The law
 does not define a policy for 3.x releases beyond these jobs.
 
-Source: 08 B.10, 09 §1.1, §2, §4, decisions D-002, D-003, D-026, D-028, D-038, D-047, D-058, D-064, D-065, D-067–D-070, D-098, D-100, D-119–D-138; 12 §0, §3–§5, §8 (bootstrap history).
+Source: 08 B.10, 09 §1.1, §2, §4, decisions D-002, D-003, D-026, D-028, D-038, D-047, D-058, D-064, D-065, D-067–D-070, D-098, D-100, D-119–D-138, D-141; 12 §0, §3–§5, §8 (bootstrap history).
