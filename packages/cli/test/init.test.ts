@@ -108,9 +108,10 @@ describe('devai init --product demo --dir <tmp> (materialise)', () => {
     for (const p of missing.filter((p) => p.binary !== '@devai-nyx/cli' && p.binary !== 'psql')) expect(p.remedy, p.binary).toBe('pnpm install');
   });
 
-  it('prints the file classes, the git config lines, the preflight lines and the two host lines (D-080)', () => {
+  it('prints the file classes, the git config lines, the preflight lines and the protection host line (D-091)', () => {
     const text = devai(dir, 'init').stdout.split('\n');
-    expect(text).toEqual(expect.arrayContaining(['init-owned: 3 files written', 'git config core.hooksPath scripts/hooks', 'protection: require the devai job', 'ruleset: require .github/workflows/devai.yml from main']));
+    expect(text).toEqual(expect.arrayContaining(['init-owned: 3 files written', 'git config core.hooksPath scripts/hooks', 'protection: require the devai job']));
+    expect(text.some((l) => l.startsWith('ruleset:'))).toBe(false); // D-091 retired D-080's ruleset
     expect(text).toContain('UNKNOWN: tooling-missing — lint: install with pnpm install');
   });
 });

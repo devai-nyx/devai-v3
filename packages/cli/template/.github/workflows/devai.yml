@@ -1,7 +1,7 @@
 name: devai
 
-# 02 §1: the one Action. The adopter's ruleset requires this workflow from main (D-080), so a PR cannot
-# redefine the check it must pass. No workflow-level paths filter: an absent required check blocks merges.
+# 02 §1: the one Action. Branch protection requires its aggregating `devai` job (D-091). No workflow-level
+# paths filter: an absent required check blocks merges.
 on:
   pull_request:
   push:

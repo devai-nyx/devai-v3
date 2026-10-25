@@ -280,7 +280,6 @@ export async function init(opts: InitOptions, format: Format, cwd: string): Prom
     ...Object.entries(gitConfig).map(([k, v]) => `git config ${k} ${v}`),
     ...new Set(missing.map((i) => `UNKNOWN: tooling-missing — ${i.node}: install with ${i.remedy}`)),
     'protection: require the devai job',
-    'ruleset: require .github/workflows/devai.yml from main',
   ];
   return { stdout: lines.join('\n') + '\n', exitCode };
 }
