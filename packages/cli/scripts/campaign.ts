@@ -10,14 +10,13 @@
 // item of the R8 PR; never a workaround in the cell. Cells the host cannot run skip with a named reason.
 //
 // Until R10 publishes @devai-nyx/{cli,decorators}, the cell installs them from this repository's build:
-// `init`'s `pnpm add` goes through test/pnpm-shim.ts's `real` PATH shim (D-107 Open 4) and every later
-// install through a global pnpmfile that `link:`s both packages. @stynx-nyx/* come from the GitHub registry
+// `init`'s `pnpm add` goes through a `pnpm` first on PATH (D-107 Open 4) and every install through a global
+// pnpmfile that `link:`s both packages. @stynx-nyx/* come from the GitHub registry
 // with NODE_AUTH_TOKEN (ci.yml; locally `export NODE_AUTH_TOKEN=$(gh auth token)`).
 import { spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { delimiter, dirname, resolve } from 'node:path';
-import { pnpmShim } from '../test/pnpm-shim.ts';
 
 const CLI = resolve(import.meta.dirname, '..');
 const REPO = resolve(CLI, '../..');
@@ -312,7 +311,9 @@ function campaign(c: Cell, o: OptionCell, work: string): boolean {
   c.exec([resolve(c.dir, 'node_modules/.bin/prettier'), '--write', ...files]);
   if (o.web) c.record('3 --web module', 'domain/notes/web', existsSync(resolve(c.dir, 'domain/notes/web/src')) ? [] : ['domain/notes/web/src absent']);
   if (o.ptBR) c.record('3 pt-BR catalogue', 'notes.i18n.pt-br.ts', existsSync(resolve(c.dir, 'domain/notes/api/src/notes.i18n.pt-br.ts')) ? [] : ['domain/notes/api/src/notes.i18n.pt-br.ts absent']);
-  if (!c.expectExit('3 pnpm install', c.exec(['pnpm', 'install']), 0)) return false;
+  // Step 3's `pnpm install` writes the new workspace package into the lock the step-3 commit carries, as it does
+  // on the agent's machine; under CI=true pnpm would refuse that unless told (R8 PR ## Open).
+  if (!c.expectExit('3 pnpm install', c.exec(['pnpm', 'install', '--no-frozen-lockfile']), 0)) return false;
   if (!c.expectExit('3 pnpm -r build', c.exec(['pnpm', '-r', 'build']), 0)) return false;
   if (!c.expectExit('3 commit (hooks)', c.commit('feat(notes): generate the notes module\n\nPacket: PKT-DEMO-002'), 0)) return false;
 
@@ -617,7 +618,6 @@ function reset(c: Cell, head?: string): void {
 
 function baseEnv(work: string, runtime: Runtime): NodeJS.ProcessEnv {
   if (!process.env['NODE_AUTH_TOKEN']) throw new Error('NODE_AUTH_TOKEN is not set: @stynx-nyx/* install from the GitHub registry');
-  const shim = pnpmShim('real');
   const pnpmfile = resolve(work, 'pnpmfile.cjs');
   writeFileSync(pnpmfile, [
     '// 09 §4 cells until R10: @devai-nyx/{cli,decorators} 3.0.0 are unpublished, so installs link this repository.',
@@ -627,11 +627,28 @@ function baseEnv(work: string, runtime: Runtime): NodeJS.ProcessEnv {
     '  return pkg;',
     '} } };',
   ].join('\n'));
-  // The shim's stand-in for init's `pnpm add` writes the pin into package.json but not the lock, as the real
-  // add would; pnpm's CI default (--frozen-lockfile under CI=true) would then refuse step 3's `pnpm install`.
-  // CI itself stays set: the model nodes verify evidence there (C.1). Both lines go at R10.
-  const env: NodeJS.ProcessEnv = { ...shim.env, npm_config_global_pnpmfile: pnpmfile, npm_config_frozen_lockfile: 'false' };
-  env['PATH'] = `${shim.dir}${delimiter}${dirname(process.execPath)}${delimiter}${process.env['PATH'] ?? ''}`;
+  // The `pnpm` first on PATH stands in for init's `pnpm add -D --save-exact @devai-nyx/cli@<v>` (404 until R10):
+  // it writes the exact pin, then runs a real install, which the pnpmfile resolves to this repository, so the
+  // lock init commits matches its manifest as a real add leaves it. `--no-frozen-lockfile` is explicit because
+  // pnpm forces a frozen install under CI=true, which stays set (the model nodes verify evidence there, C.1).
+  // Every other call is the real pnpm. Goes at R10.
+  const real = spawnSync('sh', ['-c', 'command -v pnpm'], { encoding: 'utf8' }).stdout.trim();
+  if (real === '') throw new Error('pnpm is not on PATH');
+  const shimDir = resolve(work, 'shim');
+  mkdirSync(shimDir, { recursive: true });
+  const pin = `const f=require('fs');const p=JSON.parse(f.readFileSync('package.json','utf8'));const v=process.argv[1].split('@').pop();p.devDependencies=Object.fromEntries(Object.entries({...p.devDependencies,'@devai-nyx/cli':v}).sort(([a],[b])=>a.localeCompare(b)));f.writeFileSync('package.json',JSON.stringify(p,null,2)+'\\n')`;
+  writeFileSync(resolve(shimDir, 'pnpm'), [
+    '#!/bin/sh',
+    'if [ "$1" = add ]; then',
+    `  for a in "$@"; do case "$a" in @devai-nyx/cli@*) "${process.execPath}" -e "${pin}" "$a" || exit $?;; esac; done`,
+    `  exec '${real}' install --no-frozen-lockfile --reporter=silent`,
+    'fi',
+    `exec '${real}' "$@"`,
+    '',
+  ].join('\n'));
+  chmodSync(resolve(shimDir, 'pnpm'), 0o755);
+  const env: NodeJS.ProcessEnv = { ...process.env, npm_config_global_pnpmfile: pnpmfile, COREPACK_ENABLE_DOWNLOAD_PROMPT: '0' };
+  env['PATH'] = `${shimDir}${delimiter}${dirname(process.execPath)}${delimiter}${process.env['PATH'] ?? ''}`;
   if (runtime === 'bare' && !env['DATABASE_URL']) env['DATABASE_URL'] = 'postgresql://postgres:postgres@localhost:5432/postgres';
   if (runtime === 'docker') {
     delete env['DATABASE_URL'];
