@@ -56,8 +56,8 @@ There is no `--web` on `init`: both the API and the web shell ship from day one
 ([09 §1](../framework/09-rail.md), [08 A.1](../framework/08-cli-and-nodes.md)):
 
 1. writes the template tree of 09 §1.1, running `git init` if needed;
-2. runs `pnpm add -w -D --save-exact @devai-nyx/cli@<its own version>` (`-w`: the scaffold is a pnpm workspace root, [D-139](../../decisions.md)), which installs the workspace
-   and completes `pnpm-lock.yaml` ([D-097](../../decisions.md));
+2. runs `pnpm add -w -D --save-exact @devai-nyx/cli@<its own version>` (`-w`: the scaffold is a pnpm workspace root, [D-139](../../decisions.md)) and then `pnpm install`, which links the apps ([D-140](../../decisions.md)); together they install the workspace
+   and complete `pnpm-lock.yaml` ([D-097](../../decisions.md));
 3. commits the tree as `chore(template): devai init <product>` with the trailer
    `Packet: PKT-DEMO-001`, with the hooks live;
 4. renders the four `CMP-DEMO-001` packets with `base` set to the template commit and commits them
@@ -72,7 +72,7 @@ There is no `--web` on `init`: both the API and the web shell ship from day one
 
 Exit `0` means everything was written and every tool resolved. Exit `2` means either the files were
 written but at least one tool is missing or the install failed (`tooling-missing`, with the
-`pnpm add` command as the remedy), or nothing was written because of
+`pnpm add -w … && pnpm install` commands as the remedy), or nothing was written because of
 `dir-not-empty` or `usage`. `init` never exits `1`.
 
 The repository then contains a fictional `demo` product: business rules under `product/`, the

@@ -5,7 +5,7 @@
 import type { NodeAdapter, NodeOutcome, RunContext } from '../runner/run.js';
 import { changedPresent, type Finding, runTool, unknownOutcome } from '../proc/tool.js';
 
-export const ACTIONLINT_INSTALL = 'pnpm add -D --save-exact github-actionlint@1.7.12';
+export const ACTIONLINT_INSTALL = 'pnpm add -w -D --save-exact github-actionlint@1.7.12 && pnpm install';
 const STANDARD = 'S-43';
 const workflow = (p: string) => p.startsWith('.github/') && /\.ya?ml$/.test(p);
 

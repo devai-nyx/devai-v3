@@ -8,7 +8,7 @@ import ignore from 'ignore';
 import type { NodeAdapter, NodeOutcome, RunContext } from '../runner/run.js';
 import { changedPresent, type Finding, runTool, firstLine, unknown, unknownOutcome } from '../proc/tool.js';
 
-export const FORMAT_INSTALL = 'pnpm add -D --save-exact prettier@3.9.6';
+export const FORMAT_INSTALL = 'pnpm add -w -D --save-exact prettier@3.9.6 && pnpm install';
 const STANDARD = 'S-41';
 const formattable = (p: string) => /\.(ts|mjs|json|md)$/.test(p);
 

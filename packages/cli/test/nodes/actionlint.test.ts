@@ -25,7 +25,7 @@ describe('B.14 actionlint', () => {
 
   it('UNKNOWN tooling-missing, and runner-crashed on an exit outside {0, 1} without JSON', async () => {
     expect(await run(workspace({}, { '.github/workflows/ci.yml': GOOD }, null))).toMatchObject({
-      status: 'UNKNOWN', reason: 'tooling-missing', findings: [{ locator: 'package.json:1', message: 'github-actionlint not resolvable from node_modules/.bin', standard: 'S-19', hint: 'install with pnpm add -D --save-exact github-actionlint@1.7.12' }],
+      status: 'UNKNOWN', reason: 'tooling-missing', findings: [{ locator: 'package.json:1', message: 'github-actionlint not resolvable from node_modules/.bin', standard: 'S-19', hint: 'install with pnpm add -w -D --save-exact github-actionlint@1.7.12 && pnpm install' }],
     });
     expect(await run(workspace({}, { '.github/workflows/ci.yml': GOOD }, fakeTool('github-actionlint', 3)))).toMatchObject({
       status: 'UNKNOWN', reason: 'runner-crashed', findings: [{ locator: '.github/workflows/ci.yml:1', message: 'boom: the tool fell over', standard: 'S-43' }],

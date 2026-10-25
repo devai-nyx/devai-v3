@@ -44,9 +44,9 @@ describe('B.18 deadcode', () => {
     const o = await runNode(deadcode, workspace({ 'packages/a/src/index.ts': 'export const y = 1;\n' }, false));
     expect(o).toMatchObject({ status: 'UNKNOWN', reason: 'tooling-missing', expected: 3, observed: 0 });
     expect(lines(o)).toEqual([
-      'package.json:1 knip not resolvable from node_modules/.bin [S-42] install with pnpm add -D knip@6.35.1',
-      'package.json:1 depcheck not resolvable from node_modules/.bin [S-42] install with pnpm add -D depcheck@1.4.7',
-      'package.json:1 madge not resolvable from node_modules/.bin [S-42] install with pnpm add -D madge@8.0.0',
+      'package.json:1 knip not resolvable from node_modules/.bin [S-42] install with pnpm add -w -D knip@6.35.1 && pnpm install',
+      'package.json:1 depcheck not resolvable from node_modules/.bin [S-42] install with pnpm add -w -D depcheck@1.4.7 && pnpm install',
+      'package.json:1 madge not resolvable from node_modules/.bin [S-42] install with pnpm add -w -D madge@8.0.0 && pnpm install',
     ]);
   });
 

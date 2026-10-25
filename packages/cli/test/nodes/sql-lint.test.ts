@@ -127,7 +127,7 @@ describe('B.7 sql-lint (stynx-migration-lint 3.0.0)', () => {
   it('UNKNOWN tooling-missing with the install line', async () => {
     const dir = templateWorkspace();
     write(dir, MODULE_SQL, sql);
-    expect(lines(await runNode(sqlLint, dir))).toEqual(['package.json:1 stynx-migration-lint not resolvable from node_modules/.bin [S-24] install with pnpm add -D @stynx-nyx/migration-linter@3.0.0']);
+    expect(lines(await runNode(sqlLint, dir))).toEqual(['package.json:1 stynx-migration-lint not resolvable from node_modules/.bin [S-24] install with pnpm add -w -D @stynx-nyx/migration-linter@3.0.0 && pnpm install']);
   });
 
   it('UNKNOWN runner-crashed: exit ∉ {0,1,2}', async () => {

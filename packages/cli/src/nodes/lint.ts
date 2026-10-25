@@ -10,7 +10,7 @@ import type { NodeAdapter, NodeOutcome, RunContext } from '../runner/run.js';
 import { candidatePaths, changedPresent, type Finding, preflight, runTool, unknown, unknownOutcome } from '../proc/tool.js';
 import { standardOf } from './lint-overlay/index.js';
 
-export const ESLINT_INSTALL = 'pnpm add -D --save-exact eslint@10.10.0 @stynx-nyx/eslint-config@3.0.0';
+export const ESLINT_INSTALL = 'pnpm add -w -D --save-exact eslint@10.10.0 @stynx-nyx/eslint-config@3.0.0 && pnpm install';
 export const ESLINT_CONFIG = 'eslint.config.mjs';
 const STANDARD = 'S-41';
 

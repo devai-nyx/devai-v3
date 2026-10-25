@@ -29,7 +29,7 @@ export const e2e: NodeAdapter = {
   inputs: (ctx) => ctx.listing.entries.map((e) => e.path).filter((p) => E2E_FILE.test(p) || /^apps\//.test(p)).sort(),
   async run(ctx): Promise<NodeOutcome> {
     const r = await runTool<PwReport>({
-      root: ctx.root, bin: 'playwright', install: 'pnpm add -D @playwright/test@1.60.0', args: ['test', '--config', CONFIG, '--reporter', 'json'],
+      root: ctx.root, bin: 'playwright', install: 'pnpm add -w -D @playwright/test@1.60.0 && pnpm install', args: ['test', '--config', CONFIG, '--reporter', 'json'],
       locator: `${CONFIG}:1`, standard: 'tiers', timeoutMs: 1_800_000,
       parse: (stdout) => {
         try {

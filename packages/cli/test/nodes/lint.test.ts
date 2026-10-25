@@ -99,7 +99,7 @@ describe('B.3 lint', () => {
 
   it('UNKNOWN tooling-missing and runner-crashed (a config that throws at load: ESLint exits 2 with no JSON)', async () => {
     expect(await run(workspace(BASE, { 'src/a.ts': 'export const a = 1;\n' }, null))).toMatchObject({
-      status: 'UNKNOWN', reason: 'tooling-missing', findings: [{ locator: 'package.json:1', message: 'eslint not resolvable from node_modules/.bin', standard: 'S-19', hint: 'install with pnpm add -D --save-exact eslint@10.10.0 @stynx-nyx/eslint-config@3.0.0' }],
+      status: 'UNKNOWN', reason: 'tooling-missing', findings: [{ locator: 'package.json:1', message: 'eslint not resolvable from node_modules/.bin', standard: 'S-19', hint: 'install with pnpm add -w -D --save-exact eslint@10.10.0 @stynx-nyx/eslint-config@3.0.0 && pnpm install' }],
     });
     expect(await run(workspace(BASE, { 'src/a.ts': 'export const a = 1;\n' }, fakeTool('eslint')))).toMatchObject({
       status: 'UNKNOWN', reason: 'runner-crashed', findings: [{ locator: 'eslint.config.mjs:1', message: 'boom: the tool fell over', standard: 'S-41' }],

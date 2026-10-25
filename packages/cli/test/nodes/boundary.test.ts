@@ -69,7 +69,7 @@ describe('B.17 boundary (stynx verify-stynx-boundary 3.0.0)', () => {
   });
 
   it('UNKNOWN tooling-missing with the install line', async () => {
-    expect(lines(await runNode(boundary, workspace({}, false)))).toEqual(['package.json:1 stynx not resolvable from node_modules/.bin [S-34] install with pnpm add -D @stynx-nyx/cli@3.0.0']);
+    expect(lines(await runNode(boundary, workspace({}, false)))).toEqual(['package.json:1 stynx not resolvable from node_modules/.bin [S-34] install with pnpm add -w -D @stynx-nyx/cli@3.0.0 && pnpm install']);
   });
 
   it('UNKNOWN runner-crashed: stynx exit 1 with empty stdout (usage error, D-086)', async () => {

@@ -42,7 +42,7 @@ export const lintTests: NodeAdapter = {
     const files = changedPresent(ctx, spec);
     const profile = resolveProfile(ctx.root);
     if (files.length > 0 && profile === null) {
-      return unknownOutcome(unknown('tooling-missing', 'package.json:1', `${TEST_PROFILE} not resolvable from node_modules`, 'S-19', 'install with pnpm add -D --save-exact @stynx-nyx/eslint-config@3.0.0'), { expected: files.length });
+      return unknownOutcome(unknown('tooling-missing', 'package.json:1', `${TEST_PROFILE} not resolvable from node_modules`, 'S-19', 'install with pnpm add -w -D --save-exact @stynx-nyx/eslint-config@3.0.0 && pnpm install'), { expected: files.length });
     }
     return eslintOutcome({
       ctx, files, configArgs: ['--config', profile ?? TEST_PROFILE], flags: ['--no-error-on-unmatched-pattern'], configs: [], standard: STANDARD, finding: testFinding,

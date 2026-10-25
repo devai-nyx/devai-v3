@@ -1,7 +1,8 @@
 // 08 A.1 `devai init`, 09 §1. Materialise (no `devai.json` in --dir): validate every input, write the
 // 09 §1.1 tree from the installed package's `template/`, `git init` when the folder is not a work-tree
-// root, `pnpm add -w -D --save-exact @devai-nyx/cli@<own version>` (installs the workspace and completes the
-// lock, D-097; `-w` because the template root is a pnpm workspace root, D-139), commit it as `chore(template): devai init <product>` (trailer `Packet: PKT-DEMO-001`),
+// root, `pnpm add -w -D --save-exact @devai-nyx/cli@<own version>` then `pnpm install` (installs the workspace
+// and completes the lock, D-097; `-w`: the template root is a pnpm workspace root, D-139; `add -w` links only
+// the root, so `pnpm install` links the apps, D-140), commit it as `chore(template): devai init <product>` (trailer `Packet: PKT-DEMO-001`),
 // render the four CMP-DEMO-001 packets with `base` = that commit and commit them (trailer
 // `Packet: CMP-DEMO-001`, D-120), both commits with the
 // hooks live. Attach (`devai.json` present and `HEAD` has both of those commits, D-115): rewrite only
@@ -140,7 +141,7 @@ export async function preflight(dir: string, mode: 'bare' | 'docker'): Promise<P
       return {};
     }
   })();
-  const fromManifest = (pkg: string, pinned: string) => (pkg in deps ? 'pnpm install' : `pnpm add -D --save-exact ${pkg}@${pinned}`);
+  const fromManifest = (pkg: string, pinned: string) => (pkg in deps ? 'pnpm install' : `pnpm add -w -D --save-exact ${pkg}@${pinned} && pnpm install`);
   const bin = (name: string) => existsSync(resolve(dir, 'node_modules/.bin', name));
   const lib = (name: string) => existsSync(resolve(dir, 'node_modules', name, 'package.json'));
   const checks: { nodes: string[]; binary: string; resolved: () => Promise<boolean> | boolean; remedy: string }[] = [
@@ -152,7 +153,7 @@ export async function preflight(dir: string, mode: 'bare' | 'docker'): Promise<P
     { nodes: ['format'], binary: 'prettier', resolved: () => bin('prettier'), remedy: fromManifest('prettier', '3.9.6') },
     { nodes: ['lint', 'lint-tests', 'i18n'], binary: 'eslint', resolved: () => bin('eslint'), remedy: fromManifest('eslint', '10.10.0') },
     { nodes: ['lint', 'lint-tests', 'i18n'], binary: '@stynx-nyx/eslint-config', resolved: () => lib('@stynx-nyx/eslint-config'), remedy: fromManifest('@stynx-nyx/eslint-config', '3.0.0') },
-    { nodes: ['lint', 'i18n'], binary: '@devai-nyx/cli', resolved: () => lib('@devai-nyx/cli'), remedy: '@devai-nyx/cli' in deps ? 'pnpm install' : installCommand().join(' ') },
+    { nodes: ['lint', 'i18n'], binary: '@devai-nyx/cli', resolved: () => lib('@devai-nyx/cli'), remedy: '@devai-nyx/cli' in deps ? 'pnpm install' : installRemedy() },
     { nodes: ['sql-lint'], binary: 'stynx-migration-lint', resolved: () => bin('stynx-migration-lint'), remedy: fromManifest('@stynx-nyx/migration-linter', '3.0.0') },
     { nodes: ['unit', 'integration'], binary: 'vitest', resolved: () => bin('vitest'), remedy: fromManifest('vitest', '4.1.11') },
     { nodes: ['e2e'], binary: 'playwright', resolved: () => bin('playwright'), remedy: fromManifest('@playwright/test', '1.60.0') },
@@ -227,18 +228,22 @@ async function commit(dir: string, message: string, paths: string[]): Promise<st
   return (await git(dir, ['rev-parse', 'HEAD'])).toString('utf8').trim();
 }
 
-/** D-097, D-139: the one install materialise runs, and its remedy when it fails; `-w`: the template root is a workspace root. */
+/** D-097, D-139, D-140: materialise's install, `pnpm add -w` (the template root is a workspace root) then
+ * `pnpm install` (`add -w` links only the root importer, not `apps/*`); the remedy prints both. */
 export const installCommand = (): [string, ...string[]] => ['pnpm', 'add', '-w', '-D', '--save-exact', `@devai-nyx/cli@${cliVersion()}`];
+export const installRemedy = (): string => `${installCommand().join(' ')} && pnpm install`;
 const INSTALL_TIMEOUT_MS = 600_000;
 
-/** Runs the install in `dir` (host `pnpm` from PATH, the registry `.npmrc` names); on failure the first `ERR_` line, else the first error line. */
+/** Runs the two installs in `dir` (host `pnpm` from PATH, the registry `.npmrc` names); on failure the first `ERR_` line, else the first error line. */
 async function install(dir: string): Promise<string | null> {
-  const r = await spawn({ argv: installCommand(), cwd: dir, env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: '0' }, timeoutMs: INSTALL_TIMEOUT_MS });
-  if (r.kind === 'missing') return 'pnpm not found on PATH';
-  if (r.code === 0 && !r.timedOut && !r.overflow) return null;
-  const text = `${r.stderr.toString('utf8')}\n${r.stdout.toString('utf8')}`;
-  const lines = text.split('\n').map((l) => l.trim());
-  return lines.find((l) => /\bERR_/.test(l)) ?? lines.find((l) => /error/i.test(l)) ?? (r.timedOut ? 'timed out' : `exited ${String(r.code)}`);
+  for (const argv of [installCommand(), ['pnpm', 'install'] as [string, ...string[]]]) {
+    const r = await spawn({ argv, cwd: dir, env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: '0' }, timeoutMs: INSTALL_TIMEOUT_MS });
+    if (r.kind === 'missing') return 'pnpm not found on PATH';
+    if (r.code === 0 && !r.timedOut && !r.overflow) continue;
+    const lines = `${r.stderr.toString('utf8')}\n${r.stdout.toString('utf8')}`.split('\n').map((l) => l.trim());
+    return lines.find((l) => /\bERR_/.test(l)) ?? lines.find((l) => /error/i.test(l)) ?? (r.timedOut ? 'timed out' : `exited ${String(r.code)}`);
+  }
+  return null;
 }
 
 /** D-120: init's packets commit; its trailer names the campaign it seeds. */
@@ -342,7 +347,7 @@ export async function init(opts: InitOptions, format: Format, cwd: string): Prom
   const items = await preflight(dir, mode);
   const missing = items.filter((i) => i.status === 'missing');
   const exitCode = missing.length > 0 || installFailure !== null ? 2 : 0;
-  const installLine = installFailure === null ? [] : [`devai: tooling-missing — install with ${installCommand().join(' ')} (${installFailure}); nothing was committed`];
+  const installLine = installFailure === null ? [] : [`devai: tooling-missing — install with ${installRemedy()} (${installFailure}); nothing was committed`];
 
   if (format === 'json') {
     return {

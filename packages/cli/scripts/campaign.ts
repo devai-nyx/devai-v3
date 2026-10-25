@@ -660,7 +660,8 @@ function baseEnv(work: string, runtime: Runtime): NodeJS.ProcessEnv {
   // it writes the exact pin, then runs a real install, which the pnpmfile resolves to this repository, so the
   // lock init commits matches its manifest as a real add leaves it. `--no-frozen-lockfile` is explicit because
   // pnpm forces a frozen install under CI=true, which stays set (the model nodes verify evidence there, C.1).
-  // Every other call is the real pnpm. Goes at R10.
+  // init's bare `pnpm install` after the add (D-140) runs unfrozen for the same reason. Every other call is the
+  // real pnpm. Goes at R10.
   const real = spawnSync('sh', ['-c', 'command -v pnpm'], { encoding: 'utf8' }).stdout.trim();
   if (real === '') throw new Error('pnpm is not on PATH');
   const shimDir = resolve(work, 'shim');
@@ -674,6 +675,7 @@ function baseEnv(work: string, runtime: Runtime): NodeJS.ProcessEnv {
     `  for a in "$@"; do case "$a" in @devai-nyx/cli@*) "${process.execPath}" -e "${pin}" "$a" || exit $?;; esac; done`,
     `  exec '${real}' install --no-frozen-lockfile --reporter=silent`,
     'fi',
+    `if [ "$*" = install ]; then exec '${real}' install --no-frozen-lockfile --reporter=silent; fi`,
     `exec '${real}' "$@"`,
     '',
   ].join('\n'));

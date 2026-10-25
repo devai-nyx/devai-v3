@@ -33,7 +33,7 @@ describe('B.4 lint-tests', () => {
   it('UNKNOWN tooling-missing: the ./test profile is not installed', async () => {
     expect(await run(workspace({}, { 'test/a.spec.ts': GOOD }, null))).toEqual({
       status: 'UNKNOWN', reason: 'tooling-missing', expected: 1, observed: 0, evaluated: 0,
-      findings: [{ locator: 'package.json:1', message: '@stynx-nyx/eslint-config/test not resolvable from node_modules', standard: 'S-19', hint: 'install with pnpm add -D --save-exact @stynx-nyx/eslint-config@3.0.0' }],
+      findings: [{ locator: 'package.json:1', message: '@stynx-nyx/eslint-config/test not resolvable from node_modules', standard: 'S-19', hint: 'install with pnpm add -w -D --save-exact @stynx-nyx/eslint-config@3.0.0 && pnpm install' }],
     });
   });
 
