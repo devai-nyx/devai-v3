@@ -1471,9 +1471,122 @@ the text). None was isolated. This entry authorises the one 08 stale-text PR nam
 that PR, and no law text changes here. Chosen: (a). Source: Owner (panels in the devai3 readiness
 session, 2026-10-24).
 
+## D-103 · 2026-10-25 · Module packages declare `@stynx-nyx/tsconfig`, the preset their `tsconfig.json` extends (amends D-094's list)
+[fact] The module `api/tsconfig.json` extends `@stynx-nyx/tsconfig/node24.json` (`09-rail.md:291`;
+`web/tsconfig.json` extends `angular18.json`), and depcheck counts an `extends` target as a dependency
+of the package, so `deadcode` FAILs `domain/notes/api/package.json:1 missing dependency
+@stynx-nyx/tsconfig` (and `domain/notes/web/package.json:1` with `--web`) in all eight O-cells
+(devai-v3#69 Open 1). D-094's list (seven packages, `decisions.md:1266`) omits it; the app packages
+already carry it as a devDependency (`packages/cli/template/apps/api/package.json`). Options: (a) D-094's
+list gains `@stynx-nyx/tsconfig` 3.0.0 as a `devDependency` of the module `api/package.json` and
+`web/package.json`; 09 §6 manifest rows amended; (b) the knip config ignores `extends` targets the
+root already holds. Recommended: (a). It is what depcheck reads, as for the app packages; (b) adds a
+second population rule to `deadcode`. D-094 is not edited; this entry states what it adds. Amends 09 §2
+(seed `api/package.json`), 09 §2.1 (`module.*` row), 09 §6 (`api/package.json` row). Code follow-up
+(W11): the generator's manifests. Chosen: (a). Source: Owner (panels, 2026-10-25; packet
+`PACKET-2026-10-24-R6-CLOSE.md` Part C, Owner's workspace).
+
+## D-104 · 2026-10-25 · The generator tags the seeded exports a code packet will consume `/** @public */`
+[fact] On a fresh module knip FAILs `unused export insertNote`, `getNote` (`notes.repository.ts`),
+`createNoteResponse`, `getNoteResponse` (the DTO files): the seeded queries and response schemas have
+no importer until the code packet PKT-DEMO-004 wires them, so campaign step 4 cannot be met under
+D-100 in any cell (devai-v3#69 Open 2; devai-v3#67 Open 7, ratified as recorded by D-102). Options:
+(a) the generator emits knip's `/** @public */` JSDoc tag on each seeded export the code packet is
+expected to consume (repository queries, response schemas); knip then does not report them; the code
+packet may remove the tag when it wires them; no knip config change; (b) knip ignores exports under
+`domain/*/api/src/dto/**` and `*.repository.ts`; (c) the seed service stub consumes them.
+Recommended: (a). It marks the exact exports and keeps `deadcode` live on everything else; (b) hides
+every future dead export in those files; (c) gives a stub behaviour the code packet must delete
+(P-5-08). Amends 09 §2 (seed repository, generated DTO files), 09 §2.1 (`queries[]`,
+`routes[].response` rows), 09 §6 (repository and DTO rows). Code follow-up (W11): the renderer.
+Chosen: (a). Source: Owner (panels, 2026-10-25; packet `PACKET-2026-10-24-R6-CLOSE.md` Part C,
+Owner's workspace).
+
+## D-105 · 2026-10-25 · The `unit` tier initialises Angular's TestBed for web specs from a template setup file
+[fact] In every `--web` cell `unit` FAILs `domain/notes/web/test/note.service.spec.ts:1 collection
+failed: The service 'BrowserXhr' needs to be compiled using the JIT compiler, but '@angular/compiler'
+is not available` (devai-v3#69 O5–O8; devai-v3#67 Open 3, ratified as recorded by D-102): the root
+Vitest config (09 §1.1, `09-rail.md:64`) loads no Angular test environment, and the template root
+carries neither `@angular/compiler` nor `@angular/platform-browser` (`packages/cli/template/package.json`;
+both are in `apps/web/package.json` only). Options: (a) 09 §1.1 `vitest.config.ts` row: the `unit` tier
+gets a `setupFiles` entry for web specs, `test/support/angular.setup.ts` (imports `@angular/compiler`,
+initialises TestBed with `BrowserTestingModule`/`platformBrowserTesting`, zoneless); `@angular/compiler`
+and the `@angular/platform-browser` testing entry join the template root devDependencies, pinned
+exactly like the other Angular packages in §1.1; (b) the generated web spec avoids Angular DI.
+Recommended: (a). The generated service is an Angular injectable, and its spec should load it as the
+app does; (b) tests a service outside the injector that runs it. [inference] "Pinned exactly like the
+other Angular packages" is 22.2.1, the Angular family pin (09 §5, 07 §2), which the root's
+`@angular/build`, `@angular/cli` and `@angular/compiler-cli` carry. Amends 09 §1.1 (root
+`package.json` row, `vitest.config.ts` row, new `test/support/angular.setup.ts` row). Code follow-up
+(W11): the template file, config and manifest. Chosen: (a). Source: Owner (panels, 2026-10-25; packet
+`PACKET-2026-10-24-R6-CLOSE.md` Part C, Owner's workspace).
+
+## D-106 · 2026-10-25 · Campaign step 3 builds the workspace before the generate commit; `new module` prints the build last
+[fact] At campaign step 3 the pre-commit hook's `lint` FAILs `apps/api/src/app.module.ts:19:3
+@typescript-eslint/no-unsafe-assignment` while `@demo/notes-api`'s `exports` (`./dist/index.js`,
+`09-rail.md:288`) is unbuilt: typed lint sees the import as `any`. W10's re-run ran
+`tsc -b apps/api/tsconfig.json [apps/web/tsconfig.json]` before `git commit`; 09 §4 step 3 lists no
+build (`09-rail.md:197`; devai-v3#69 Open 5). Options: (a) 09 §4 step 3 gains `pnpm -r build` after
+`pnpm install` (the apps' `tsc -b` builds the referenced module); `new module` prints it as the last
+mount line, `then pnpm -r build`; (b) `exports` gain a `types`/`development` condition. Recommended:
+(a). It builds what D-093's `references` already declare; (b) makes typed lint read sources through a
+condition no runtime uses. Amends 09 §2 (mount lines), 09 §4 (step 3), 09 §6 (printed mount lines).
+Code follow-up (W11): `new module`'s mount print. Chosen: (a). Source: Owner (panels, 2026-10-25;
+packet `PACKET-2026-10-24-R6-CLOSE.md` Part C, Owner's workspace).
+
+## D-107 · 2026-10-25 · W10's readings are ratified as recorded (devai-v3#69 Open 3, 4, 6–11)
+[fact] The W10 fix wave (devai-v3#69) listed eleven items under `## Open`; D-103, D-104 and D-106 rule
+Open 1, 2 and 5. The other eight are W10's readings where the law was silent:
+- **Open 3**: the D-098 fixtures are not authored and steps 5–8 not run; R8 authors them (D-098), with a
+  token helper, since the template's test support gives database roles but no way to mint a
+  `StynxAuthModule` token and no law fixes the token form.
+- **Open 4**: the real D-097 `pnpm add -D --save-exact @devai-nyx/cli@3.0.0` 404s until R10; tests and
+  the re-run reach `init` through a `pnpm` first on `PATH` (`packages/cli/test/pnpm-shim.ts`, modes
+  `stub`, `fail`, `real`), the host lookup `init` already makes, not a CLI flag or variable; the real
+  `pnpm add` is first exercised at R10. The `@devai-nyx/decorators` 3.0.0 pin at campaign step 3's
+  `pnpm install` is bridged the same way (a global pnpmfile `link:`).
+- **Open 6**: under `--hook pre-commit|commit-msg` an unborn `HEAD` is read as git's empty tree, and the
+  report's `head` is the empty tree's id (`4b825dc6…`, not a commit); every other mode still refuses
+  `HEAD has no commit`.
+- **Open 7**: `AppModule` in `apps/<app>/src/app.module.ts`, the mount-census root, is exempt from
+  `devai/product-prefix`; only that class in that file.
+- **Open 8**: a commit refused by a hook during `init` is exit 2 `setup-failed`
+  (`git commit "<subject>" refused by the hooks: <FAIL/UNKNOWN lines>; fix the findings, then commit by
+  hand`); after a failed install or a refused commit, `devai init` again is attach mode and commits
+  nothing.
+- **Open 9**: the `layout` exemption covers all six 09 §1.1 `vitest.config.ts` tier literals, including
+  `test/integration/…` and `test/db/…`, which the template already populates.
+- **Open 10**: generator formatting is pinned to the CLI's own Prettier (3.9.6, a dependency of
+  `@devai-nyx/cli`); a Prettier bump in a later CLI changes the bytes for a new `generatorVersion`, as
+  any renderer change does.
+- **Open 11**: `render()` is async (Prettier 3 has no synchronous API); 09 §2's
+  `render(specBytes, options, version) → Map` resolves to that map.
+Options: (a) ratify all as recorded; (b) ratify except named rows. Recommended: (a). Chosen: (a).
+Where a reading changes framework text it is applied: 08 A.1 (Exit, Failure → reason: the `init`
+exit-2 path and the attach re-run; Open 8), 08 A.7 (unborn `HEAD`; Open 6), 08 B.3 (`product-prefix`
+exemption; Open 7), 08 B.6 (S-62 tier literals; Open 9), 09 §2 (async `render`, the pinned Prettier;
+Open 10, 11), 09 §4 (R8's token helper; Open 3). Open 4 changes no law text; this entry records it.
+No code change: W10 already behaves as ratified. Source: Owner (panels, 2026-10-25; packet
+`PACKET-2026-10-24-R6-CLOSE.md` Part C, Owner's workspace).
+
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
 - Mutation testing's home (D-004: outside the cycle or not at all) — not blocking v3.0.
 - 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck (D-058) — not blocking v3.0.
 - STYNX local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 (D-069) — STYNX item, not blocking 3.0.0.
+- D-106's `pnpm -r build` builds nothing on the template as it stands: no template package has a
+  `build` script (root `scripts` is `test` only; `apps/api`, `apps/web` and 09 §6's module manifest have
+  none), and pnpm 9.15.0 then prints `None of the selected packages has a "build" script` and exits 0.
+  Which manifests gain `build: tsc -b` (or whether step 3 runs `tsc -b` itself) is not ruled.
+- D-106's printed line is read as its own last line, `mount: then pnpm -r build` (09 §2, §6); its exact
+  text is not ruled.
+- D-105: Vitest's `setupFiles` applies to every file of the `unit` tier, so "for web specs" in one root
+  config also loads the setup for API specs, unless the tier is split; the setup imports
+  `@angular/core/testing`, but `@angular/core` is not among the two root devDependencies D-105 adds;
+  and no DOM environment (jsdom, happy-dom) is named for `BrowserTestingModule`. Not ruled.
+- D-104: the response schemas live in `generated` DTO files, where the code packet cannot remove the
+  tag (`generated` FAILs a hand edit, S-45; regeneration restores it), so there the tag is permanent.
+  Not ruled.
+- D-107 (devai-v3#69 Open 8): after a failed `init` install or a hook-refused commit, the re-run is
+  attach mode and commits nothing; who then makes the template and packets commits is not stated.
