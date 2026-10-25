@@ -7,7 +7,7 @@ import { commitTree, digestOf } from '../candidate/digest.js';
 import { CACHE_DIR } from '../cache/store.js';
 import { isAncestor, log, lsTree, revParse, show } from '../git/git.js';
 import type { Format } from '../main.js';
-import { frontMatter, PacketInvalid, parsePacket } from '../packet/packet.js';
+import { frontMatter, PACKET_ID, PacketInvalid, parsePacket } from '../packet/packet.js';
 import { introducing, packetsAtHead, preDag } from '../packet/rules.js';
 import { packetPopulation } from './check.js';
 import { setup } from './packet.js';
@@ -29,7 +29,8 @@ async function statusOf(root: string, path: string, text: string, committed: boo
   if (!committed) return out('drafted', 'not in any commit');
 
   const base = typeof fm['base'] === 'string' && (await revParse(root, fm['base'])) !== null ? fm['base'] : null;
-  const trailer = (await log(root, ['--all', '--format=%H', `--grep=^Packet: ${id}$`])).split('\n').filter((s) => s !== '');
+  // D-122: only a packet id names trailer commits; `init`'s `Packet: CMP-<PRODUCT>-nnn` carries no packet.
+  const trailer = PACKET_ID.test(id) ? (await log(root, ['--all', '--format=%H', `--grep=^Packet: ${id}$`])).split('\n').filter((s) => s !== '') : [];
   if (main !== null) {
     for (const c of trailer) if (await isAncestor(root, c, main)) return out('merged', `${abbrev(c)} on main carries Packet: ${id}`);
   }
