@@ -1,15 +1,15 @@
 ---
 title: Building and testing
 sidebar_position: 3
-description: The build command today, what R6 adds, the generator release matrix CI runs, and the R2 database prototype.
+description: The build command, the generator release matrix CI runs, and the R2 database prototype.
 ---
 
 # Building and testing
 
 > **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
 
-The `pnpm` build below runs today. The `devai` commands on this page are the ones the release matrix
-will run once the CLI exists at R6.
+The `pnpm` build below runs today. The CLI is built (R6); the `devai` commands on this page are the
+ones the release matrix runs once R8 writes its cells.
 
 ## Toolchain
 
@@ -20,7 +20,7 @@ will run once the CLI exists at R6.
 - `NODE_AUTH_TOKEN` set to a GitHub Packages token with `read:packages` on `stynx-nyx` (the `@stynx-nyx/*` packages are private; in CI this is the `STYNX_READ_TOKEN` secret of 12 §5 H4, locally `gh auth token` works for a member), because `.npmrc` resolves both `@devai-nyx` and
   `@stynx-nyx` from `npm.pkg.github.com`.
 
-## Build today
+## Build
 
 The build is the CI `build` job's command, also given in `AGENTS.md` (12 §2):
 
@@ -28,20 +28,29 @@ The build is the CI `build` job's command, also given in `AGENTS.md` (12 §2):
 pnpm install --frozen-lockfile && pnpm -r --if-present build && pnpm -r --if-present test
 ```
 
-Since R6 W0 both packages define `build` (`tsc -b`) and the CLI defines `test` (`vitest run`), so the
-job compiles both packages and runs the CLI's tests: the 08 C.2 invariants, the A.8 definition, byte
-parity of `report.ts`/`config.ts` with 08, the D-056 projections, the built binary's preamble and the
-packed tarball. `pnpm project` in `packages/cli` rewrites `schema/devai.schema.json` after a change to
-`config.ts`. Only `--version` runs; commands arrive with the R6 waves (12 §4).
+Both packages define `build` (`tsc -b`, the 12 §5 addition) and `test`, so the job compiles both
+packages and runs their tests: the 08 C.2 invariants, the A.8 definition, byte parity of
+`report.ts`/`config.ts` with 08, the D-056 projections, every command and node adapter through the
+built binary, the generator against 09 §6, the template and the packed tarball. `pnpm project` in
+`packages/cli` rewrites `schema/*.schema.json` after a change to a zod definition.
 
-## Build from R6
+The database tests (`db-apply`, `sql-typed` DB, `integration`) need a PostgreSQL 16 server and `psql`.
+They read `DEVAI_TEST_DATABASE_URL` (default `postgresql://localhost:5432/postgres`, which connects as
+your OS user) and skip with a warning when it does not answer. CI sets it to its `postgres:16`
+service; locally, for a server with a `postgres` superuser:
 
-R6 adds `tsc -b` to the `build` job (12 §5). Development runs emitted JavaScript, never TypeScript
+```sh
+DEVAI_TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres pnpm -r --if-present test
+```
+
+## Running emitted JavaScript
+
+Development runs emitted JavaScript, never TypeScript
 directly: `tsc -b`, then `node dist/main.js`. There is no `tsx`, because Node's type stripping cannot
 resolve the `.js` relative specifiers that ESM output requires to `.ts` sources
 ([D-057](../../decisions.md), [07 §1](../framework/07-dependencies.md)).
 
-R6 also adds the schema projection test. Every artifact schema is a zod definition. `devai.schema.json`
+The schema projection test: every artifact schema is a zod definition. `devai.schema.json`
 and the use-case JSON Schema are emitted from those definitions with `z.toJSONSchema()` and committed,
 and the DEVAI build checks that every artifact schema projects and that the committed projections
 match ([D-056](../../decisions.md), [07 §3](../framework/07-dependencies.md)).
@@ -56,8 +65,8 @@ This is standard S-46, and it runs in this repository's `ci.yml`, not as a secon
 In `ci.yml` this is the `matrix` job. It runs in both runtimes (`bare`, `docker`) whenever
 `packages/cli/**` changed, and on every `v*` tag. The change test is a job condition, never a
 workflow-level `paths` filter, because an absent required check blocks merges silently (12 §5).
-**Today the job is a placeholder:** the cells need `src/main.ts` (R6) and the published STYNX `<v>`
-(R5), and are written into the job at R8. Until then the job passes on branches and fails on tags,
+**Today the job is a placeholder:** `src/main.ts` (R6) and STYNX 3.0.0 (R5) exist, and the cells are
+written into the job at R8. Until then the job passes on branches and fails on tags,
 so `publish` cannot run on an unfilled matrix.
 
 Each cell runs in a temporary workspace with a clean registry install, no STYNX checkout, product

@@ -10,14 +10,14 @@ This section is for the people and agents who work on DEVAI itself: the `devai-v
 builds `@devai-nyx/cli` and `@devai-nyx/decorators`. If you are adopting DEVAI in a product
 repository, read [Adopters](../adopters/index.md) instead.
 
-The repository is at its seed state. It holds the law, the two package manifests, the zod
-definitions of `devai.json` and `report.json`, the decorators, and the template files whose bytes
-the law fixes. There is no `src/main.ts` yet: the CLI, the generator and the rest of the template
-land at release prerequisite R6 (12 §2, §4, bootstrap history; [D-065](../../decisions.md)).
+The code of release prerequisite R6 has landed: the repository holds the law, the CLI
+(`src/main.ts`, the commands of 08 Part A and the 28 node adapters), the generator, the decorators,
+the template with its `package.json` and lock at STYNX 3.0.0, and the committed schema projections (12 §2, §4,
+bootstrap history; [D-065](../../decisions.md)). Neither package is published yet (R10).
 
 ## Pages
 
-- [Repository](repository.md): what each path is today, and what R6 adds.
+- [Repository](repository.md): what each path is, as R6 built it.
 - [Building and testing](building-and-testing.md): the build command, the generator release matrix
   in `ci.yml`, and the R2 database prototype.
 - [Release](release.md): prerequisites R0–R10, the tag-triggered `publish` job, and the host

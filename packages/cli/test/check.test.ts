@@ -96,7 +96,7 @@ describe('devai check refusals (W1)', () => {
   });
   it('flags of later waves refuse naming the wave; W4 flags refuse their misuse', () => {
     const dir = templateWorkspace();
-    expect(usage(dir, '--full')).toMatchObject({ reason: 'usage', message: '--full arrives in a later wave (R6 W2–W5, with the nodes it selects)' });
+    expect(usage(dir, '--full')).toMatchObject({ reason: 'usage', message: '--full arrives in a later wave (not wired at the R6 close; the R8 matrix needs it)' });
     expect(usage(dir, '--hook', 'pre-merge')).toMatchObject({ reason: 'usage', message: '--hook pre-merge: expected pre-commit, pre-push or commit-msg' });
     expect(usage(dir, '--hook', 'commit-msg')).toMatchObject({ reason: 'usage', message: '--hook commit-msg needs the message file' });
     expect(usage(dir, '--hook', 'pre-commit', '--only', 'format')).toMatchObject({ reason: 'usage', message: '--hook combines with --format only (A.7)' });
