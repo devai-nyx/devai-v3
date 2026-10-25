@@ -129,14 +129,15 @@ describe('A.7 end to end through git commit and git push', () => {
       { class: 'ci', paths: ['.github/workflows/ci.yml'], declared: false },
     ] });
 
-    // git push runs the pre-push hook. Until B.16 `generated` has an adapter the hook's plan is refused
-    // (exit 2, `node generated arrives in a later wave`), so the push is rejected and the remote unchanged.
+    // git push runs the pre-push hook. Its plan now runs whole (W8 registered `generated`, SKIPPED here:
+    // no manifest); a gating node that is not PASS rejects the push and leaves the remote unchanged.
     const remote = resolve(dir, '../', `${dir.split('/').pop()}-remote.git`);
     gitIn(dir, 'init', '-q', '--bare', remote);
     gitIn(dir, 'remote', 'add', 'origin', remote);
     expect(git(dir, 'push', '-q', '--no-verify', 'origin', 'main').status).toBe(0);
     r = git(dir, 'push', 'origin', 'n13');
-    expect(r.out).toContain('devai: usage — node generated arrives in a later wave\nexit 2\n');
+    expect(r.out).toContain('generated[no generation-manifest.json under domain/]');
+    expect(r.out).toMatch(/\ndevai pre-push (FAIL|UNKNOWN) — .*\nexit [12]\n/);
     expect(r.status).not.toBe(0);
     expect(gitIn(remote, 'branch', '--list', 'n13')).toBe('');
   });

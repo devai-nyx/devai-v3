@@ -1,0 +1,39 @@
+domain/notes/README.md                         generated  <!-- @generated from SPEC-DEMO-001 do not edit -->  # Notes — SPEC-DEMO-001
+domain/notes/generation-manifest.json          —          { "generator": "@devai-nyx/cli", "generatorVersion": "<release>", "specId": "SPEC-DEMO-001", …
+domain/notes/api/package.json                  seed       { "name": "@demo/notes-api", "private": true, "type": "module", "exports": { ".": "./dist/index.js" }, …
+domain/notes/api/tsconfig.json                 generated  G
+                                                          { "extends": "@stynx-nyx/tsconfig/node24.json", "compilerOptions": { "outDir": "dist", "experimentalDecorators": true, "emitDecoratorMetadata": true }, "include": ["src"] }
+domain/notes/api/src/index.ts                  generated  G
+                                                          export { DemoNotesModule } from './notes.module.js';  export { demoNotesEnUs } from './notes.i18n.en-us.js';
+domain/notes/api/src/notes.module.ts           generated  G
+                                                          @Module({ controllers: [DemoNotesController], providers: [DemoNotesService, DemoNotesRepository] })
+domain/notes/api/src/notes.controller.ts       seed       import { parseDto } from '@stynx-nyx/flow';  import { RequireRoles } from '@stynx-nyx/backend';  import { ErrorContract, Slo, UseCase } from '<decorators>';
+                                                          @Controller() export class DemoNotesController {
+                                                            @Post('/notes') @HttpCode(201) @NoIdempotent() @RequireRoles(['demo-member'], 'all')
+                                                            @ErrorContract([{ status: 400, code: 'VALIDATION', messageKey: 'demo.notes.invalid' }, … 401, 403, 503 …])
+                                                            @UseCase('UC-DEMO-001') @Slo({ metric: 'http.server.duration', percentile: 95, maxMs: 500 })
+                                                            async create(@Body() body: unknown, @Query() query: unknown): Promise<CreateNoteResponse> { … parseDto(createNoteBody, body); parseDto(emptyQuery, query); … }
+                                                            @Get('/notes/:id') @HttpCode(200) @NoIdempotent() @RequireRoles(['demo-member'], 'all') @ErrorContract([… 404 'demo.notes.missing' …]) @UseCase('UC-DEMO-001') @Slo({ …, maxMs: 250 })
+domain/notes/api/src/notes.service.ts          seed       @Injectable() export class DemoNotesService { … throw new NotImplementedException('SPEC-DEMO-001 R-1: implement in a code packet'); }
+domain/notes/api/src/notes.repository.ts       seed       import { defineQuery, sql } from '@stynx-nyx/data';
+                                                          export const insertNote = defineQuery({ name: 'demo_notes.note.insert', text: sql`insert into demo_notes.note (title, author_alias) values ($1, $2) returning id, title, author_alias`,
+                                                            params: z.tuple([z.string().min(1).max(80), z.string().min(1).max(40)]), row: noteRow, expects: 'one' });
+                                                          export const getNote = defineQuery({ name: 'demo_notes.note.get', text: sql`select id, title, author_alias from demo_notes.note where id = $1`, params: z.tuple([z.string().uuid()]), row: noteRow, expects: 'zero-or-one' });
+domain/notes/api/src/dto/create-note.dto.ts    generated  G
+                                                          export const createNoteBody = z.strictObject({ title: z.string().min(1).max(80), author_alias: z.string().min(1).max(40) });  export const createNoteResponse = z.strictObject({ … });
+domain/notes/api/src/dto/get-note.dto.ts       generated  G
+                                                          export const getNoteParams = z.strictObject({ id: z.string().uuid() });  export const emptyQuery = z.strictObject({});
+domain/notes/api/src/notes.i18n.en-us.ts       generated  G
+                                                          export const demoNotesEnUs = { 'demo.notes.forbidden': 'You cannot access these notes.', 'demo.notes.invalid': 'Invalid note request.', … } as const;
+domain/notes/api/test/notes.controller.spec.ts seed       it('rejects an undeclared body field with 400 VALIDATION', …
+domain/notes/api/test/acceptance/.gitkeep      seed       (empty)
+domain/notes/db/demo_notes_notes.sql           generated  -- @generated from SPEC-DEMO-001 do not edit
+                                                          CREATE SCHEMA "demo_notes" AUTHORIZATION demo_owner;
+                                                          CREATE TABLE "demo_notes"."note" ( "id" UUID NOT NULL DEFAULT gen_random_uuid(), "tenant_id" UUID NOT NULL DEFAULT NULLIF(current_setting('app.tenant_id', true), '')::uuid REFERENCES "tenancy"."tenants"("id"),
+                                                            "title" VARCHAR(80) NOT NULL CHECK (char_length("title") BETWEEN 1 AND 80),
+                                                            -- @pii: basis=RN-DEMO-002/demo-consent, retention=RN-DEMO-002/until-workspace-destruction
+                                                            "author_alias" VARCHAR(40) NOT NULL CHECK (char_length("author_alias") BETWEEN 1 AND 40), PRIMARY KEY ("id") );
+                                                          ALTER TABLE "demo_notes"."note" ENABLE ROW LEVEL SECURITY;  ALTER TABLE "demo_notes"."note" FORCE ROW LEVEL SECURITY;
+                                                          CREATE POLICY "note_tenant_policy" ON "demo_notes"."note" FOR ALL USING ("tenant_id" = NULLIF(current_setting('app.tenant_id', true), '')::uuid) WITH CHECK (same predicate);
+database/seed/modules.txt                      appended   <sha256>  domain/notes/db/demo_notes_notes.sql
+stdout                                                    mount: add "@demo/notes-api": "workspace:*" to apps/api/package.json and DemoNotesModule to apps/api/src/app.module.ts imports, then pnpm install

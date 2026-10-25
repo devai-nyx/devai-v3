@@ -5,8 +5,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import ts from 'typescript';
-import { parse as parseYaml } from 'yaml';
 import type { NodeAdapter, NodeOutcome, RunContext } from '../runner/run.js';
+import { parseSpec } from '../spec/parse-spec.js';
 import { candidatePaths, type Finding, unknown, type Unknown } from '../proc/tool.js';
 import { ESLINT_CONFIG, eslintOutcome } from './lint.js';
 
@@ -69,14 +69,12 @@ function specKeys(root: string, slug: string, present: ReadonlySet<string>): Rea
   const s = present.has(spec) ? readText(root, spec) : null;
   if (s === null) return { ...fail(spec, `spec ${specId} not found`), inputs };
   if ('unknown' in s) return { ...s, inputs };
-  const block = /^```yaml\n([\s\S]*?)^```/m.exec(s.ok)?.[1];
-  try {
-    const i18n = (parseYaml(block ?? '') as { i18n?: unknown } | null)?.i18n;
-    if (typeof i18n !== 'object' || i18n === null) return { ...fail(spec, 'spec contract has no i18n map'), inputs };
-    return { ok: Object.keys(i18n), inputs };
-  } catch {
-    return { ...fail(spec, 'spec contract does not parse'), inputs };
-  }
+  // parse-spec (W8): a block the 06 §2 definition rejects still names its keys; spec-lint owns that verdict.
+  const parsed = parseSpec(s.ok);
+  if (parsed.kind === 'malformed') return { ...fail(spec, 'spec contract does not parse'), inputs };
+  const i18n = parsed.kind === 'valid' ? parsed.i18n : (parsed.value as { i18n?: unknown } | null)?.i18n;
+  if (typeof i18n !== 'object' || i18n === null) return { ...fail(spec, 'spec contract has no i18n map'), inputs };
+  return { ok: Object.keys(i18n), inputs };
 }
 
 interface Parity {
