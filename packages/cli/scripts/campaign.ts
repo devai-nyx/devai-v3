@@ -521,7 +521,8 @@ export const NEGATIVES: Negative[] = [
         }
       }
       try {
-        c.expectRows('N12', c.check(['--full']), { exit: 1, nodes: { 'route-contract': 'UNKNOWN tooling-missing', boundary: 'UNKNOWN tooling-missing', 'db-apply': 'FAIL', openapi: 'SKIPPED' }, findings: [['route-contract', 'stynx not resolvable from node_modules/.bin'], ['boundary', 'stynx not resolvable from node_modules/.bin'], ['db-apply', 'node_modules/.bin/stynx: No such file'], ['db-apply', 'tooling-missing — db-apply: stynx not resolvable from node_modules/.bin (rls-negative)']] }, [OPEN['packetless']!]);
+        // The shell's own wording follows (bash: `No such file or directory`, dash: `not found`).
+        c.expectRows('N12', c.check(['--full']), { exit: 1, nodes: { 'route-contract': 'UNKNOWN tooling-missing', boundary: 'UNKNOWN tooling-missing', 'db-apply': 'FAIL', openapi: 'SKIPPED' }, findings: [['route-contract', 'stynx not resolvable from node_modules/.bin'], ['boundary', 'stynx not resolvable from node_modules/.bin'], ['db-apply', 'database/apply.sh exited 1'], ['db-apply', 'tooling-missing — db-apply: stynx not resolvable from node_modules/.bin (rls-negative)']] }, [OPEN['packetless']!]);
       } finally {
         for (const [from, to] of moved) renameSync(to, from);
       }
