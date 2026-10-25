@@ -1,7 +1,7 @@
 // 08 A.1 `devai init`, 09 §1. Materialise (no `devai.json` in --dir): validate every input, write the
 // 09 §1.1 tree from the installed package's `template/`, `git init` when the folder is not a work-tree
-// root, `pnpm add -D --save-exact @devai-nyx/cli@<own version>` (installs the workspace and completes the
-// lock, D-097), commit it as `chore(template): devai init <product>` (trailer `Packet: PKT-DEMO-001`),
+// root, `pnpm add -w -D --save-exact @devai-nyx/cli@<own version>` (installs the workspace and completes the
+// lock, D-097; `-w` because the template root is a pnpm workspace root, D-139), commit it as `chore(template): devai init <product>` (trailer `Packet: PKT-DEMO-001`),
 // render the four CMP-DEMO-001 packets with `base` = that commit and commit them (trailer
 // `Packet: CMP-DEMO-001`, D-120), both commits with the
 // hooks live. Attach (`devai.json` present and `HEAD` has both of those commits, D-115): rewrite only
@@ -152,7 +152,7 @@ export async function preflight(dir: string, mode: 'bare' | 'docker'): Promise<P
     { nodes: ['format'], binary: 'prettier', resolved: () => bin('prettier'), remedy: fromManifest('prettier', '3.9.6') },
     { nodes: ['lint', 'lint-tests', 'i18n'], binary: 'eslint', resolved: () => bin('eslint'), remedy: fromManifest('eslint', '10.10.0') },
     { nodes: ['lint', 'lint-tests', 'i18n'], binary: '@stynx-nyx/eslint-config', resolved: () => lib('@stynx-nyx/eslint-config'), remedy: fromManifest('@stynx-nyx/eslint-config', '3.0.0') },
-    { nodes: ['lint', 'i18n'], binary: '@devai-nyx/cli', resolved: () => lib('@devai-nyx/cli'), remedy: fromManifest('@devai-nyx/cli', cliVersion()) },
+    { nodes: ['lint', 'i18n'], binary: '@devai-nyx/cli', resolved: () => lib('@devai-nyx/cli'), remedy: '@devai-nyx/cli' in deps ? 'pnpm install' : installCommand().join(' ') },
     { nodes: ['sql-lint'], binary: 'stynx-migration-lint', resolved: () => bin('stynx-migration-lint'), remedy: fromManifest('@stynx-nyx/migration-linter', '3.0.0') },
     { nodes: ['unit', 'integration'], binary: 'vitest', resolved: () => bin('vitest'), remedy: fromManifest('vitest', '4.1.11') },
     { nodes: ['e2e'], binary: 'playwright', resolved: () => bin('playwright'), remedy: fromManifest('@playwright/test', '1.60.0') },
@@ -227,8 +227,8 @@ async function commit(dir: string, message: string, paths: string[]): Promise<st
   return (await git(dir, ['rev-parse', 'HEAD'])).toString('utf8').trim();
 }
 
-/** D-097: the one install materialise runs, and its remedy when it fails. */
-export const installCommand = (): [string, ...string[]] => ['pnpm', 'add', '-D', '--save-exact', `@devai-nyx/cli@${cliVersion()}`];
+/** D-097, D-139: the one install materialise runs, and its remedy when it fails; `-w`: the template root is a workspace root. */
+export const installCommand = (): [string, ...string[]] => ['pnpm', 'add', '-w', '-D', '--save-exact', `@devai-nyx/cli@${cliVersion()}`];
 const INSTALL_TIMEOUT_MS = 600_000;
 
 /** Runs the install in `dir` (host `pnpm` from PATH, the registry `.npmrc` names); on failure the first `ERR_` line, else the first error line. */

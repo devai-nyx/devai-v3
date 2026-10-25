@@ -656,7 +656,7 @@ function baseEnv(work: string, runtime: Runtime): NodeJS.ProcessEnv {
     '  return pkg;',
     '} } };',
   ].join('\n'));
-  // The `pnpm` first on PATH stands in for init's `pnpm add -D --save-exact @devai-nyx/cli@<v>` (404 until R10):
+  // The `pnpm` first on PATH stands in for init's `pnpm add -w -D --save-exact @devai-nyx/cli@<v>` (D-139; 404 until R10):
   // it writes the exact pin, then runs a real install, which the pnpmfile resolves to this repository, so the
   // lock init commits matches its manifest as a real add leaves it. `--no-frozen-lockfile` is explicit because
   // pnpm forces a frozen install under CI=true, which stays set (the model nodes verify evidence there, C.1).
@@ -669,6 +669,8 @@ function baseEnv(work: string, runtime: Runtime): NodeJS.ProcessEnv {
   writeFileSync(resolve(shimDir, 'pnpm'), [
     '#!/bin/sh',
     'if [ "$1" = add ]; then',
+    // pnpm's own refusal of `add` at a workspace root without -w (D-139), so the shim cannot mask it.
+    `  case " $* " in *' -w '*|*' --workspace-root '*) ;; *) if [ -f pnpm-workspace.yaml ]; then echo ' ERR_PNPM_ADDING_TO_ROOT  Running this command will add the dependency to the workspace root' >&2; exit 1; fi ;; esac`,
     `  for a in "$@"; do case "$a" in @devai-nyx/cli@*) "${process.execPath}" -e "${pin}" "$a" || exit $?;; esac; done`,
     `  exec '${real}' install --no-frozen-lockfile --reporter=silent`,
     'fi',

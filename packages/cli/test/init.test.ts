@@ -85,7 +85,7 @@ describe('devai init --product demo --dir <tmp> (materialise; the install stubbe
 
   it('installs @devai-nyx/cli at its own version before committing, then commits with the hooks live (D-097)', () => {
     const calls = readFileSync(shim.log, 'utf8').trim().split('\n');
-    expect(calls[0]).toBe('add -D --save-exact @devai-nyx/cli@3.0.0');
+    expect(calls[0]).toBe('add -w -D --save-exact @devai-nyx/cli@3.0.0');
     // both commits ran pre-commit and commit-msg (no --no-verify)
     expect(calls.filter((c) => c === 'exec devai check --hook pre-commit')).toHaveLength(2);
     expect(calls.filter((c) => c.startsWith('exec devai check --hook commit-msg'))).toHaveLength(2);
@@ -148,13 +148,13 @@ describe('devai init when the install fails (D-097)', () => {
     const shim = pnpmShim('fail');
     const text = run(shim.env, parent, 'init', '--product', 'demo', '--dir', 'demo');
     expect(text.status).toBe(2);
-    expect(text.stdout.split('\n')).toContain('devai: tooling-missing — install with pnpm add -D --save-exact @devai-nyx/cli@3.0.0 (ERR_PNPM_FETCH_404  GET https://npm.pkg.github.com/@devai-nyx%2Fcli: Not Found - 404); nothing was committed');
+    expect(text.stdout.split('\n')).toContain('devai: tooling-missing — install with pnpm add -w -D --save-exact @devai-nyx/cli@3.0.0 (ERR_PNPM_FETCH_404  GET https://npm.pkg.github.com/@devai-nyx%2Fcli: Not Found - 404); nothing was committed');
     expect(spawnSync('git', ['rev-parse', '--verify', 'HEAD'], { cwd: dir }).status).not.toBe(0);
     expect(readFileSync(resolve(dir, 'devai.json'), 'utf8')).toContain('"productPrefix": "demo"');
     const json = run(pnpmShim('fail').env, tmp(), 'init', '--product', 'demo', '--dir', 'demo', '--format', 'json');
     const out = JSON.parse(json.stdout) as { exitCode: number; reason: string; preflight: { binary: string; status: string; remedy?: string }[] };
     expect(out).toMatchObject({ exitCode: 2, reason: 'tooling-missing' });
-    expect(out.preflight.find((p) => p.binary === '@devai-nyx/cli')).toMatchObject({ status: 'missing', remedy: 'pnpm add -D --save-exact @devai-nyx/cli@3.0.0' });
+    expect(out.preflight.find((p) => p.binary === '@devai-nyx/cli')).toMatchObject({ status: 'missing', remedy: 'pnpm add -w -D --save-exact @devai-nyx/cli@3.0.0' });
     // D-112, D-113: unborn HEAD, so the re-run is a first run; another --product is exit 2 config-mismatch.
     const stub = pnpmShim('stub');
     const other = run(stub.env, dir, 'init', '--product', 'other', '--format', 'json');
@@ -163,7 +163,7 @@ describe('devai init when the install fails (D-097)', () => {
     const again = JSON.parse(run(stub.env, dir, 'init', '--format', 'json').stdout) as { mode: string; written: string[] };
     expect(again.mode).toBe('materialise');
     expect(again.written.filter((p) => !p.startsWith('packets/'))).toEqual([]);
-    expect(readFileSync(stub.log, 'utf8')).toContain('add -D --save-exact @devai-nyx/cli@3.0.0');
+    expect(readFileSync(stub.log, 'utf8')).toContain('add -w -D --save-exact @devai-nyx/cli@3.0.0');
     expect(git(dir, 'log', '--format=%s|%(trailers:key=Packet,valueonly,separator=%x2C)')).toBe('chore(packets): seed CMP-DEMO-001|CMP-DEMO-001\nchore(template): devai init demo|PKT-DEMO-001');
     expect(git(dir, 'status', '--porcelain')).toBe('');
     expect(JSON.parse(run(stub.env, dir, 'init', '--format', 'json').stdout)).toMatchObject({ mode: 'attach' });
