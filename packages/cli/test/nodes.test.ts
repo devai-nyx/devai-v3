@@ -46,6 +46,14 @@ describe('B.1 inventory', () => {
     expect(data.populations.boundary.skippable).toBe(false);
   });
 
+  it("spec-tests' predicate names the packet's pinned spec (05 §3: no acceptance file for SPEC-x)", async () => {
+    const dir = templateWorkspace();
+    const base = { root: dir, config: templateConfig(), runtime: 'bare' as const, cliVersion: '3.0.0', listing: await workingTree(dir, null), base: null, head: 'b'.repeat(40), plan: plan({ packet: false, full: false, only: ['inventory'] }) };
+    const packet = { kind: 'code' as const, unimplemented: [], specText: '', packet: { spec: { id: 'SPEC-DEMO-001' } } } as unknown as RunContext['packet'];
+    expect((await runInventory({ ...base, packet })).data.populations['spec-tests']).toMatchObject({ predicate: 'no acceptance file for SPEC-DEMO-001', count: 0 });
+    expect((await runInventory(base)).data.populations['spec-tests']!.predicate).toBe('no acceptance file for the pinned spec');
+  });
+
   it('FAIL: a workspace package without "type": "module", and a glob naming no package (B.1 finding forms)', async () => {
     const dir = templateWorkspace({
       'pnpm-workspace.yaml': "packages:\n  - 'packages/*'\n  - 'libs/*'\n",
