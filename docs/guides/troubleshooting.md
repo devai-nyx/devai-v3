@@ -6,8 +6,6 @@ description: From an exit code and a reason code to the next action, for the age
 
 # Troubleshooting
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 Every line `devai check` prints is a locator plus a remedy. Read the line and act; the rule *is* the
 line ([05 §5](../framework/05-task-packet.md)). This page groups the common cases. The full list of
 54 reason codes is in the [reference](../reference/reason-codes.md).

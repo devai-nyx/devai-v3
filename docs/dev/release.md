@@ -6,8 +6,6 @@ description: The ordered release prerequisites R0 to R10, the tag-triggered publ
 
 # Release
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 DEVAI 3.0.0 is released by a one-time plan, the succession plan (bootstrap document 12). It adds no
 node, state, command or field (12 §0). Every step is decided by a check, a read-back, an
 `npm view` or an exit code; none needs a human to read a diff ([D-003](../../decisions.md); 12 §5).
@@ -130,7 +128,7 @@ The H-steps are the one-time GitHub actions around the release (12 §5):
 | H4 | Owner | Package settings: connect `@devai-nyx/cli` to the repository with Actions write access; give the repository read access to the installed `@stynx-nyx/*` packages, or set a `STYNX_READ_TOKEN` secret if cross-org access is not possible |
 | H5 | Owner | Protection with checks `build` and `matrix`, read back |
 | H6 | agent | `git tag -a v3.0.0 -m "DEVAI 3.0.0" <green main sha>` and push the tag; `publish` runs |
-| H7 | Owner, then agent | After R10 and once the first adopter has one v3 module green in its CI, its applied SQL history kept and a recovery path shown, archive the v2 repository `aarusso-nyx/devai`; read back `archived: true` ([D-090](../../decisions.md)) |
+| H7 | — | Struck by [D-142](../../decisions.md) (Owner, 2026-10-25): v2 and v3 cohabit, and the v2 repository `aarusso-nyx/devai` stays unarchived. It was: archive v2 after R10 and the first adopter's green v3 module ([D-090](../../decisions.md)) |
 | H8 | Owner | After R10, make `@devai-nyx/cli` and `@devai-nyx/decorators` public; read back `public`. This is irreversible and also exposes the CLI's existing 0.1.0–0.8.0 ([D-064](../../decisions.md)) |
 
 Each Owner step ends with a read-back command, so the step is observed rather than trusted (12 §5).
@@ -148,4 +146,4 @@ Adopters move by fresh scaffold; see [Moving from v2](../adopters/moving-from-v2
 release would follow the same jobs: green `build` and `matrix` on `main`, then a `v*` tag. The law
 does not define a policy for 3.x releases beyond these jobs.
 
-Source: 08 B.10, 09 §1.1, §2, §4, decisions D-002, D-003, D-026, D-028, D-038, D-047, D-058, D-064, D-065, D-067–D-070, D-098, D-100, D-119–D-138, D-141; 12 §0, §3–§5, §8 (bootstrap history).
+Source: 08 B.10, 09 §1.1, §2, §4, decisions D-002, D-003, D-026, D-028, D-038, D-047, D-058, D-064, D-065, D-067–D-070, D-098, D-100, D-119–D-138, D-141, D-142; 12 §0, §3–§5, §8 (bootstrap history).

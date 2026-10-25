@@ -6,8 +6,6 @@ description: DEVAI 3 in one page — a rail and a harness for agent-built NestJS
 
 # What is DEVAI?
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 DEVAI exists so that frontier coding agents (Claude Code, Codex) can build company products — NestJS
 backends over PostgreSQL behind Angular web apps — while the company standards hold, and so that the
 person steering the work spends attention on intent, rules and specs rather than on administration

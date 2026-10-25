@@ -6,8 +6,6 @@ description: Running checks bare or in Docker, how the runtime is declared and o
 
 # Runtimes
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 Every check, the dev environment, local CI and remote CI must run either bare on your machine or in
 Docker. Docker is supported, never mandatory ([S-08](../framework/03-standards.md)). This used to be
 practice with no written home; DEVAI states it as a contract agents read

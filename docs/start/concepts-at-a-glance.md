@@ -6,8 +6,6 @@ description: One paragraph each on the ten ideas DEVAI 3 is built from, with a l
 
 # Concepts at a glance
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 Ten ideas, one paragraph each. The [glossary](../reference/glossary.md) has the short definitions; the
 links go to the law.
 

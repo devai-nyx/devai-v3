@@ -6,8 +6,6 @@ description: The report.json schema, node result, finding and details shapes, th
 
 # `report.json` and the evidence files
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 `devai check` has **one report shape** ([08 C.2](../framework/08-cli-and-nodes.md), [D-056](../../decisions.md)). The text report and the JSON report come from the same `Report` object; there is no second reporter format ([08 Part D](../framework/08-cli-and-nodes.md)). The zod definitions are in 08 C.2; `packages/cli/src/report.ts` holds the same text.
 
 **Counts:** `Report` 16 fields and 9 invariants; `NodeResult` 13 fields and 9 invariants; `Finding` 4 fields; `Details` 8 variants; 28 `NodeId` values; 4 `Status` values; 54 `ReasonCode` values ([Reason codes](./reason-codes.md)); plus 5 evidence and model-output schemas (`SensorOutput`, `SensorEvidence`, `Review`, `ReviewPhase1`, `ReviewModelOutput`).

@@ -6,8 +6,6 @@ description: Every key of devai.json as the 08 A.8 zod definition declares it, w
 
 # `devai.json`
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 `devai.json` is the one configuration file. It sits at the repository root, is checked in, belongs to protected class `standards`, and contains no executable configuration ([02 §6](../framework/02-architecture.md), [D-034](../../decisions.md)). Its definition is the zod object `DevaiConfig` in [08 A.8](../framework/08-cli-and-nodes.md); `packages/cli/src/config.ts` holds the same text byte for byte. `devai.schema.json` is emitted from it with `z.toJSONSchema(DevaiConfig)` at the DEVAI build ([D-056](../../decisions.md)). Refinements (`superRefine`) do not appear in the emitted JSON Schema.
 
 **Counts:** 9 top-level keys, 20 key paths in all, 13 of them leaf settings. The objects are strict: an unknown key at any level is invalid. Every command validates the file first; an invalid file is exit 2 `config-invalid` ([08 Part A](../framework/08-cli-and-nodes.md)).

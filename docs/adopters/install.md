@@ -6,8 +6,6 @@ description: Prerequisites, devai init in materialise and attach mode, and the p
 
 # Install
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 A DEVAI 3 product repository is created once by `devai init` and then lives on its own. There is no
 installer beyond that command and no interactive setup: every input is a flag, and every missing
 tool is a printed line with its install command ([08 A.1](../framework/08-cli-and-nodes.md)).

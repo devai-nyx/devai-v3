@@ -6,8 +6,6 @@ description: The devai.json file key by key, the DEVAI_RUNTIME override, and the
 
 # Configuration
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 A DEVAI 3 repository has one configuration file, `devai.json` at the root. It is checked in, it is
 inert JSON with a `$schema` (no executable configuration), and it belongs to the `standards`
 protected class ([D-034](../../decisions.md), [02 §6](../framework/02-architecture.md)). Its shape

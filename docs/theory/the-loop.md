@@ -6,8 +6,6 @@ description: How a business rule becomes an accepted change in DEVAI 3 — spec,
 
 # The loop
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 The loop runs at task level. One feature is a short campaign of packets, each a unit of acceptance,
 landing through one or more PRs, each a unit of merge ([D-026](../../decisions.md),
 [02 §8](../framework/02-architecture.md)). D-026's packet granularity is **provisional**: the first DETRAN

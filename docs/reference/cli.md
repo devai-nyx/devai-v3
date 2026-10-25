@@ -6,8 +6,6 @@ description: Every devai command, flag, mode, exit code and reason code, as 08 P
 
 # CLI reference
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 This page lists the whole command surface of [08 Part A](../framework/08-cli-and-nodes.md): **7 invocations** under 5 command words (`init`, `new module`, `check`, `packet new|lint|rebase`, `packets status`), **20 distinct flags** (28 flag uses across the 7 invocations), and **3 hook scripts**. `devai doctor` is specified as *not built* ([08 A.6](../framework/08-cli-and-nodes.md)).
 
 ## Rules for every command

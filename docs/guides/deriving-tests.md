@@ -6,8 +6,6 @@ description: How a test agent derives acceptance tests from an approved spec bef
 
 # Deriving tests
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 Acceptance tests are the loop's sensor. They are written by an agent that did not write the code,
 from the spec alone, before the implementation exists ([01 Charter](../framework/01-charter.md),
 [D-035](../../decisions.md)). Independence comes from derivation source and sequencing, not from

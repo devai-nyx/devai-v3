@@ -6,8 +6,6 @@ description: What DEVAI 3 is, who each part of this site is for, and where the b
 
 # DEVAI 3
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 DEVAI 3 is a rail and a harness for building NestJS / Angular / PostgreSQL applications in one
 monorepo with frontier coding agents, to company standards ([01](framework/01-charter.md),
 [D-006](../decisions.md)). The rail is a template, a module generator and a few helpers that make the

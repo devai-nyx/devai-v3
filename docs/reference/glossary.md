@@ -6,8 +6,6 @@ description: Short definitions of the terms DEVAI 3's law uses, each with the do
 
 # Glossary
 
-> **Status:** DEVAI 3.0.0 is in development; this page describes the specified behaviour (docs/framework). Commands are not yet published.
-
 One or two lines per term, each pointing at the document that defines it. Where a term has a reference page, the page is linked too. 53 terms.
 
 | Term | Meaning | Source |
