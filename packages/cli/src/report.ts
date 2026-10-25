@@ -11,7 +11,8 @@ export const Status = z.enum(['PASS', 'FAIL', 'UNKNOWN', 'SKIPPED']);
 export const ReasonCode = z.enum([
   // could not run (command level)
   'config-invalid','not-a-repository','packet-invalid','base-not-ancestor','expect-red-nothing-named','no-report',
-  'candidate-changed','usage','dir-not-empty','spec-not-approved','spec-invalid','spec-superseded','output-exists','spec-mismatch','config-mismatch',
+  'candidate-changed','usage','dir-not-empty','spec-not-approved','spec-invalid','spec-superseded','output-exists','spec-mismatch',
+  'config-mismatch',
   // could not observe (node level)
   'no-observations','prerequisite-failed','tooling-missing','engines-mismatch','lint-config-failed','runner-crashed','timeout',
   'base-unreadable','io','parser-unavailable','adapter-unbound','unsupported-oid','unsupported-binding','mount-unresolved',
