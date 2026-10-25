@@ -34,7 +34,7 @@ matter when you upgrade:
 
 | Situation | Result | Remedy printed |
 |---|---|---|
-| Installed CLI version ≠ the manifest's `generatorVersion` | `UNKNOWN: generator-version-mismatch` | `pnpm add -D @devai-nyx/cli@<version>` |
+| Installed CLI version ≠ the manifest's `generatorVersion` | `UNKNOWN: generator-version-mismatch` | `pnpm add -w -D @devai-nyx/cli@<version> && pnpm install` |
 | A generated file was edited by hand | `FAIL … differs from regeneration [S-45]` | regenerate (`devai new module --regenerate`) or move the logic to a seed file |
 | The recorded spec bytes cannot be found | `UNKNOWN: generator-unavailable` | regenerate in a generate packet |
 

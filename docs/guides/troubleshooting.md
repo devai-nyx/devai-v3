@@ -84,7 +84,7 @@ See [Deriving tests](deriving-tests.md).
 | Reason or finding | Next action |
 |---|---|
 | `differs from regeneration` | `devai new module --regenerate`, or move the logic to a seed file |
-| `generator-version-mismatch` | `pnpm add -D @devai-nyx/cli@<version>` |
+| `generator-version-mismatch` | `pnpm add -w -D @devai-nyx/cli@<version> && pnpm install` |
 | `generator-unavailable`, `catalog-unresolved` | Regenerate in a `generate` packet |
 | `output-exists` | The module exists: use `--regenerate` |
 | `spec-mismatch` | Regenerate only from the spec the manifest names |
