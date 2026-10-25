@@ -221,7 +221,7 @@ async function commit(dir: string, message: string, paths: string[]): Promise<st
     // The hook's report (git sends hook output to stderr): its node lines and its closing stage line.
     const lines = e.stderr.split('\n').map((l) => l.trim()).filter((l) => /^(FAIL|UNKNOWN)\b|^devai (pre-commit|commit-msg) /.test(l));
     const tail = (lines.length > 0 ? lines : [e.message]).join(' · ');
-    throw new CommandRefusal('setup-failed', `git commit "${message.split('\n')[0]}" refused by the hooks: ${tail}; fix the findings, then run devai init again (D-112)`);
+    throw new CommandRefusal('setup-failed', `git commit "${message.split('\n')[0]}" refused by the hooks: ${tail}; fix the findings, then run devai init again`);
   }
   return (await git(dir, ['rev-parse', 'HEAD'])).toString('utf8').trim();
 }
