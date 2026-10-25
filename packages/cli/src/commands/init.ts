@@ -3,14 +3,16 @@
 // root, `pnpm add -D --save-exact @devai-nyx/cli@<own version>` (installs the workspace and completes the
 // lock, D-097), commit it as `chore(template): devai init <product>` (trailer `Packet: PKT-DEMO-001`),
 // render the four CMP-DEMO-001 packets with `base` = that commit and commit them, both commits with the
-// hooks live. Attach (`devai.json` present): rewrite only the three hooks. Both modes set the worktree's
+// hooks live. Attach (`devai.json` present and a `Packet:` commit exists, D-112): rewrite only the three
+// hooks. `devai.json` without a `Packet:` commit (a failed install or a hook-refused commit) is a first
+// run again: the tree stays as it is, and the install and both commits are made from it. Both modes set the worktree's
 // hooks path and agent identity (D-057, D-058, 02 §5) and end with the preflight; exit 2
 // `tooling-missing` when an item does not resolve or the install failed (then nothing is committed).
 import { chmodSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DevaiConfig } from '../config.js';
-import { git, GitFailed, topLevel } from '../git/git.js';
+import { git, GitFailed, log, revParse, topLevel } from '../git/git.js';
 import { CommandRefusal, cliVersion, type Format, loadConfig } from '../main.js';
 import { spawn } from '../proc/spawn.js';
 
@@ -218,7 +220,7 @@ async function commit(dir: string, message: string, paths: string[]): Promise<st
     // The hook's report (git sends hook output to stderr): its node lines and its closing stage line.
     const lines = e.stderr.split('\n').map((l) => l.trim()).filter((l) => /^(FAIL|UNKNOWN)\b|^devai (pre-commit|commit-msg) /.test(l));
     const tail = (lines.length > 0 ? lines : [e.message]).join(' · ');
-    throw new CommandRefusal('setup-failed', `git commit "${message.split('\n')[0]}" refused by the hooks: ${tail}; fix the findings, then commit by hand`);
+    throw new CommandRefusal('setup-failed', `git commit "${message.split('\n')[0]}" refused by the hooks: ${tail}; fix the findings, then run devai init again (D-112)`);
   }
   return (await git(dir, ['rev-parse', 'HEAD'])).toString('utf8').trim();
 }
@@ -236,9 +238,18 @@ async function install(dir: string): Promise<string | null> {
   return text.split('\n').map((l) => l.trim()).find((l) => /ERR_|error/i.test(l)) ?? (r.timedOut ? 'timed out' : `exited ${String(r.code)}`);
 }
 
+/** D-112: attach mode needs a commit with a `Packet:` trailer; an unborn `HEAD` or none is a first run. */
+async function hasPacketCommit(dir: string): Promise<boolean> {
+  if ((await topLevel(dir)) === null || (await revParse(dir, 'HEAD')) === null) return false;
+  return (await log(dir, ['--format=%(trailers:key=Packet,valueonly)', 'HEAD'])).trim() !== '';
+}
+
+const tokensOf = (product: string, locales: readonly string[]) => ({ __PRODUCT__: product, __PREFIX__: product[0]!.toUpperCase() + product.slice(1), __LOCALES__: tsArray(locales) });
+
 export async function init(opts: InitOptions, format: Format, cwd: string): Promise<{ stdout: string; exitCode: 0 | 2 }> {
   const dir = resolve(cwd, opts.dir ?? '.');
-  const attach = existsSync(resolve(dir, 'devai.json'));
+  const configured = existsSync(resolve(dir, 'devai.json'));
+  const attach = configured && (await hasPacketCommit(dir));
   let product: string;
   let mode: 'bare' | 'docker';
   let gitConfig: Record<string, string>;
@@ -257,8 +268,7 @@ export async function init(opts: InitOptions, format: Format, cwd: string): Prom
     product = config.productPrefix;
     mode = config.runtime.mode;
     gitConfig = await configure(dir, product);
-    const tokens = { __PRODUCT__: product, __PREFIX__: product[0]!.toUpperCase() + product.slice(1), __LOCALES__: tsArray(config.locales) };
-    for (const e of templateEntries(tokens).filter((e) => HOOKS.includes(e.path))) {
+    for (const e of templateEntries(tokensOf(product, config.locales)).filter((e) => HOOKS.includes(e.path))) {
       const abs = resolve(dir, e.path);
       mkdirSync(dirname(abs), { recursive: true });
       writeFileSync(abs, e.bytes!);
@@ -266,19 +276,28 @@ export async function init(opts: InitOptions, format: Format, cwd: string): Prom
       count('init-owned', e.path);
     }
   } else {
-    const inputs = materialiseInputs(opts);
-    product = inputs.product;
-    mode = inputs.config.runtime.mode;
-    assertEmpty(dir);
-    const tokens = { __PRODUCT__: product, __PREFIX__: product[0]!.toUpperCase() + product.slice(1), __LOCALES__: tsArray(inputs.config.locales) };
-    const entries = templateEntries(tokens);
-    mkdirSync(dir, { recursive: true });
-    for (const e of entries.filter((e) => !e.path.startsWith(PACKETS))) {
-      write(dir, e);
-      count(HOOKS.includes(e.path) ? 'init-owned' : 'seed', e.path);
+    let entries: Entry[];
+    if (configured) {
+      // D-112: the re-run of a first run that committed nothing; the inputs are the ones devai.json records.
+      const config = loadConfig(dir);
+      if (opts.product !== undefined && opts.product !== config.productPrefix) throw new CommandRefusal('usage', `--product ${opts.product}: ${resolve(dir, 'devai.json')} records ${config.productPrefix}`);
+      product = config.productPrefix;
+      mode = config.runtime.mode;
+      entries = templateEntries(tokensOf(product, config.locales));
+    } else {
+      const inputs = materialiseInputs(opts);
+      product = inputs.product;
+      mode = inputs.config.runtime.mode;
+      assertEmpty(dir);
+      entries = templateEntries(tokensOf(product, inputs.config.locales));
+      mkdirSync(dir, { recursive: true });
+      for (const e of entries.filter((e) => !e.path.startsWith(PACKETS))) {
+        write(dir, e);
+        count(HOOKS.includes(e.path) ? 'init-owned' : 'seed', e.path);
+      }
+      writeFileSync(resolve(dir, 'devai.json'), prettyJson(inputs.config));
+      count('seed', 'devai.json');
     }
-    writeFileSync(resolve(dir, 'devai.json'), prettyJson(inputs.config));
-    count('seed', 'devai.json');
     const top = await topLevel(dir);
     if (top === null || realpathSync(top) !== realpathSync(dir)) await git(dir, ['init', '--quiet', '--initial-branch=main']);
     gitConfig = await configure(dir, product);

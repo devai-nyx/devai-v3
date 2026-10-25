@@ -19,14 +19,25 @@ if (patterns === undefined)
 const files = patterns
   .flatMap((p) => globSync(p))
   .filter((f) => tier !== 'unit' || !f.endsWith('.acceptance.spec.ts'));
-// D-105: web specs run in their own project, with the Angular test environment as setup file.
+// D-110: the unit tier is two projects, each enabled iff its patterns match a file, as a tier is.
 const isWeb = (f: string) => f.startsWith('domain/') && f.includes('/web/test/');
-const web = files.filter(isWeb);
-const rest = files.filter((f) => !isWeb(f));
-const project = (name: string, include: string[], setupFiles: string[] = []) => ({
-  extends: true,
-  test: { name, include, setupFiles },
-});
+const projects =
+  tier === 'unit'
+    ? [
+        {
+          name: 'unit-api',
+          include: files.filter((f) => !isWeb(f)),
+          environment: 'node',
+          setupFiles: [],
+        },
+        {
+          name: 'unit-web',
+          include: files.filter(isWeb),
+          environment: 'jsdom',
+          setupFiles: ['test/support/angular.setup.ts'],
+        },
+      ].filter((p) => p.include.length > 0)
+    : [];
 
 export default defineConfig({
   plugins: [
@@ -43,13 +54,7 @@ export default defineConfig({
     }),
   ],
   test:
-    web.length > 0
-      ? {
-          passWithNoTests: false,
-          projects: [
-            ...(rest.length > 0 ? [project(tier, rest)] : []),
-            project(`${tier}-web`, web, ['test/support/angular.setup.ts']),
-          ],
-        }
+    projects.length > 0
+      ? { passWithNoTests: false, projects: projects.map((test) => ({ extends: true, test })) }
       : { include: files.length > 0 ? files : [], passWithNoTests: false },
 });

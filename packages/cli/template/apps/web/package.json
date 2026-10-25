@@ -2,6 +2,9 @@
   "name": "@__PRODUCT__/web",
   "private": true,
   "type": "module",
+  "scripts": {
+    "build": "tsc -b"
+  },
   "dependencies": {
     "@angular/common": "22.2.1",
     "@angular/compiler": "22.2.1",

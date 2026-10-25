@@ -189,12 +189,18 @@ describe('template pins (07 §2, 09 §5)', () => {
     expect(lock).toContain("'@stynx-nyx/eslint-config@3.0.0'");
   });
 
-  it('web specs run with the Angular test environment as setup file; its packages are root devDependencies (D-105)', () => {
-    expect(tpl('vitest.config.ts')).toContain("project(`${tier}-web`, web, ['test/support/angular.setup.ts'])");
+  it('the unit tier is two projects: unit-api (node) and unit-web (jsdom, Angular setup file) (D-105, D-110)', () => {
+    const config = tpl('vitest.config.ts');
+    for (const s of ["name: 'unit-api'", "environment: 'node'", "name: 'unit-web'", "environment: 'jsdom'", "setupFiles: ['test/support/angular.setup.ts']"]) expect(config).toContain(s);
     const setup = tpl('test/support/angular.setup.ts');
     for (const s of ["import '@angular/compiler';", 'provideZonelessChangeDetection()', 'BrowserTestingModule', 'platformBrowserTesting()']) expect(setup).toContain(s);
     const dev = (JSON.parse(tpl('package.json')) as { devDependencies: Record<string, string> }).devDependencies;
     for (const n of ['@angular/compiler', '@angular/core', '@angular/platform-browser']) expect([n, dev[n]]).toEqual([n, dev['@angular/compiler-cli']]);
+    expect(dev['jsdom']).toMatch(/^\d+\.\d+\.\d+$/);
+  });
+
+  it('apps/api and apps/web build with tsc -b, so pnpm -r build builds each referenced module first (D-108)', () => {
+    for (const app of ['api', 'web']) expect([app, (JSON.parse(tpl(`apps/${app}/package.json`)) as { scripts?: unknown }).scripts]).toEqual([app, { build: 'tsc -b' }]);
   });
 
   it('tsconfigs extend the published presets (09 §1.1)', () => {
