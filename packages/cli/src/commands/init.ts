@@ -231,13 +231,14 @@ async function commit(dir: string, message: string, paths: string[]): Promise<st
 export const installCommand = (): [string, ...string[]] => ['pnpm', 'add', '-D', '--save-exact', `@devai-nyx/cli@${cliVersion()}`];
 const INSTALL_TIMEOUT_MS = 600_000;
 
-/** Runs the install in `dir` (host `pnpm` from PATH, the registry `.npmrc` names); the first error line on failure. */
+/** Runs the install in `dir` (host `pnpm` from PATH, the registry `.npmrc` names); on failure the first `ERR_` line, else the first error line. */
 async function install(dir: string): Promise<string | null> {
   const r = await spawn({ argv: installCommand(), cwd: dir, env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: '0' }, timeoutMs: INSTALL_TIMEOUT_MS });
   if (r.kind === 'missing') return 'pnpm not found on PATH';
   if (r.code === 0 && !r.timedOut && !r.overflow) return null;
   const text = `${r.stderr.toString('utf8')}\n${r.stdout.toString('utf8')}`;
-  return text.split('\n').map((l) => l.trim()).find((l) => /ERR_|error/i.test(l)) ?? (r.timedOut ? 'timed out' : `exited ${String(r.code)}`);
+  const lines = text.split('\n').map((l) => l.trim());
+  return lines.find((l) => /\bERR_/.test(l)) ?? lines.find((l) => /error/i.test(l)) ?? (r.timedOut ? 'timed out' : `exited ${String(r.code)}`);
 }
 
 /** D-120: init's packets commit; its trailer names the campaign it seeds. */
