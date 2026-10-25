@@ -46,7 +46,7 @@ describe('B.23 e2e', () => {
   it('UNKNOWN tooling-missing: no node_modules/.bin/playwright', () => {
     const { row } = check(workspace("test('x', () => {});\n", {}, false), 'e2e');
     expect(row).toMatchObject({ status: 'UNKNOWN', reason: 'tooling-missing' });
-    expect(row.findings[0]!.hint).toBe('install with pnpm add -D @playwright/test@1.60.0');
+    expect(row.findings[0]!.hint).toBe('install with pnpm add -w -D @playwright/test@1.60.0 && pnpm install');
   });
 
   it('UNKNOWN runner-crashed (D-086): a config that does not load exits 1 without the JSON report', () => {

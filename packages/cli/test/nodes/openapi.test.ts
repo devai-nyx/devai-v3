@@ -95,7 +95,7 @@ describe('B.19 openapi (stynx 3.0.0 check forms)', () => {
   });
 
   it('UNKNOWN tooling-missing without the binary; runner-crashed on a stynx exit 1 without JSON', async () => {
-    expect(lines(await runNode(openapi, workspace({}, false)))).toEqual(['package.json:1 stynx not resolvable from node_modules/.bin [S-22] install with pnpm add -D @stynx-nyx/cli@3.0.0']);
+    expect(lines(await runNode(openapi, workspace({}, false)))).toEqual(['package.json:1 stynx not resolvable from node_modules/.bin [S-22] install with pnpm add -w -D @stynx-nyx/cli@3.0.0 && pnpm install']);
     const dir = workspace({}, false);
     mkdirSync(resolve(dir, 'node_modules/.bin'), { recursive: true });
     writeFileSync(resolve(dir, 'node_modules/.bin/stynx'), "#!/bin/sh\necho \"error: unknown option '--strict'\" >&2\nexit 1\n");

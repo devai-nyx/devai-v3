@@ -114,7 +114,7 @@ describe.skipIf(!server)('B.20 db-apply on PostgreSQL (bare)', () => {
   it('UNKNOWN tooling-missing (rls-negative): the applied observations stand, the stynx binary is absent', () => {
     const { row } = check(ws({}, { vitest: false, stynx: false }), 'db-apply', env);
     expect(row).toMatchObject({ status: 'UNKNOWN', reason: 'tooling-missing', expected: 3, observed: 3, evaluated: 3 });
-    expect(row.findings[0]).toMatchObject({ message: 'tooling-missing — db-apply: stynx not resolvable from node_modules/.bin (rls-negative)', hint: 'install with pnpm add -D @stynx-nyx/cli@3.0.0' });
+    expect(row.findings[0]).toMatchObject({ message: 'tooling-missing — db-apply: stynx not resolvable from node_modules/.bin (rls-negative)', hint: 'install with pnpm add -w -D @stynx-nyx/cli@3.0.0 && pnpm install' });
   });
 
   it('UNKNOWN runner-crashed (D-086): stynx exits non-zero without its JSON; stderr first line is the message', () => {

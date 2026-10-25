@@ -192,7 +192,7 @@ describe('--regenerate refusals and D-074', () => {
     write(dir, 'domain/notes/api/package.json', read(dir, 'domain/notes/api/package.json').replace(`"@devai-nyx/decorators": "${cliVersion()}"`, '"@devai-nyx/decorators": "2.9.0"'));
     commitAll(dir, 'feat(notes): generate');
     let g = generatedNode(dir);
-    expect(g.node.findings.find((f) => f.message.startsWith('installed generator'))).toEqual({ locator: `${MANIFEST}:1`, message: `installed generator ${cliVersion()} ≠ generatorVersion 2.9.0`, standard: 'S-45', hint: 'pnpm add -D @devai-nyx/cli@2.9.0' });
+    expect(g.node.findings.find((f) => f.message.startsWith('installed generator'))).toEqual({ locator: `${MANIFEST}:1`, message: `installed generator ${cliVersion()} ≠ generatorVersion 2.9.0`, standard: 'S-45', hint: 'pnpm add -w -D @devai-nyx/cli@2.9.0 && pnpm install' });
     expect(g.node.status).toBe('UNKNOWN');
     expect(generate(dir, '--regenerate').status).toBe(0);
     expect((JSON.parse(read(dir, MANIFEST)) as { generatorVersion: string }).generatorVersion).toBe(cliVersion());

@@ -160,7 +160,7 @@ export const dbApply: NodeAdapter = {
 
     // stynx verify-rls-negative (published entry point; D-089).
     const rls = await runTool({
-      root: ctx.root, bin: 'stynx', install: 'pnpm add -D @stynx-nyx/cli@3.0.0', args: ['verify-rls-negative', '--json', '--ddl', RLS_ROOTS],
+      root: ctx.root, bin: 'stynx', install: 'pnpm add -w -D @stynx-nyx/cli@3.0.0 && pnpm install', args: ['verify-rls-negative', '--json', '--ddl', RLS_ROOTS],
       locator: `${APPLY}:1`, standard: 'S-02',
       parse: (stdout) => {
         try {

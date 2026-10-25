@@ -68,7 +68,7 @@ describe('B.11 unit', () => {
   it('UNKNOWN tooling-missing: no node_modules/.bin/vitest', () => {
     const { row } = check(workspace(PASSING + '\n', PASSING, {}, false), 'unit');
     expect(row).toMatchObject({ status: 'UNKNOWN', reason: 'tooling-missing' });
-    expect(row.findings[0]!.hint).toBe('install with pnpm add -D vitest@4.1.11');
+    expect(row.findings[0]!.hint).toBe('install with pnpm add -w -D vitest@4.1.11 && pnpm install');
   });
 
   it('UNKNOWN runner-crashed (D-086): a config that does not load leaves no onTestRunEnd; stderr first line is the message', () => {

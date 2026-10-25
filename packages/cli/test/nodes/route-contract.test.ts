@@ -166,7 +166,7 @@ describe('B.9 route-contract', () => {
     fs.rmSync(resolve(dir, 'node_modules/.bin/stynx'));
     const { row } = await runOnly(dir, 'route-contract');
     expect(row).toMatchObject({ status: 'UNKNOWN', reason: 'tooling-missing' });
-    expect(row.findings).toEqual([{ locator: 'package.json:1', message: 'stynx not resolvable from node_modules/.bin', standard: 'S-28', hint: 'install with pnpm add -D @stynx-nyx/cli@3.0.0' }]);
+    expect(row.findings).toEqual([{ locator: 'package.json:1', message: 'stynx not resolvable from node_modules/.bin', standard: 'S-28', hint: 'install with pnpm add -w -D @stynx-nyx/cli@3.0.0 && pnpm install' }]);
   });
 
   it('D-086: a stynx exit 1 without the JSON report (a usage error) is runner-crashed, stderr first line as message', async () => {

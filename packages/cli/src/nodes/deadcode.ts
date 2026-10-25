@@ -10,9 +10,9 @@ import { crashed, type Finding, jsonOf, type Reason, runTool, toolingMissing } f
 
 export const KNIP_CONFIG = 'tools/knip.config.ts';
 const TOOLS = [
-  { bin: 'knip', install: 'pnpm add -D knip@6.35.1' },
-  { bin: 'depcheck', install: 'pnpm add -D depcheck@1.4.7' },
-  { bin: 'madge', install: 'pnpm add -D madge@8.0.0' },
+  { bin: 'knip', install: 'pnpm add -w -D knip@6.35.1 && pnpm install' },
+  { bin: 'depcheck', install: 'pnpm add -w -D depcheck@1.4.7 && pnpm install' },
+  { bin: 'madge', install: 'pnpm add -w -D madge@8.0.0 && pnpm install' },
 ] as const;
 
 /** Workspace packages: folders with a `package.json` the `pnpm-workspace.yaml` globs match (04 §1; B.1's matcher). */

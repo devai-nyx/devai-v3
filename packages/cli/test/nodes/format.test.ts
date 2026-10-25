@@ -42,7 +42,7 @@ describe('B.2 format', () => {
     const dir = workspace({}, { 'src/a.ts': 'export const a = 1;\n' }, null);
     expect(await run(dir)).toEqual({
       status: 'UNKNOWN', reason: 'tooling-missing', expected: 1, observed: 0, evaluated: 0,
-      findings: [{ locator: 'package.json:1', message: 'prettier not resolvable from node_modules/.bin', standard: 'S-19', hint: 'install with pnpm add -D --save-exact prettier@3.9.6' }],
+      findings: [{ locator: 'package.json:1', message: 'prettier not resolvable from node_modules/.bin', standard: 'S-19', hint: 'install with pnpm add -w -D --save-exact prettier@3.9.6 && pnpm install' }],
     });
   });
 

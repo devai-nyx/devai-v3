@@ -167,7 +167,7 @@ export const routeContract: NodeAdapter = {
 
     const r = await spawn({ argv: [bin(ctx, 'stynx'), 'list-routes', '--json', '--roots', ROOTS], cwd: ctx.root, env, timeoutMs: 120_000 });
     if (r.kind === 'missing') {
-      return outcome(zero, [], [{ reason: 'tooling-missing', finding: { locator: 'package.json:1', message: 'stynx not resolvable from node_modules/.bin', standard: 'S-28', hint: 'install with pnpm add -D @stynx-nyx/cli@3.0.0' } }]);
+      return outcome(zero, [], [{ reason: 'tooling-missing', finding: { locator: 'package.json:1', message: 'stynx not resolvable from node_modules/.bin', standard: 'S-28', hint: 'install with pnpm add -w -D @stynx-nyx/cli@3.0.0 && pnpm install' } }]);
     }
     let list: z.infer<typeof ListRoutes>;
     try {

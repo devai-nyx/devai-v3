@@ -10,7 +10,7 @@ import type { NodeAdapter, NodeOutcome, RunContext } from '../runner/run.js';
 import { log } from '../git/git.js';
 import { type Finding, preflight, runTool, unknown, unknownOutcome } from '../proc/tool.js';
 
-export const COMMITLINT_INSTALL = 'pnpm add -D --save-exact @commitlint/cli@21.2.2 @commitlint/config-conventional@21.2.2';
+export const COMMITLINT_INSTALL = 'pnpm add -w -D --save-exact @commitlint/cli@21.2.2 @commitlint/config-conventional@21.2.2 && pnpm install';
 export const COMMITLINT_CONFIG = 'tools/commitlint.config.mjs';
 const STANDARD = 'S-40';
 const HINT = 'type(scope): subject';

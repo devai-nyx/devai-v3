@@ -10,7 +10,7 @@ import { ReasonCode } from '../report.js';
 const DEFAULT_ROOTS = ['reference', 'domain', 'packages', 'packages-web'];
 /** Directories the command does not descend into [fact: `stynx-boundary.mjs:95`]. */
 const SKIPPED_DIRS = ['node_modules', 'dist', 'coverage'];
-export const STYNX_INSTALL = 'pnpm add -D @stynx-nyx/cli@3.0.0';
+export const STYNX_INSTALL = 'pnpm add -w -D @stynx-nyx/cli@3.0.0 && pnpm install';
 
 interface ToolReport {
   status: 'PASS' | 'FAIL' | 'UNKNOWN';

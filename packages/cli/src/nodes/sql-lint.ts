@@ -9,7 +9,7 @@ import { show } from '../git/git.js';
 import type { NodeAdapter, NodeOutcome, RunContext } from '../runner/run.js';
 import { crashed, firstLine, type Finding, jsonOf, runTool, toolingMissing, unknown } from './tool-local.js';
 
-export const MIGRATION_LINT_INSTALL = 'pnpm add -D @stynx-nyx/migration-linter@3.0.0';
+export const MIGRATION_LINT_INSTALL = 'pnpm add -w -D @stynx-nyx/migration-linter@3.0.0 && pnpm install';
 /** 09 §1.1 `database/seed/modules.txt`: the D-023 root manifest LINT013 reads (`<sha256>  <path>`). */
 const PARSER: string = 'pg-query-emscripten'; // untyped package; imported by name
 export const APPLIED_MANIFEST = 'database/seed/modules.txt';

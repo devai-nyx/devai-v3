@@ -43,7 +43,7 @@ export const HINTS: Record<Reason, string> = {
   "setup-failed": "the suite failed before any case: fix the import, app start or DB setup at the locator",
   "expect-red-not-reached": "make the case fail at an expect; seed with SQL, not unbuilt routes",
   "assertion-unresolved": "fail through expect(); a throw without a source-mapped AssertionError cannot be classified",
-  "generator-version-mismatch": "pnpm add -D @devai-nyx/cli@<version>",
+  "generator-version-mismatch": "pnpm add -w -D @devai-nyx/cli@<version> && pnpm install",
   "generator-unavailable": "regenerate in a generate packet",
   "catalog-unresolved": "regenerate the module in a generate packet",
   "slice-too-large": "move code out of the listed guard-reachable files, or note it for the pilot",

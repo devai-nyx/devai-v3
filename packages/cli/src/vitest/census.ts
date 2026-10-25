@@ -123,7 +123,7 @@ export async function runVitest(r: VitestRun): Promise<RunResult> {
       env: { ...process.env, ...r.env, TEST_TIER: r.tier, DEVAI_VITEST_EVENTS: events, NO_COLOR: '1', FORCE_COLOR: '0', CI: '1' },
       timeoutMs: VITEST_TIMEOUT_MS,
     });
-    if (res.kind === 'missing') return { kind: 'unknown', unknown: unknown('tooling-missing', 'package.json:1', 'tooling-missing — vitest not resolvable from node_modules/.bin', 'S-19', 'install with pnpm add -D vitest@4.1.11') };
+    if (res.kind === 'missing') return { kind: 'unknown', unknown: unknown('tooling-missing', 'package.json:1', 'tooling-missing — vitest not resolvable from node_modules/.bin', 'S-19', 'install with pnpm add -w -D vitest@4.1.11 && pnpm install') };
     if (res.timedOut) return { kind: 'unknown', unknown: unknown('timeout', `${VITEST_CONFIG}:1`, 'vitest exceeded its wall time', 'tests') };
     let text = '';
     try {

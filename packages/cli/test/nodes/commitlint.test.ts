@@ -72,7 +72,7 @@ describe('B.15 commitlint', () => {
 
   it('UNKNOWN tooling-missing, and runner-crashed on exit 1 without a parseable violation', async () => {
     expect(await runRange(history(['feat: x'], CONFIG, null))).toMatchObject({
-      status: 'UNKNOWN', reason: 'tooling-missing', expected: 1, findings: [{ locator: 'package.json:1', message: 'commitlint not resolvable from node_modules/.bin', standard: 'S-19', hint: 'install with pnpm add -D --save-exact @commitlint/cli@21.2.2 @commitlint/config-conventional@21.2.2' }],
+      status: 'UNKNOWN', reason: 'tooling-missing', expected: 1, findings: [{ locator: 'package.json:1', message: 'commitlint not resolvable from node_modules/.bin', standard: 'S-19', hint: 'install with pnpm add -w -D --save-exact @commitlint/cli@21.2.2 @commitlint/config-conventional@21.2.2 && pnpm install' }],
     });
     expect(await runRange(history(['feat: x'], CONFIG, fakeTool('commitlint', 1)))).toMatchObject({
       status: 'UNKNOWN', reason: 'runner-crashed', expected: 1, findings: [{ locator: 'tools/commitlint.config.mjs:1', message: 'boom: the tool fell over', standard: 'S-40' }],

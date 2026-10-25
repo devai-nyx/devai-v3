@@ -70,7 +70,7 @@ async function replay(ctx: RunContext, manifestPath: string, present: ReadonlySe
   r.expected = generatedEntries.length;
   // Step 3: the installed version must equal the recorded one.
   if (m.generatorVersion !== ctx.cliVersion) {
-    r.unknowns.push({ reason: 'generator-version-mismatch', finding: { locator: `${manifestPath}:1`, message: `installed generator ${ctx.cliVersion} ≠ generatorVersion ${m.generatorVersion}`, standard: STANDARD, hint: `pnpm add -D @devai-nyx/cli@${m.generatorVersion}` } });
+    r.unknowns.push({ reason: 'generator-version-mismatch', finding: { locator: `${manifestPath}:1`, message: `installed generator ${ctx.cliVersion} ≠ generatorVersion ${m.generatorVersion}`, standard: STANDARD, hint: `pnpm add -w -D @devai-nyx/cli@${m.generatorVersion} && pnpm install` } });
     return r;
   }
   // Step 1: the recorded bytes, by digest; candidates first, then HEAD, the packet base and history.
