@@ -101,6 +101,8 @@ interface PopulationFacts {
   locales: number;
   commitsSinceBase: number;
   packet: boolean;
+  /** The packet's pinned spec id, named in `spec-tests`' population predicate (05 §3: `no acceptance file for SPEC-x`). */
+  specId?: string;
   /** D-096: a path `.prettierignore` names is not in `format`'s population. */
   formatIgnored?: (path: string) => boolean;
 }
@@ -155,7 +157,7 @@ export function populations(f: PopulationFacts): Record<NodeId, Population> {
     deadcode: always('always applies', f.manifests.filter((m) => m.dir !== '.').length),
     openapi: n('no app binding changed and no public-API surface changed', surface.length),
     'db-apply': n('no database/', f.paths.filter((p) => p.startsWith('database/')).length),
-    'spec-tests': n('no acceptance file for <spec id>', f.paths.filter((p) => p.endsWith('.acceptance.spec.ts')).length),
+    'spec-tests': n(`no acceptance file for ${f.specId ?? 'the pinned spec'}`, f.paths.filter((p) => p.endsWith('.acceptance.spec.ts')).length),
     integration: n('no test/integration or test/db files affected', f.paths.filter((p) => INTEGRATION_FILE.test(p)).length),
     e2e: n('no test/e2e files', f.paths.filter((p) => E2E_FILE.test(p)).length),
     'permissions-pattern': n('no mounted routes', controllers.length),
@@ -339,7 +341,8 @@ export async function runInventory(ctx: RunContext): Promise<{ outcome: NodeOutc
     packageDirs,
     populations: populations({
       paths, changed, changedPresent: changed.filter((p) => present.has(p)), packageDirs: ['.', ...packageDirs], projects, manifests,
-      locales: ctx.config.locales.length, commitsSinceBase, packet: ctx.packet !== undefined, formatIgnored: prettierIgnored(root),
+      locales: ctx.config.locales.length, commitsSinceBase, packet: ctx.packet !== undefined,
+      ...(ctx.packet?.packet?.spec ? { specId: ctx.packet.packet.spec.id } : {}), formatIgnored: prettierIgnored(root),
     }),
   };
   const details = {
