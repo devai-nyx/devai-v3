@@ -1636,19 +1636,20 @@ repository whose `HEAD` is unborn or that has no `Packet:` commit is a first run
 D-107's attach reading is narrowed to repositories with a `Packet:` commit. Recommended: (c). It keeps
 attach mode to "hooks and git config only" (08 A.1) and lets the same command finish what it started;
 (a) gives attach mode a write path; (b) moves the pilot's first commits out of DEVAI. D-107 is not
-edited; this entry narrows its Open 8 reading: attach mode is a repository with `devai.json` and a
-commit carrying a `Packet:` trailer. The first run here is D-113's re-run: it keeps the files on
+edited; this entry narrows its Open 8 reading: attach mode is a repository with `devai.json` and
+both `init` commits; with fewer than the two `init` commits a re-run is a first run (wording amended
+by D-115, 2026-10-25: it read "a commit carrying a `Packet:` trailer"). The first run here is D-113's re-run: it keeps the files on
 disk, skips materialise, re-runs the install and makes the two `init` commits (wording amended by
 D-113, 2026-10-25). Amends 08 A.1 (Modes, Exit), 09 §1 (Modes), docs/adopters/install.md (attach
 mode). Chosen: (c). Source: Owner (panels, 2026-10-25; packet
 `PACKET-2026-10-24-R6-CLOSE.md` Part D, Owner's workspace).
 
 ## D-113 · 2026-10-25 · An `init` re-run keeps the files on disk, re-runs the install and makes the two commits; `--product` must match (`config-mismatch`)
-[fact] D-112 makes a re-run of `init` on a repository whose `HEAD` is unborn or that has no `Packet:`
-commit a first run, not attach mode; but 08 A.1 rejects `--product` "when one [`devai.json`] exists" and
+[fact] D-112 makes a re-run of `init` on a repository whose `HEAD` is unborn or that has fewer than
+the two `init` commits (wording amended by D-115, 2026-10-25: it read "no `Packet:` commit") a first run, not attach mode; but 08 A.1 rejects `--product` "when one [`devai.json`] exists" and
 requires `--dir` "empty or absent in materialise mode" (`dir-not-empty`), so the re-run D-112 admits
 meets two rules written for an empty directory, and whether it rewrites the template was not stated
-(devai-v3#71 Open 1). Options: (a) a re-run where `HEAD` is unborn or no `Packet:` commit exists keeps
+(devai-v3#71 Open 1). Options: (a) a re-run where `HEAD` is unborn or has fewer than the two `init` commits (D-115) keeps
 the files on disk and skips materialise; it accepts the existing `devai.json` and template (`--product`
 must match the recorded product or be omitted; a mismatch is exit 2 `config-mismatch`), re-runs the
 `pnpm add`/install and makes the two `init` commits; nothing is rewritten; (b) materialise over the
@@ -1681,16 +1682,85 @@ paths, and the template config already filters out a project with no file
 (`packages/cli/template/vitest.config.ts:22-39`, devai-v3#72). Chosen: (a). Source:
 Owner (panels, 2026-10-25; packet `PACKET-2026-10-24-R6-CLOSE.md` Part E, Owner's workspace).
 
+## D-115 · 2026-10-25 · `init` is a re-run until both of its commits exist and makes whichever is missing; attach mode starts after both (amends D-112, D-113)
+[fact] D-112 makes attach mode a repository with a `Packet:` commit, but `init`'s template commit carries
+`Packet: PKT-DEMO-001` while its packets commit is the second: when the template commit lands and the
+hooks refuse the packets commit, the repository has a `Packet:` commit, a re-run is attach mode, which
+makes no commit, and the packets commit has no path (devai-v3#73 Open 1). Options: (a) `init` is a
+re-run while `HEAD` lacks either of its two commits (the template commit, trailer `Packet:
+PKT-DEMO-001`, and the packets commit) and makes whichever is missing; attach mode starts only after
+both exist; (b) the operator commits by hand; (c) a single `init` commit. Recommended: (a). It finishes
+an interrupted `init` from any point with the same command; (b) leaves the commits' form to the
+operator; (c) changes 05 §7's campaign, whose spec packet is complete in the template commit. D-112's
+and D-113's "no `Packet:` commit" now reads "fewer than the two `init` commits"; both entries' wording is
+amended so. Amends 08 A.1 (Modes, Exit), 09 §1 (Modes), docs/adopters/install.md,
+docs/reference/reason-codes.md. Code follow-up: the re-run's commit detection. Chosen: (a). Source:
+Owner (panels, 2026-10-25; packet `PACKET-2026-10-24-R6-CLOSE.md` Part F, Owner's workspace).
+
+## D-116 · 2026-10-25 · On an `init` re-run, `--locales`, `--lgpd` and `--runtime` must equal `devai.json` or be omitted (`config-mismatch`)
+[fact] D-113 rules only `--product` on a re-run; W11 ignores `--locales`, `--lgpd` and `--runtime` there,
+without comparing them with `devai.json` (devai-v3#73 Open 2, devai-v3#74 Open 2, devai-v3#72 Open 1).
+Options: (a) ignored; (b) on a re-run `--locales`, `--lgpd` and `--runtime` must equal `devai.json` or
+be omitted, else exit 2 `config-mismatch`, the same rule as `--product`; (c) refused as `usage`.
+Recommended: (b). The re-run rewrites nothing, so an argument that differs from the recorded value
+would be silently dropped under (a); (c) refuses an argument that agrees. [inference] The recorded
+fields are `devai.json` `locales`, `lgpd` and `runtime.mode`, the fields those arguments write (09 §1.1).
+Amends 08 A.1 (Arguments, Exit, Failure → reason), 09 §1 (Modes), docs/adopters/install.md,
+docs/reference/{reason-codes,cli}.md. Code follow-up: the three comparisons. Chosen: (b).
+Source: Owner (panels, 2026-10-25; packet `PACKET-2026-10-24-R6-CLOSE.md` Part F, Owner's workspace).
+
+## D-117 · 2026-10-25 · The `config-mismatch` hint names the mismatching argument; a refused `init` commit says "run devai init again"
+[fact] D-113's `config-mismatch` hint was written in the recording PR (devai-v3#73 Open 3); W11 wrote
+another (`omit --product, or pass the productPrefix devai.json records; the re-run keeps the files on
+disk`, devai-v3#74 Open 1, devai-v3#72 Open 1); and 08 A.1's `setup-failed` line still told the pilot to
+"commit by hand", which under D-112 leaves the repository in first-run state or skips the packets
+commit, so W11 printed `fix the findings, then run devai init again` (devai-v3#72 Open 2). Options:
+(a) 10 §4 keeps devai-v3#73's hint text, generalised to name the mismatching argument:
+`<flag> differs from devai.json <field>; omit it or pass the recorded value`, and the `setup-failed`
+remedy becomes `fix the findings, then run devai init again` in 08 A.1, replacing `then commit by hand`;
+(b) the code's texts win. Recommended: (a). One hint covers D-116's four arguments; the remedy is the
+D-115 path. Amends 08 A.1 (Exit), 10 §4 (`config-mismatch` row), docs/reference/reason-codes.md. Code
+follow-up: the hint in `packages/cli/src/text/hints.ts`. Chosen: (a). Source: Owner (panels,
+2026-10-25; packet `PACKET-2026-10-24-R6-CLOSE.md` Part F, Owner's workspace).
+
+## D-118 · 2026-10-25 · W11's readings are ratified as recorded (devai-v3#72 Open 3, 4, 7; devai-v3#74 Open 3)
+[fact] W11 (devai-v3#72, devai-v3#74) listed its readings where the law was silent. Ratified:
+- **#72 Open 3**: a `Packet:` commit is any commit reachable from `HEAD` with a `Packet:` trailer
+  (`git log --format=%(trailers:key=Packet,valueonly) HEAD`), not specifically `PKT-DEMO-001`; under
+  D-115 the two `init` commits are identified by their trailers.
+- **#72 Open 4**: `accept`'s campaign step 4 `FAIL` counts as traced (D-100) when every finding it
+  carries is a traced or `tooling-missing` row.
+- **#72 Open 7**: on a re-run, the `dir-not-empty` check and the `--product` requirement do not apply
+  (as 08 A.1 states since D-113).
+- **#74 Open 3**: `config-mismatch` is a reason code the Owner introduced by D-113, not one chosen in
+  code; D-055 is kept.
+Options: (a) ratify as recorded; (b) ratify except named rows. Recommended: (a). Where a reading
+changes framework text it is applied: 08 A.1 (what a `Packet:` commit is), 09 §4 step 4 (`accept`'s
+traced `FAIL`). 12 §4 R6 is not edited:
+its done clause reads "every `FAIL` row traces to the S10 list", and this entry records how `accept`'s
+row traces. No code change: W11 already behaves as ratified. Chosen: (a). Source: Owner (panels,
+2026-10-25; packet `PACKET-2026-10-24-R6-CLOSE.md` Part F, Owner's workspace).
+
+## D-119 · 2026-10-25 · R6 clause 2 is met at 09 §4 steps 1–4; steps 5–8 are R8 acceptance; R6 closes at 10/10 modulo the S10 list
+[fact] W11's R6 clause check is 10 ✅ reading clause 2 ("campaign 09 §4 steps 1–8 green in bare mode")
+as steps 1–4 while D-098 defers the fixtures steps 5–8 need, and 9 ✅ · 1 ❌ on a strict reading
+(devai-v3#72 Open 5; steps 5–8 not run, as in devai-v3#69 Open 3). Options: (a) clause 2 of the R6
+check is met at 09 §4 steps 1–4; steps 5–8 are R8 acceptance (D-098); R6 closes at 10/10 modulo the
+S10 list (D-100) once devai-v3#73 and devai-v3#74 merge; (b) R6 stays open until steps 5–8 run.
+Recommended: (a). Steps 5–8 need the R8 fixtures and a token helper (D-098, D-107), and steps 6 and 8
+would meet S10 #2 anyway (devai-v3#69 Open 3); (b) puts R8's work on R6's critical path. **R6 status:
+closed at 10/10 modulo the S10 list (D-100)**, effective when devai-v3#74 merges (devai-v3#73 merged
+2026-10-25). 00 and 10 carry no round status line; docs/dev/release.md (where things stand) records the
+close. 12 §4's R6 row is not edited. Chosen: (a). Source: Owner (panels, 2026-10-25; packet
+`PACKET-2026-10-24-R6-CLOSE.md` Part F, Owner's workspace).
+
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
 - Mutation testing's home (D-004: outside the cycle or not at all) — not blocking v3.0.
 - 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck (D-058) — not blocking v3.0.
 - STYNX local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 (D-069) — STYNX item, not blocking 3.0.0.
-- D-113's re-run when `init`'s template commit landed (it carries `Packet: PKT-DEMO-001`) but the
-  packets commit was refused: the repository then has a `Packet:` commit, so D-112 makes a re-run
-  attach mode, which makes no commit, and the packets commit has no path. Not ruled.
-- D-113's re-run and the other `init` arguments: whether `--locales`, `--lgpd` and `--runtime` are
-  ignored, must match `devai.json`, or are refused, is not stated (only `--product` is ruled).
-- D-113's `config-mismatch` hint in 10 §4 (`--product differs from devai.json productPrefix; omit it or
-  pass the recorded product`) was written in the recording PR; the ruling gave no hint text.
+- D-115/D-118: the two `init` commits are "identified by their trailers", but the packets commit
+  (`chore(packets): seed CMP-DEMO-001`) carries no `Packet:` trailer (08 A.1;
+  `packages/cli/src/commands/init.ts:313`). How a re-run recognises it (its subject, a new trailer, or
+  the packet files at `HEAD`) is not ruled.
