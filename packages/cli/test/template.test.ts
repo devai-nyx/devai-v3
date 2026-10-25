@@ -196,7 +196,7 @@ describe('template pins (07 §2, 09 §5)', () => {
     for (const s of ["import '@angular/compiler';", 'provideZonelessChangeDetection()', 'BrowserTestingModule', 'platformBrowserTesting()']) expect(setup).toContain(s);
     const dev = (JSON.parse(tpl('package.json')) as { devDependencies: Record<string, string> }).devDependencies;
     for (const n of ['@angular/compiler', '@angular/core', '@angular/platform-browser']) expect([n, dev[n]]).toEqual([n, dev['@angular/compiler-cli']]);
-    expect(dev['jsdom']).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(dev['jsdom']).toBe('30.1.3'); // D-110
   });
 
   it('apps/api and apps/web build with tsc -b, so pnpm -r build builds each referenced module first (D-108)', () => {
