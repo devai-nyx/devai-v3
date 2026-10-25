@@ -67,7 +67,7 @@ export class __PREFIX__ErrorContractGuard implements CanActivate {
 }
 
 @Catch(BadRequestException, UnauthorizedException, ForbiddenException)
-export class __PREFIX__ValidationFilter implements ExceptionFilter {
+class __PREFIX__ValidationFilter implements ExceptionFilter {
   catch(error: HttpException, host: ArgumentsHost): void {
     const http = host.switchToHttp();
     const request = http.getRequest<HttpRequest>();
