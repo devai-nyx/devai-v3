@@ -34,7 +34,7 @@ carries its contract; the acceptance tests from PKT-DEMO-003 go from red to gree
 ## Deliverables
 - R-1, R-2, R-4 of SPEC-DEMO-001 implemented in `notes.service.ts`,
   `notes.repository.ts`, `notes.controller.ts` (seed files from PKT-DEMO-002). R-3 is
-  rail behaviour from the generated guards and stays green.
+  rail behaviour from the shell's guards and stays green (D-123).
 - Routes `POST /notes` and `GET /notes/:id` as the spec's route table states; both
   carry `@NoIdempotent()`, `@RequireRoles(['demo-member'], 'all')`, `@ErrorContract`,
   `@UseCase('UC-DEMO-001')`, `@Slo`.
