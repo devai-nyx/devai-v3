@@ -73,7 +73,7 @@ devai init [--product <slug>] [--locales <tag,…>] [--lgpd] [--runtime bare|doc
 | Preflight (last step) | Resolves every binary and library Part B names for every node whose population could be non-empty on this template; prints one line per missing item: `UNKNOWN: tooling-missing — <node>: install with <command>` |
 | Exit | `0` written and every tool resolved; `2` written but ≥ 1 tool missing (`tooling-missing`), or `--dir` not empty (`dir-not-empty`), or `--product` missing in materialise mode (`usage`); never `1` |
 | JSON output | `{ mode, product, written: string[], gitConfig: {…}, preflight: [{ node, binary, status, remedy? }], accepted: false, exitCode, reason? }` |
-| Reason codes | `config-invalid` (attach, bad file), `not-a-repository` (attach, outside git), `tooling-missing`, `dir-not-empty`, `config-mismatch` (re-run `--product` ≠ `productPrefix`, [D-113](../../decisions.md)), `usage` |
+| Reason codes | `config-invalid` (attach, bad file), `not-a-repository` (attach, outside git), `tooling-missing`, `dir-not-empty`, `config-mismatch` (re-run argument ≠ its `devai.json` value, [D-113](../../decisions.md), [D-116](../../decisions.md)), `usage` |
 
 ## `devai new module`
 

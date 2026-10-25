@@ -47,7 +47,13 @@ code and template.
 [D-103](../../decisions.md)–[D-107](../../decisions.md) rule W10's open items (module manifests,
 fresh-module dead code, the web `unit` setup, the step 3 build, W10's readings) and [D-108](../../decisions.md)–[D-112](../../decisions.md) the questions those left
 open (app `build` scripts, the `unit-api`/`unit-web` projects, `init` re-runs); W11 applies them.
-[D-113](../../decisions.md) and [D-114](../../decisions.md) settle the `init` re-run and `unit`'s invocation.
+[D-113](../../decisions.md) and [D-114](../../decisions.md) settle the `init` re-run and `unit`'s invocation;
+[D-115](../../decisions.md)–[D-118](../../decisions.md) finish the re-run rules and ratify W11's readings.
+**R6 is closed** at 10/10 modulo the S10 list ([D-119](../../decisions.md), [D-100](../../decisions.md)) once
+devai-v3#74 merges: clause 2 is met at 09 §4 steps 1–4, and steps 5–8 are R8 acceptance
+([D-098](../../decisions.md)).
+[D-120](../../decisions.md) and [D-121](../../decisions.md) settle how `init` recognises its two commits and
+ratify W11's `config-mismatch` readings.
 R7 is confirmed on the release host.
 
 **Not blocking 3.0.0** (12 §4): the D-047 edit-loop p95 measurement (3.0.0 ships 90000); the first

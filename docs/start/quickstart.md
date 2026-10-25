@@ -36,7 +36,7 @@ devai init --product demo --lgpd --dir notes-demo
 `--dir` must be empty or absent. In this *materialise* mode `init` writes the template, runs `git init`
 if needed, commits it as `chore(template): devai init demo` with the trailer `Packet: PKT-DEMO-001`,
 then renders the four demo packets with `base` set to that commit and commits them as
-`chore(packets): seed CMP-DEMO-001` ([08 A.1](../framework/08-cli-and-nodes.md), [09 §1](../framework/09-rail.md)).
+`chore(packets): seed CMP-DEMO-001` with the trailer `Packet: CMP-DEMO-001` ([08 A.1](../framework/08-cli-and-nodes.md), [09 §1](../framework/09-rail.md)).
 It also sets `core.hooksPath scripts/hooks` and the agent identity `demo-agent` /
 `agent@demo.local` in the worktree's git config ([08 A.1](../framework/08-cli-and-nodes.md),
 [02 §5](../framework/02-architecture.md)). The last step is a tooling preflight.
