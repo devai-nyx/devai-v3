@@ -253,7 +253,9 @@ behavioural checks.
 **Identity.** One agent git identity per repository, configured by `devai init` in each worktree:
 `user.name = <product>-agent`, `user.email = agent@<product>.local`, with trailers
 `Co-Authored-By: <model name> <vendor noreply>` (both harnesses already add one) and
-`Packet: PKT-<PRODUCT>-nnn` (D-050). The pilot commits as themself. No check reads the identity to refuse anything;
+`Packet: PKT-<PRODUCT>-nnn` (D-050). The one exception is `init`'s packets commit, whose trailer carries the
+campaign id `CMP-<PRODUCT>-nnn` (`Packet: CMP-DEMO-001` in the template, D-120); a reader that expects a
+packet id skips a `CMP-` value and counts that commit as carrying no packet (D-122). The pilot commits as themself. No check reads the identity to refuse anything;
 `git log --author` separates agent and pilot work for the dashboard. The worker family for `review`
 is derived from the trailers, never from a packet field.
 
@@ -552,7 +554,7 @@ message to a document. Measure with the selected harness before trusting the est
 | Agentic verdict cache | `.devai/cache/agentic/<node>/<digest>.json` | `permissions-pattern`, `review` | same |
 | Sensor verdict evidence | `.devai/review/<packet-id>.permissions.json`, tracked in the PR branch, bound to the slice digest (D-058; CI has no model and the cache is gitignored, so without it CI reports `permissions-pattern: UNKNOWN (stale)`) | `permissions-pattern` on the pilot's machine | superseded by the next candidate |
 | Reviewer worktree, scratch DB descriptors | `.devai/cache/scratch/` | `devai check` | command cleanup; interruption cleanup is the harness's |
-| Packets | `packets/<CMP>/PKT-*.md`, `packets/<CMP>/campaign.md` (D-027, D-050) | pilot / spec agent / generator | git; a packet is "done" when a merged commit on main carries `Packet: PKT-<PRODUCT>-nnn`; `devai packets status` prints the derivation, no status field |
+| Packets | `packets/<CMP>/PKT-*.md`, `packets/<CMP>/campaign.md` (D-027, D-050) | pilot / spec agent / generator | git; a packet is "done" when a merged commit on main carries `Packet: PKT-<PRODUCT>-nnn` (a `CMP-` value names no packet, D-122); `devai packets status` prints the derivation, no status field |
 | Technical specs | `specs/<area>-<capability>/SPEC-*.md` (D-027) | spec agent, approved by pilot annotation | git; written statuses are `draft`, `approved`, `superseded-by: <SpecId>`; `frozen` is derived (a packet pins `base` + sha256); the successor carries `supersedes: {id, path, sha256}` and the predecessor's status line is the one permitted post-pin edit (D-053) |
 | Decisions | `decisions.md` at root (D-031) | pilot (agents may draft; the pilot's commit is the approval) | never deleted; entries carry `superseded by` |
 | Generation record | `domain/<m>/generation-manifest.json` | `generate` packets only | regenerated |
