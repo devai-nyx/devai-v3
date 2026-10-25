@@ -2,7 +2,7 @@
 // temp folder (one install for every test file, under a mkdir lock), temp workspaces that link it as
 // `node_modules`, fake binaries for the crash cases, and a RunContext built the way `devai check` does.
 import { execFileSync, spawnSync } from 'node:child_process';
-import { chmodSync, cpSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
@@ -13,7 +13,7 @@ import { plan } from '../../src/runner/plan.js';
 import type { NodeId } from '../../src/runner/edges.js';
 import type { RunContext } from '../../src/runner/run.js';
 import { templateConfig } from '../fixtures.js';
-import { commitAll, gitIn, tempRepo, write } from '../repo.js';
+import { commitAll, copyFixtureTemplate, gitIn, tempRepo, write } from '../repo.js';
 
 /** 07 §2 pins for format, lint, lint-tests, i18n, actionlint, commitlint (and `tsc` for inventory). */
 export const PINS = [
@@ -64,8 +64,7 @@ export const ROOT_PACKAGE = JSON.stringify({ name: 'demo', private: true, type: 
 export function workspace(base: Record<string, string>, changes: Record<string, string> = {}, modules: string | null = toolModules(), template = false): string {
   const dir = tempRepo('devai-w2a-');
   if (template) {
-    cpSync(templateDir, dir, { recursive: true, verbatimSymlinks: true });
-    renameSync(resolve(dir, 'gitignore'), resolve(dir, '.gitignore'));
+    copyFixtureTemplate(dir);
   }
   write(dir, 'package.json', ROOT_PACKAGE);
   // 09 §1.1's `apps/*` glob with one real package (D-084 item 7: a glob matching no package is FAIL).

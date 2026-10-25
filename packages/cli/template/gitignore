@@ -6,3 +6,4 @@ coverage/
 .devai/cache/
 .DS_Store
 Thumbs.db
+*.tsbuildinfo

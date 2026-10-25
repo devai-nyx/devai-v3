@@ -3,6 +3,13 @@
   "version": "3.0.0",
   "type": "module",
   "license": "Apache-2.0",
+  "exports": {
+    "./eslint-overlay": {
+      "types": "./dist/nodes/lint-overlay/index.d.ts",
+      "default": "./dist/nodes/lint-overlay/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "bin": {
     "devai": "dist/main.js"
   },

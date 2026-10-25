@@ -1,0 +1,11 @@
+{
+  "extends": "@stynx-nyx/tsconfig/node24.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "composite": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
+  },
+  "include": ["src"]
+}

@@ -1,0 +1,155 @@
+name: devai
+
+# 02 §1: the one Action. Branch protection requires its aggregating `devai` job (D-091). No workflow-level
+# paths filter: an absent required check blocks merges.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 4 * * 1'
+
+permissions:
+  contents: read
+
+env:
+  NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN || secrets.GITHUB_TOKEN }}
+
+jobs:
+  modes:
+    runs-on: ubuntu-24.04
+    outputs:
+      runtimes: ${{ steps.modes.outputs.runtimes }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      # D-039: wiring changes and the weekly run use both modes; otherwise the declared mode.
+      - id: modes
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          declared=$(node -e "process.stdout.write(JSON.parse(require('node:fs').readFileSync('devai.json','utf8')).runtime.mode)")
+          both=false
+          if [ "$EVENT" = schedule ]; then both=true; fi
+          if [ "$EVENT" = pull_request ] && git diff --name-only "$BASE" HEAD | grep -Eq '^(devai\.json|compose\.yaml|scripts/ci-local/|tools/)'; then both=true; fi
+          if [ "$both" = true ]; then echo 'runtimes=["bare","docker"]'; else echo "runtimes=[\"$declared\"]"; fi >> "$GITHUB_OUTPUT"
+
+  check:
+    needs: modes
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        runtime: ${{ fromJSON(needs.modes.outputs.runtimes) }}
+        lane:
+          - name: edit-loop
+            nodes: format lint lint-tests typecheck layout sql-lint spec-lint route-contract sql-typed unit test-integrity i18n
+          - name: pre-push
+            nodes: generated boundary deadcode openapi actionlint commitlint protected-paths
+          - name: postgres
+            nodes: db-apply integration
+          - name: e2e
+            nodes: e2e
+    services:
+      postgres:
+        image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+        env:
+          POSTGRES_PASSWORD: postgres
+        # A host port GitHub picks, so compose.yaml's 127.0.0.1:5432 stays free for the docker mode.
+        ports: ['5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5; version from packageManager
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Browsers for e2e (07 §5)
+        if: matrix.lane.name == 'e2e'
+        run: pnpm exec playwright install --with-deps chromium
+      - name: devai check (${{ matrix.lane.name }}, ${{ matrix.runtime }})
+        env:
+          LANE: ${{ matrix.lane.nodes }}
+          DEVAI_RUNTIME: ${{ matrix.runtime }}
+          DATABASE_URL: postgresql://postgres:postgres@localhost:${{ job.services.postgres.ports['5432'] }}/postgres
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        run: |
+          only=''
+          for n in $LANE; do only="$only --only $n"; done
+          if [ "$DEVAI_RUNTIME" = docker ] && [ "${{ matrix.lane.name }}" = postgres ]; then
+            sh scripts/ci-local/run.sh
+          else
+            # shellcheck disable=SC2086
+            pnpm exec devai check $only
+          fi
+
+  acceptance:
+    if: github.event_name == 'pull_request'
+    needs: modes
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+    services:
+      postgres:
+        image: postgres:16-alpine@sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@a8198c4bff370c8506180b035930dea56dbd5288 # v5; version from packageManager
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The packet named by the head commit's trailer: review and the sensor are digest-verified from
+      # .devai/review/, never executed here (08 C.1); labels come from protected-paths; the PR body from
+      # --summary.
+      - name: devai check --packet --full
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          id=$(git log -1 --format='%(trailers:key=Packet,valueonly)' | head -n 1 | tr -d ' ')
+          if [ -z "$id" ]; then echo 'no Packet: trailer on the head commit; acceptance needs a packet' >&2; exit 2; fi
+          packet=$(git ls-files "packets/*/$id.md" | head -n 1)
+          status=0
+          pnpm exec devai check --packet "$packet" --full --format json > report.json || status=$?
+          node -e "const r=JSON.parse(require('node:fs').readFileSync('report.json','utf8'));const t=r.nodes.find((n)=>n.id==='protected-paths')?.details?.touched??[];for(const c of t)console.log('protected:'+c.class);if(t.some((c)=>c.declared===false))console.log('protected:unplanned')" > labels.txt || true
+          while read -r label; do
+            [ -n "$label" ] || continue
+            gh label create "$label" --force >/dev/null
+            gh pr edit "$PR" --add-label "$label"
+          done < labels.txt
+          pnpm exec devai check --packet "$packet" --summary > summary.txt || true
+          gh pr edit "$PR" --body-file summary.txt
+          exit "$status"
+
+  devai:
+    if: always()
+    needs: [modes, check, acceptance]
+    runs-on: ubuntu-24.04
+    steps:
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          for r in $RESULTS; do
+            case "$r" in success|skipped) ;; *) echo "a devai job ended $r"; exit 1;; esac
+          done
