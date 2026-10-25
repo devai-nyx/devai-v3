@@ -1760,7 +1760,7 @@ close. 12 §4's R6 row is not edited. Chosen: (a). Source: Owner (panels, 2026-1
 [fact] D-118 identifies the two `init` commits by their `Packet:` trailers, but the packets commit
 (`chore(packets): seed CMP-DEMO-001`) carried no trailer (08 A.1; `packages/cli/src/commands/init.ts:313`),
 so a re-run could not recognise it (devai-v3#75 Open 1); W11 matched its exact subject instead
-(devai-v3#76 Open 2). Options: (a) the packets commit gains the trailer `Packet: CMP-DEMO-001`, so both
+(devai-v3#76 Open 2; `packages/cli/src/commands/init.ts:242,249`, commit at `:335`). Options: (a) the packets commit gains the trailer `Packet: CMP-DEMO-001`, so both
 `init` commits are recognised by their `Packet:` trailers exactly as D-118 reads; a history without both
 trailers reachable from `HEAD` is a re-run, one with both is attach mode; (b) match the exact subject;
 (c) `packets/CMP-DEMO-001/` present at `HEAD`. Recommended: (a). Trailers survive a reworded subject,
@@ -1794,6 +1794,6 @@ packet `PACKET-2026-10-24-R6-CLOSE.md` Part G, Owner's workspace).
 - STYNX local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 (D-069) — STYNX item, not blocking 3.0.0.
 - D-120's trailer value `CMP-DEMO-001` is a campaign id, while 02 §5 gives agent commits the trailer
   `Packet: PKT-<PRODUCT>-nnn` (D-050) and 05 §2 calls the trailer the packet `id`. The code's trailer
-  readers take any value (PL-12 builds a set, `packages/cli/src/packet/rules.ts:405`; `init` tests
-  presence, `packages/cli/src/commands/init.ts:244`), but whether 02 §5/05 §2 widen the trailer's form
+  readers take any value (PL-12 builds a set, `packages/cli/src/packet/rules.ts:405`; `init` reads
+  them per commit, `packages/cli/src/commands/init.ts:247`), but whether 02 §5/05 §2 widen the trailer's form
   for `init`'s commit, or readers that expect a packet id must skip it, is not ruled.
