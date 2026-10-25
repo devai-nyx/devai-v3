@@ -45,7 +45,7 @@ with a new decision (D-068, D-070 in the history). The bootstrap documents 11 (m
 
 | Path | Today |
 |---|---|
-| `package.json` | Version 3.0.0, `type: module`, Apache-2.0; bin `devai` → `dist/main.js`; `files: [dist, template, schema]`; `exports` `./eslint-overlay`; `publishConfig.registry` GitHub Packages; runtime dependencies pinned as 07 §2 lists them (`commander` 15.0.0, `ignore` 7.0.5, `pg` 8.23.1, `pg-query-emscripten` 5.1.0, `typescript` `~6.0.3`, `yaml` 2.9.0, `zod` 4.4.3; dev `@types/pg` 8.20.0) |
+| `package.json` | Version 3.0.0, `type: module`, Apache-2.0; bin `devai` → `dist/main.js`; `files: [dist, template, schema]`; `exports` `./eslint-overlay`; `publishConfig.registry` GitHub Packages; `repository` this repository, `directory` `packages/cli`; runtime dependencies pinned as 07 §2 lists them (`commander` 15.0.0, `ignore` 7.0.5, `pg` 8.23.1, `pg-query-emscripten` 5.1.0, `typescript` `~6.0.3`, `yaml` 2.9.0, `zod` 4.4.3; dev `@types/pg` 8.20.0) |
 | `src/config.ts` | The `devai.json` zod definition, verbatim from [08 A.8](../framework/08-cli-and-nodes.md) |
 | `src/report.ts` | The `report.json`, sensor-evidence and review zod definitions, verbatim from [08 C.2](../framework/08-cli-and-nodes.md) |
 | `template/` | The [09 §1.1](../framework/09-rail.md) template `devai init` materialises (below) |

@@ -26,7 +26,7 @@ From 12 §4. Each row blocks 3.0.0 except R10, which *is* the release.
 | R5 | STYNX publishes `<v>`; the R3–R4 acceptance commands are rerun against it | STYNX, agent |
 | R6 | CLI per [08](../framework/08-cli-and-nodes.md), decorators, template per [09 §1.1](../framework/09-rail.md), generator per [09 §2](../framework/09-rail.md); tsconfigs, schema projections and the projection test; template `package.json` and lock at `<v>` | agent |
 | R7 | Release host: `psql` 16.15 on PATH; `claude` 2.1.292 and `codex` 0.163.0 authenticated; Docker | Owner |
-| R8 | [09 §4](../framework/09-rail.md) matrix O1–O16 and N1–N12 green in CI, with sensor evidence committed; the model calibration table filled | agent |
+| R8 | [09 §4](../framework/09-rail.md) matrix O1–O16 and N1–N20 green in CI ([D-130](../../decisions.md)); R8 closes on a green `matrix` in both runtimes with its Open list ruled. Sensor evidence and the model calibration table are pending S10 #4 and D-124, re-checked at R9 ([D-134](../../decisions.md)) | agent |
 | R9 | H5: `matrix` becomes a required check | Owner |
 | R10 | H6: tag and publish; `npm view @devai-nyx/{cli,decorators}@3.0.0 version` prints `3.0.0` twice; `pnpm dlx @devai-nyx/cli@3.0.0 init --product demo` in an empty directory exits 0 | agent |
 
@@ -48,21 +48,26 @@ code and template.
 fresh-module dead code, the web `unit` setup, the step 3 build, W10's readings) and [D-108](../../decisions.md)–[D-112](../../decisions.md) the questions those left
 open (app `build` scripts, the `unit-api`/`unit-web` projects, `init` re-runs); W11 applies them.
 [D-113](../../decisions.md) and [D-114](../../decisions.md) settle the `init` re-run and `unit`'s invocation;
-[D-115](../../decisions.md)–[D-118](../../decisions.md) finish the re-run rules and ratify W11's readings.
-**R6 is closed** at 10/10 modulo the S10 list ([D-119](../../decisions.md), [D-100](../../decisions.md)) once
-devai-v3#74 merges: clause 2 is met at 09 §4 steps 1–4, and steps 5–8 are R8 acceptance
+[D-115](../../decisions.md)–[D-118](../../decisions.md) finish the re-run rules and ratify W11's readings
+(devai-v3#70–#76).
+**R6 is closed** at 10/10 modulo the S10 list ([D-119](../../decisions.md), [D-100](../../decisions.md)),
+with devai-v3#74 merged: clause 2 is met at 09 §4 steps 1–4, and steps 5–8 are R8 acceptance
 ([D-098](../../decisions.md)).
 [D-120](../../decisions.md) and [D-121](../../decisions.md) settle how `init` recognises its two commits and
 ratify W11's `config-mismatch` readings; [D-122](../../decisions.md) admits the campaign id in that commit's
-`Packet:` trailer. With it, R6 leaves no open law question.
+`Packet:` trailer (devai-v3#77–#80). With it, R6 leaves no open law question.
 R8's first pass (devai-v3#81) ran the 09 §4 matrix; [D-123](../../decisions.md)–[D-131](../../decisions.md) rule
-its open items: the shell's guards and error bodies, `packet rebase`'s PL-14, the aggregate `matrix`
-job, and the sensor evidence, deferred until S10 #4 ([D-128](../../decisions.md)).
+its open items (devai-v3#83): the shell's guards and error bodies, `packet rebase`'s PL-14, the aggregate `matrix`
+job, and the sensor evidence, deferred until S10 #4 ([D-128](../../decisions.md)); devai-v3#84 applies them, and #82 makes `typecheck`'s population the `tsc -b` closure.
 [D-132](../../decisions.md)–[D-134](../../decisions.md) make the test config a `typecheck` project, word `unit`'s
 population as coded, and let R8 close on a green `matrix` in both runtimes, the sensor evidence re-checked at
-R9. [D-135](../../decisions.md)–[D-138](../../decisions.md) drop PKT-DEMO-004's repository range, ratify the
+R9 (devai-v3#86; #85 applies D-132). [D-135](../../decisions.md)–[D-138](../../decisions.md) drop PKT-DEMO-004's repository range, ratify the
 shell's filter wiring, add the public health controller to S10 (#8; the probes answer 401 until then) and
-let the test config reach the modules through the apps.
+let the test config reach the modules through the apps (devai-v3#87, applied by #88, with #89's PL-15 evidence text).
+**R8 is closed** ([D-134](../../decisions.md)): `matrix` is green in both runtimes, O1–O16 and N1–N20; the sensor
+evidence and 12 §3.1's token rows stay pending S10 #4 and D-124 ([D-124](../../decisions.md), [D-128](../../decisions.md)).
+**R9 is applied** (2026-10-25): `main`'s protection requires `build` and `matrix`, strict, enforced for admins;
+read back `[["build","matrix"],true,true]`.
 R7 is confirmed on the release host.
 
 **Not blocking 3.0.0** (12 §4): the D-047 edit-loop p95 measurement (3.0.0 ships 90000); the first
@@ -81,8 +86,15 @@ release lane ([D-038](../../decisions.md)).
 - has `permissions: packages: write` and publishes with `pnpm -r publish`, authenticated by the
   workflow's `GITHUB_TOKEN`. There is no publish PAT.
 
-The matrix job refuses tags until R8 fills it, so a tag cannot publish early (see
-[Building and testing](building-and-testing.md)).
+On a `v*` tag `matrix` always runs every cell, whatever changed, so a tag publishes only what the full
+matrix passed (see [Building and testing](building-and-testing.md)). The install steps authenticate with
+`STYNX_READ_TOKEN` (H4's fallback for the cross-organisation `@stynx-nyx/*` read); the publish step itself
+sets `NODE_AUTH_TOKEN` to `GITHUB_TOKEN`, so that read token is never a publish credential (12 §5).
+
+Both manifests name `repository` (`https://github.com/devai-nyx/devai-v3.git`, `directory`
+`packages/cli` or `packages/decorators`), which GitHub Packages uses to connect a package it creates
+to this repository. `@devai-nyx/cli` already exists, connected to the v2 repository with 0.1.0–0.8.0;
+H4 grants this repository Actions write access to it.
 
 There are no Changesets in this repository: two packages, one literal version, and no node reads a
 changeset here ([D-065](../../decisions.md)). There are no signed tags, provenance or attestations
@@ -118,4 +130,4 @@ Adopters move by fresh scaffold; see [Moving from v2](../adopters/moving-from-v2
 release would follow the same jobs: green `build` and `matrix` on `main`, then a `v*` tag. The law
 does not define a policy for 3.x releases beyond these jobs.
 
-Source: 08 B.10, 09 §1.1, §2, §4, decisions D-002, D-003, D-026, D-028, D-038, D-047, D-058, D-064, D-065, D-067–D-070; 12 §0, §3–§5, §8 (bootstrap history).
+Source: 08 B.10, 09 §1.1, §2, §4, decisions D-002, D-003, D-026, D-028, D-038, D-047, D-058, D-064, D-065, D-067–D-070, D-098, D-100, D-119–D-138; 12 §0, §3–§5, §8 (bootstrap history).
