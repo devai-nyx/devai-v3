@@ -19,7 +19,7 @@ if (patterns === undefined)
 const files = patterns
   .flatMap((p) => globSync(p))
   .filter((f) => tier !== 'unit' || !f.endsWith('.acceptance.spec.ts'));
-// D-110: the unit tier is two projects, each enabled iff its patterns match a file, as a tier is.
+// D-110, D-114: the unit tier is two projects, each enabled iff its patterns match a file.
 const isWeb = (f: string) => f.startsWith('domain/') && f.includes('/web/test/');
 const projects =
   tier === 'unit'

@@ -1,4 +1,4 @@
-// 08 B.11 `unit` as amended by D-081 (R6 W3): `vitest run --config vitest.config.ts --reporter <C.5 module>`
+// 08 B.11 `unit` as amended by D-081 (R6 W3) and D-114: `vitest run --config vitest.config.ts --reporter <C.5 module>`
 // with `TEST_TIER=unit` over the population's files (`*.spec.ts` outside the tier suffixes in a
 // `typecheck`-affected package, B.1 table), counted per case: a skipped or pending case is a shortfall
 // `FAIL` naming it, a module that fails to import is `FAIL`, a collected case without a result is
