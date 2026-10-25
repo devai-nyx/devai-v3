@@ -56,7 +56,7 @@ There is no `--web` on `init`: both the API and the web shell ship from day one
 ([09 §1](../framework/09-rail.md), [08 A.1](../framework/08-cli-and-nodes.md)):
 
 1. writes the template tree of 09 §1.1, running `git init` if needed;
-2. runs `pnpm add -D --save-exact @devai-nyx/cli@<its own version>`, which installs the workspace
+2. runs `pnpm add -w -D --save-exact @devai-nyx/cli@<its own version>`, which installs the workspace
    and completes `pnpm-lock.yaml` ([D-097](../../decisions.md));
 3. commits the tree as `chore(template): devai init <product>` with the trailer
    `Packet: PKT-DEMO-001`, with the hooks live;
