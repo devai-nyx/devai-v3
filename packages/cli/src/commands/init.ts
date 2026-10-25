@@ -3,9 +3,10 @@
 // root, `pnpm add -D --save-exact @devai-nyx/cli@<own version>` (installs the workspace and completes the
 // lock, D-097), commit it as `chore(template): devai init <product>` (trailer `Packet: PKT-DEMO-001`),
 // render the four CMP-DEMO-001 packets with `base` = that commit and commit them, both commits with the
-// hooks live. Attach (`devai.json` present and a `Packet:` commit exists, D-112): rewrite only the three
-// hooks. `devai.json` without a `Packet:` commit (a failed install or a hook-refused commit) is a first
-// run again: the tree stays as it is, and the install and both commits are made from it. Both modes set the worktree's
+// hooks live. Attach (`devai.json` present and `HEAD` has both of those commits, D-115): rewrite only
+// the three hooks. Otherwise, with `devai.json` present, it is a re-run (a failed install or a hook-refused
+// commit; D-112, D-113, D-115): the files on disk stay, the given inputs must equal devai.json's (D-116),
+// the install runs again and whichever of the two commits is missing is made. Both modes set the worktree's
 // hooks path and agent identity (D-057, D-058, 02 §5) and end with the preflight; exit 2
 // `tooling-missing` when an item does not resolve or the install failed (then nothing is committed).
 import { chmodSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
@@ -220,7 +221,7 @@ async function commit(dir: string, message: string, paths: string[]): Promise<st
     // The hook's report (git sends hook output to stderr): its node lines and its closing stage line.
     const lines = e.stderr.split('\n').map((l) => l.trim()).filter((l) => /^(FAIL|UNKNOWN)\b|^devai (pre-commit|commit-msg) /.test(l));
     const tail = (lines.length > 0 ? lines : [e.message]).join(' · ');
-    throw new CommandRefusal('setup-failed', `git commit "${message.split('\n')[0]}" refused by the hooks: ${tail}; fix the findings, then run devai init again (D-112)`);
+    throw new CommandRefusal('setup-failed', `git commit "${message.split('\n')[0]}" refused by the hooks: ${tail}; fix the findings, then run devai init again`);
   }
   return (await git(dir, ['rev-parse', 'HEAD'])).toString('utf8').trim();
 }
@@ -238,10 +239,27 @@ async function install(dir: string): Promise<string | null> {
   return text.split('\n').map((l) => l.trim()).find((l) => /ERR_|error/i.test(l)) ?? (r.timedOut ? 'timed out' : `exited ${String(r.code)}`);
 }
 
-/** D-112: attach mode needs a commit with a `Packet:` trailer; an unborn `HEAD` or none is a first run. */
-async function hasPacketCommit(dir: string): Promise<boolean> {
-  if ((await topLevel(dir)) === null || (await revParse(dir, 'HEAD')) === null) return false;
-  return (await log(dir, ['--format=%(trailers:key=Packet,valueonly)', 'HEAD'])).trim() !== '';
+const PACKETS_SUBJECT = 'chore(packets): seed CMP-DEMO-001';
+
+/** D-115: init's two commits in `HEAD`'s history: the template commit (trailer `Packet: PKT-DEMO-001`) and the packets commit. */
+async function initCommits(dir: string): Promise<{ template: string | null; packets: boolean }> {
+  if ((await topLevel(dir)) === null || (await revParse(dir, 'HEAD')) === null) return { template: null, packets: false };
+  const records = (await log(dir, ['--format=%H%x1f%s%x1f%(trailers:key=Packet,valueonly,separator=%x2C)%x1e', 'HEAD'])).split('\x1e').map((r) => r.trim().split('\x1f'));
+  const template = records.find((r) => (r[2] ?? '').split(',').map((t) => t.trim()).includes('PKT-DEMO-001'))?.[0] ?? null;
+  return { template, packets: records.some((r) => r[1] === PACKETS_SUBJECT) };
+}
+
+/** D-116, D-117: on a re-run each given input equals devai.json's, else exit 2 `config-mismatch`. */
+function assertRecorded(opts: InitOptions, config: DevaiConfig): void {
+  const given: [string, string, unknown, unknown][] = [
+    ['--product', 'productPrefix', opts.product, config.productPrefix],
+    ['--locales', 'locales', opts.locales?.split(',').map((l) => l.trim()).join(','), config.locales.join(',')],
+    ['--lgpd', 'lgpd', opts.lgpd, config.lgpd],
+    ['--runtime', 'runtime.mode', opts.runtime, config.runtime.mode],
+  ];
+  for (const [flag, field, value, recorded] of given) {
+    if (value !== undefined && value !== recorded) throw new CommandRefusal('config-mismatch', `${flag} differs from devai.json ${field}; omit it or pass the recorded value`);
+  }
 }
 
 const tokensOf = (product: string, locales: readonly string[]) => ({ __PRODUCT__: product, __PREFIX__: product[0]!.toUpperCase() + product.slice(1), __LOCALES__: tsArray(locales) });
@@ -249,7 +267,8 @@ const tokensOf = (product: string, locales: readonly string[]) => ({ __PRODUCT__
 export async function init(opts: InitOptions, format: Format, cwd: string): Promise<{ stdout: string; exitCode: 0 | 2 }> {
   const dir = resolve(cwd, opts.dir ?? '.');
   const configured = existsSync(resolve(dir, 'devai.json'));
-  const attach = configured && (await hasPacketCommit(dir));
+  const made = configured ? await initCommits(dir) : { template: null, packets: false };
+  const attach = made.template !== null && made.packets;
   let product: string;
   let mode: 'bare' | 'docker';
   let gitConfig: Record<string, string>;
@@ -278,10 +297,9 @@ export async function init(opts: InitOptions, format: Format, cwd: string): Prom
   } else {
     let entries: Entry[];
     if (configured) {
-      // D-112, D-113: the re-run of a first run that committed nothing keeps the files on disk and takes
-      // the inputs devai.json records.
+      // D-112, D-113, D-115: a re-run keeps the files on disk and takes the inputs devai.json records.
       const config = loadConfig(dir);
-      if (opts.product !== undefined && opts.product !== config.productPrefix) throw new CommandRefusal('config-mismatch', `--product ${opts.product}: ${resolve(dir, 'devai.json')} records ${config.productPrefix}`);
+      assertRecorded(opts, config);
       product = config.productPrefix;
       mode = config.runtime.mode;
       entries = templateEntries(tokensOf(product, config.locales));
@@ -304,14 +322,18 @@ export async function init(opts: InitOptions, format: Format, cwd: string): Prom
     gitConfig = await configure(dir, product);
     installFailure = await install(dir);
     if (installFailure === null) {
-      const template = await commit(dir, `chore(template): devai init ${product}\n\nPacket: PKT-DEMO-001\n`, ['.']);
+      // D-115: only the missing commits are made.
+      const template = made.template ?? (await commit(dir, `chore(template): devai init ${product}\n\nPacket: PKT-DEMO-001\n`, ['.']));
       // D-095 as amended: `base` is the template commit for all four packets; campaign step 3 rebases
-      // PKT-DEMO-002 to HEAD before its commit.
-      for (const e of entries.filter((e) => e.path.startsWith(PACKETS))) {
-        write(dir, { ...e, bytes: Buffer.from(e.bytes!.toString('utf8').replace(BASE_LINE, `base: ${template}`), 'utf8') });
-        count('seed', e.path);
+      // PKT-DEMO-002 to HEAD before its commit. A packet already on disk is kept (D-113).
+      if (!made.packets) {
+        for (const e of entries.filter((e) => e.path.startsWith(PACKETS))) {
+          if (existsSync(resolve(dir, e.path))) continue;
+          write(dir, { ...e, bytes: Buffer.from(e.bytes!.toString('utf8').replace(BASE_LINE, `base: ${template}`), 'utf8') });
+          count('seed', e.path);
+        }
+        await commit(dir, `${PACKETS_SUBJECT}\n`, ['packets']);
       }
-      await commit(dir, 'chore(packets): seed CMP-DEMO-001\n', ['packets']);
     }
   }
   const items = await preflight(dir, mode);

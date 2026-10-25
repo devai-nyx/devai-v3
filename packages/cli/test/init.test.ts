@@ -42,12 +42,14 @@ describe('devai init refusals (A.1 Failure → reason)', () => {
     writeFileSync(resolve(dir, 'notes.txt'), 'x\n');
     expect(refusal(dir, '--product', 'demo')).toMatchObject({ status: 2, reason: 'dir-not-empty' });
   });
-  /** A repository whose devai.json is `text`, with one `Packet:` commit (attach mode, D-112). */
+  /** A repository whose devai.json is `text`, with init's two commits (attach mode, D-115). */
   const attached = (text: string) => {
     const dir = tmp();
     writeFileSync(resolve(dir, 'devai.json'), text);
     spawnSync('git', ['init', '-q'], { cwd: dir });
-    spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '--allow-empty', '-m', 'chore: x\n\nPacket: PKT-DEMO-001'], { cwd: dir });
+    for (const m of ['chore(template): devai init demo\n\nPacket: PKT-DEMO-001', 'chore(packets): seed CMP-DEMO-001']) {
+      spawnSync('git', ['-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '--allow-empty', '-m', m], { cwd: dir });
+    }
     return dir;
   };
   it('attach mode rejects --product', () => {
@@ -165,6 +167,69 @@ describe('devai init when the install fails (D-097)', () => {
     expect(git(dir, 'log', '--format=%s|%(trailers:key=Packet,valueonly)')).toBe('chore(packets): seed CMP-DEMO-001|\nchore(template): devai init demo|PKT-DEMO-001');
     expect(git(dir, 'status', '--porcelain')).toBe('');
     expect(JSON.parse(run(stub.env, dir, 'init', '--format', 'json').stdout)).toMatchObject({ mode: 'attach' });
+  });
+});
+
+describe('devai init re-run (D-113, D-115, D-116, D-117)', () => {
+  /** A first run whose install failed: the files are on disk, nothing is committed. */
+  const failed = (...args: string[]) => {
+    const parent = tmp();
+    run(pnpmShim('fail').env, parent, 'init', '--product', 'demo', '--dir', 'demo', ...args);
+    return resolve(parent, 'demo');
+  };
+  const mismatch = (dir: string, ...args: string[]) => {
+    const r = run(pnpmShim('stub').env, dir, 'init', '--format', 'json', ...args);
+    return { status: r.status, ...(JSON.parse(r.stdout) as { reason: string; message: string }) };
+  };
+
+  it.each([
+    [['--product', 'other'], '--product differs from devai.json productPrefix; omit it or pass the recorded value'],
+    [['--locales', 'en-US,pt-BR'], '--locales differs from devai.json locales; omit it or pass the recorded value'],
+    [['--lgpd'], '--lgpd differs from devai.json lgpd; omit it or pass the recorded value'],
+    [['--runtime', 'docker'], '--runtime differs from devai.json runtime.mode; omit it or pass the recorded value'],
+  ])('%j that differs from devai.json is exit 2 config-mismatch, nothing committed', (args, message) => {
+    const dir = failed();
+    expect(mismatch(dir, ...args)).toMatchObject({ status: 2, reason: 'config-mismatch', message });
+    expect(spawnSync('git', ['rev-parse', '--verify', 'HEAD'], { cwd: dir }).status).not.toBe(0);
+  });
+
+  it('the recorded values are accepted: the re-run makes both commits', () => {
+    const dir = failed('--lgpd', '--locales', 'en-US,pt-BR');
+    const r = run(pnpmShim('stub').env, dir, 'init', '--format', 'json', '--product', 'demo', '--lgpd', '--locales', 'en-US,pt-BR', '--runtime', 'bare');
+    expect(JSON.parse(r.stdout)).toMatchObject({ mode: 'materialise' });
+    expect(git(dir, 'log', '--format=%s')).toBe('chore(packets): seed CMP-DEMO-001\nchore(template): devai init demo');
+  });
+
+  it('template commit present, packets commit missing: the re-run makes only the packets commit, keeping the packets on disk', () => {
+    const parent = tmp();
+    const dir = resolve(parent, 'demo');
+    const stub = pnpmShim('stub');
+    run(stub.env, parent, 'init', '--product', 'demo', '--dir', 'demo');
+    const template = git(dir, 'rev-parse', 'HEAD~1');
+    // the packets commit undone, its files left on disk (a hook-refused packets commit leaves this state)
+    spawnSync('git', ['reset', '-q', 'HEAD~1'], { cwd: dir });
+    const packet = resolve(dir, 'packets/CMP-DEMO-001/PKT-DEMO-001.md');
+    const kept = readFileSync(packet, 'utf8');
+    expect(JSON.parse(run(stub.env, dir, 'init', '--format', 'json').stdout)).toMatchObject({ mode: 'materialise', written: [] });
+    expect(git(dir, 'log', '--format=%s')).toBe('chore(packets): seed CMP-DEMO-001\nchore(template): devai init demo');
+    expect(git(dir, 'rev-parse', 'HEAD~1')).toBe(template);
+    expect(readFileSync(packet, 'utf8')).toBe(kept);
+    expect(kept).toContain(`\nbase: ${template}\n`);
+    expect(git(dir, 'status', '--porcelain')).toBe('');
+    expect(JSON.parse(run(stub.env, dir, 'init', '--format', 'json').stdout)).toMatchObject({ mode: 'attach' });
+  });
+
+  it('packets missing from disk too: the re-run renders them with base = the existing template commit', () => {
+    const parent = tmp();
+    const dir = resolve(parent, 'demo');
+    const stub = pnpmShim('stub');
+    run(stub.env, parent, 'init', '--product', 'demo', '--dir', 'demo');
+    const template = git(dir, 'rev-parse', 'HEAD~1');
+    spawnSync('git', ['reset', '-q', '--hard', 'HEAD~1'], { cwd: dir });
+    const out = JSON.parse(run(stub.env, dir, 'init', '--format', 'json').stdout) as { written: string[] };
+    expect(out.written.every((p) => p.startsWith('packets/'))).toBe(true);
+    expect(readFileSync(resolve(dir, 'packets/CMP-DEMO-001/PKT-DEMO-002.md'), 'utf8')).toContain(`\nbase: ${template}\n`);
+    expect(git(dir, 'log', '--format=%s')).toBe('chore(packets): seed CMP-DEMO-001\nchore(template): devai init demo');
   });
 });
 
