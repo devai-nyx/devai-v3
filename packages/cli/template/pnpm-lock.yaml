@@ -125,6 +125,9 @@ importers:
       '@stynx-nyx/auth':
         specifier: 3.0.0
         version: 3.0.0(@nestjs/common@11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.3)(@opentelemetry/api@1.10.0)(@types/pg@8.20.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@stynx-nyx/backend':
+        specifier: 3.0.0
+        version: 3.0.0(@nestjs/common@11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.3)(@opentelemetry/api@1.10.0)(@types/pg@8.20.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)
       '@stynx-nyx/core':
         specifier: 3.0.0
         version: 3.0.0(@nestjs/common@11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -2154,6 +2157,15 @@ packages:
       reflect-metadata: ^0.2.2
       rxjs: ^7.8.2
 
+  '@stynx-nyx/backend@3.0.0':
+    resolution: {integrity: sha512-rfNRzsAJufMd1hHM6QMpHflI5Ghqg9bXoo8aHRAQTAF2UTHsU2eBRpMxHAJUjqcojGYa+5lMNOdySBJFDD4cJw==, tarball: https://npm.pkg.github.com/download/@stynx-nyx/backend/3.0.0/cc3fb3bdecd4c4dc932b239678695fd55ea03e59}
+    engines: {node: '>=24 <25'}
+    peerDependencies:
+      '@nestjs/common': ^11.1.19
+      '@nestjs/core': ^11.1.19
+      reflect-metadata: ^0.2.2
+      rxjs: ^7.8.2
+
   '@stynx-nyx/cli@3.0.0':
     resolution: {integrity: sha512-XUjcL7e7uC50q3KvTiknTDj4zZf+mvPaYpqbtgNKSTsX5hjpCWaD2Spdxv6ehmsmL8LeRjgrB22VJ+FDhK2NCg==, tarball: https://npm.pkg.github.com/download/@stynx-nyx/cli/3.0.0/2d124813784572b58d41e061fcbf1d0e2e9ee6aa}
     engines: {node: '>=24 <25'}
@@ -2214,6 +2226,10 @@ packages:
       reflect-metadata: ^0.2.2
       rxjs: ^7.8.2
 
+  '@stynx-nyx/integration-adapter@3.0.0':
+    resolution: {integrity: sha512-b+U8vfOj979Z1HERNkeJIRJrHkVjB+xhnqHGdswBJjU1GKwApDH1P3QSL1R3uN3fjc+g2gyylgNBIxEVHnFRjA==, tarball: https://npm.pkg.github.com/download/@stynx-nyx/integration-adapter/3.0.0/0c2898b9c513deec60ce6411589278ade3db9238}
+    engines: {node: '>=24 <25'}
+
   '@stynx-nyx/logging@3.0.0':
     resolution: {integrity: sha512-6Xro7Nen9RP9CN5lmUsD5mvFNNihxSX8dYKAWPEtmuOT115D+NEDGGmB6Liz32XKcECMoIT09jQH03GnUEmFQQ==, tarball: https://npm.pkg.github.com/download/@stynx-nyx/logging/3.0.0/81e0a5cbba03ee482ed031eff6f8ee86f9797b3c}
     engines: {node: '>=24 <25'}
@@ -2230,6 +2246,15 @@ packages:
 
   '@stynx-nyx/privacy@3.0.0':
     resolution: {integrity: sha512-fkv/xa/ucWjrUEZqnKBtwyf6EiWNS6Toh5ES+Fd5oM1PPCs196jLVpnrqNyOZ9YjdNcIn9W8ldeMTE5ibhBaGA==, tarball: https://npm.pkg.github.com/download/@stynx-nyx/privacy/3.0.0/71c59a159c3c7d28c137cc685ef5bb3ef4c2652b}
+    engines: {node: '>=24 <25'}
+    peerDependencies:
+      '@nestjs/common': ^11.1.19
+      '@nestjs/core': ^11.1.19
+      reflect-metadata: ^0.2.2
+      rxjs: ^7.8.2
+
+  '@stynx-nyx/ratelimit@3.0.0':
+    resolution: {integrity: sha512-raaeajRWttdRa/g2j3xb0LSkg6yhIDgfm18vg6NNKKNTdkLCKLtxkLzTUiQRdpXjFeSCJRwYr6qdtUyfcuV3sQ==, tarball: https://npm.pkg.github.com/download/@stynx-nyx/ratelimit/3.0.0/b230efb9da02af258f24d706a41729ae49c1e642}
     engines: {node: '>=24 <25'}
     peerDependencies:
       '@nestjs/common': ^11.1.19
@@ -7290,6 +7315,51 @@ snapshots:
       - sql.js
       - sqlite3
 
+  '@stynx-nyx/backend@3.0.0(@nestjs/common@11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.3)(@opentelemetry/api@1.10.0)(@types/pg@8.20.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
+    dependencies:
+      '@nestjs/common': 11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core': 11.2.3(@nestjs/common@11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.2.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@stynx-nyx/contracts': 3.0.0
+      '@stynx-nyx/core': 3.0.0(@nestjs/common@11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@stynx-nyx/data': 3.0.0(@nestjs/common@11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.3)(@opentelemetry/api@1.10.0)(@types/pg@8.20.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@stynx-nyx/idempotency': 3.0.0(@nestjs/common@11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.3)(@opentelemetry/api@1.10.0)(@types/pg@8.20.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@stynx-nyx/integration-adapter': 3.0.0
+      '@stynx-nyx/ratelimit': 3.0.0(@nestjs/common@11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.3)(@opentelemetry/api@1.10.0)(@types/pg@8.20.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      reflect-metadata: 0.2.2
+      rxjs: 7.8.2
+    transitivePeerDependencies:
+      - '@aws-sdk/client-rds-data'
+      - '@cloudflare/workers-types'
+      - '@electric-sql/pglite'
+      - '@libsql/client'
+      - '@libsql/client-wasm'
+      - '@neondatabase/serverless'
+      - '@netlify/db'
+      - '@node-rs/xxhash'
+      - '@op-engineering/op-sqlite'
+      - '@opentelemetry/api'
+      - '@planetscale/database'
+      - '@prisma/client'
+      - '@tidbcloud/serverless'
+      - '@types/better-sqlite3'
+      - '@types/pg'
+      - '@types/sql.js'
+      - '@upstash/redis'
+      - '@vercel/postgres'
+      - '@xata.io/client'
+      - better-sqlite3
+      - bun-types
+      - expo-sqlite
+      - gel
+      - knex
+      - kysely
+      - mysql2
+      - pg-native
+      - postgres
+      - prisma
+      - sql.js
+      - sqlite3
+
   '@stynx-nyx/cli@3.0.0(@nestjs/common@11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.3)(@opentelemetry/api@1.10.0)(@types/pg@8.20.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
     dependencies:
       '@stynx-nyx/privacy': 3.0.0(@nestjs/common@11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.3)(@opentelemetry/api@1.10.0)(@types/pg@8.20.0)(pg@8.23.1)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -7522,6 +7592,8 @@ snapshots:
       - sql.js
       - sqlite3
 
+  '@stynx-nyx/integration-adapter@3.0.0': {}
+
   '@stynx-nyx/logging@3.0.0(@nestjs/common@11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
     dependencies:
       '@nestjs/common': 11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -7580,6 +7652,49 @@ snapshots:
       - kysely
       - mysql2
       - pg
+      - pg-native
+      - postgres
+      - prisma
+      - sql.js
+      - sqlite3
+
+  '@stynx-nyx/ratelimit@3.0.0(@nestjs/common@11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.3)(@opentelemetry/api@1.10.0)(@types/pg@8.20.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)':
+    dependencies:
+      '@nestjs/common': 11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@nestjs/core': 11.2.3(@nestjs/common@11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.2.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@stynx-nyx/auth': 3.0.0(@nestjs/common@11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.3)(@opentelemetry/api@1.10.0)(@types/pg@8.20.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      '@stynx-nyx/contracts': 3.0.0
+      '@stynx-nyx/data': 3.0.0(@nestjs/common@11.2.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.2.3)(@opentelemetry/api@1.10.0)(@types/pg@8.20.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)
+      redis: 6.3.0(@opentelemetry/api@1.10.0)
+      reflect-metadata: 0.2.2
+      rxjs: 7.8.2
+    transitivePeerDependencies:
+      - '@aws-sdk/client-rds-data'
+      - '@cloudflare/workers-types'
+      - '@electric-sql/pglite'
+      - '@libsql/client'
+      - '@libsql/client-wasm'
+      - '@neondatabase/serverless'
+      - '@netlify/db'
+      - '@node-rs/xxhash'
+      - '@op-engineering/op-sqlite'
+      - '@opentelemetry/api'
+      - '@planetscale/database'
+      - '@prisma/client'
+      - '@tidbcloud/serverless'
+      - '@types/better-sqlite3'
+      - '@types/pg'
+      - '@types/sql.js'
+      - '@upstash/redis'
+      - '@vercel/postgres'
+      - '@xata.io/client'
+      - better-sqlite3
+      - bun-types
+      - expo-sqlite
+      - gel
+      - knex
+      - kysely
+      - mysql2
       - pg-native
       - postgres
       - prisma

@@ -61,8 +61,9 @@ jobs:
   # 09 §4 (R8): every cell in a temporary workspace through packages/cli/scripts/campaign.ts, which asserts
   # each step's current form and prints the law's form as pending (D-100). Both runtimes (12 §5); option
   # cells O1–O8 bare and O9–O16 docker, negative cells N1–N20 on the default cell O2, bare (D-098). The
-  # entries shard the cells so no job runs much past twenty minutes.
-  matrix:
+  # entries shard the cells so no job runs much past twenty minutes; each reports as `matrix (<runtime>, <shard>)`.
+  cells:
+    name: matrix (${{ matrix.runtime }}, ${{ matrix.shard }})
     needs: [build]
     if: needs.build.outputs.cli == 'true'
     runs-on: ubuntu-24.04
@@ -122,6 +123,23 @@ jobs:
             ${{ runner.temp }}/cells/results.json
             ${{ runner.temp }}/cells/*.log
           if-no-files-found: ignore
+
+  # D-127: the one `matrix` check H5 names. It fails when any shard failed or was cancelled, and passes when
+  # the shards were skipped because packages/cli/** did not change (12 §5's job condition).
+  matrix:
+    needs: [build, cells]
+    if: always()
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Every shard passed (or none was due)
+        env:
+          BUILD: ${{ needs.build.result }}
+          CLI: ${{ needs.build.outputs.cli }}
+          CELLS: ${{ needs.cells.result }}
+        run: |
+          echo "build: $BUILD · packages/cli changed: $CLI · shards: $CELLS"
+          [ "$BUILD" = success ] || exit 1
+          if [ "$CLI" = true ]; then [ "$CELLS" = success ]; else [ "$CELLS" = skipped ]; fi
 
   publish:
     needs: [build, matrix]

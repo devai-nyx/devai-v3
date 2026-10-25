@@ -1,8 +1,9 @@
-// 09 §4 campaign fixtures (D-098, R8): the reference acceptance file (with its bearer-token helper, D-107)
-// and the reference service and repository bodies, placed where campaign steps 5 and 7 put them in a
-// workspace holding the template (09 §1.1) and the 09 §6 module. They are Prettier-clean under the
-// template's options, type-check against the rendered module and the API shell, and lint clean under the
-// template's ESLint config. The tools come from the registry, as the node tests' do (helpers.ts).
+// 09 §4 campaign fixtures (D-098, R8): the reference acceptance file (with its bearer-token helper, D-107),
+// the reference service and repository bodies and their unit spec (D-131), placed where campaign steps 5
+// and 7 put them in a workspace holding the template (09 §1.1) and the 09 §6 module. They are Prettier-clean
+// under the template's options, type-check against the rendered module and the API shell, lint clean under
+// the template's ESLint config, and the unit spec passes. The tools come from the registry, as the node
+// tests' do (helpers.ts).
 import { execFileSync, spawnSync } from 'node:child_process';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -23,6 +24,8 @@ const PLACED: Record<string, string> = {
   'SPEC-DEMO-001.acceptance.spec.ts': 'domain/notes/api/test/acceptance/spec-demo-001.acceptance.spec.ts',
   'notes.service.ts': 'domain/notes/api/src/notes.service.ts',
   'notes.repository.ts': 'domain/notes/api/src/notes.repository.ts',
+  // D-131: PKT-DEMO-004's unit test of the zero-row → 404 mapping, beside the seed controller spec.
+  'notes.service.spec.ts': 'domain/notes/api/test/notes.service.spec.ts',
 };
 
 /** The template's pins (package.json, apps/api, the module manifest) for the packages the checks load. */
@@ -60,8 +63,8 @@ describe('09 §4 campaign fixtures (D-098)', () => {
     execFileSync('git', ['init', '-q'], { cwd: dir });
   }, 900_000);
 
-  it('the fixture set is the three files D-098 names', () => {
-    expect(Object.keys(PLACED).sort()).toEqual(['SPEC-DEMO-001.acceptance.spec.ts', 'notes.repository.ts', 'notes.service.ts']);
+  it('the fixture set is the three files D-098 names and D-131\'s service spec', () => {
+    expect(Object.keys(PLACED).sort()).toEqual(['SPEC-DEMO-001.acceptance.spec.ts', 'notes.repository.ts', 'notes.service.spec.ts', 'notes.service.ts']);
   });
 
   it("the acceptance file has one top-level it('R-n: …') per acceptance requirement, named as the spec's notes", () => {
@@ -82,11 +85,19 @@ describe('09 §4 campaign fixtures (D-098)', () => {
     expect(r.status).toBe(0);
   });
 
-  it('the acceptance file type-checks against the API shell and the test support', () => {
+  it('the service spec passes against the bodies', () => {
+    put(dir, 'vitest.fixtures.config.mjs', "export default { test: { include: ['domain/notes/api/test/notes.service.spec.ts'] } };\n");
+    const r = tool('vitest', ['run', '--config', 'vitest.fixtures.config.mjs']);
+    // CI colours Vitest's summary; the count is read without the escape codes.
+    expect(`${r.stdout}${r.stderr}`.replace(/\x1b\[[0-9;]*m/g, '')).toMatch(/Tests {2}2 passed \(2\)/);
+    expect(r.status).toBe(0);
+  });
+
+  it('the acceptance file and the service spec type-check against the API shell and the test support', () => {
     put(dir, 'tsconfig.fixtures.json', JSON.stringify({
       extends: '@stynx-nyx/tsconfig/node24.json',
       compilerOptions: { noEmit: true, experimentalDecorators: true, emitDecoratorMetadata: true, types: ['node'] },
-      include: [PLACED['SPEC-DEMO-001.acceptance.spec.ts'], 'apps/api/src/**/*.ts', 'test/support/utils/*.ts'],
+      include: [PLACED['SPEC-DEMO-001.acceptance.spec.ts'], PLACED['notes.service.spec.ts'], 'apps/api/src/**/*.ts', 'test/support/utils/*.ts'],
     }));
     const r = tool('tsc', ['-p', 'tsconfig.fixtures.json']);
     expect(r.stdout + r.stderr).toBe('');

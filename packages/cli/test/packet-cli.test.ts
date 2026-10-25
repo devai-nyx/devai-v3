@@ -104,6 +104,23 @@ describe('devai packet rebase (A.4, PL-05)', () => {
     expect(readFileSync(resolve(dir, PACKET), 'utf8')).toBe(text.replace(`base: ${base}`, `base: ${to}`));
   });
 
+  it('judges PL-14 at --to (D-124): a context file that exists only past the old base rebases; one absent at --to is exit 2', () => {
+    const { dir, base, sha } = packetWorkspace();
+    const extra = 'context:\n  - { path: domain/notes/api/src/notes.repository.ts, lines: "1-2", why: "the seeds" }';
+    const text = packetText({ base, sha, extra });
+    commitPacket(dir, text);
+    write(dir, 'domain/notes/api/src/notes.repository.ts', 'export const a = 1;\nexport const b = 2;\n');
+    const to = commitAll(dir, 'feat(notes): seeds');
+    expect(json(dir, 'packet', 'rebase', PACKET, '--to', 'HEAD')).toEqual({ status: 0, out: { path: PACKET, id: 'PKT-DEMO-005', rules: [{ id: 'PL-05', status: 'pass' }], accepted: false, exitCode: 0 } });
+    expect(readFileSync(resolve(dir, PACKET), 'utf8')).toBe(text.replace(`base: ${base}`, `base: ${to}`));
+    commitAll(dir, 'chore(packets): rebase');
+    const missing = packetText({ base: to, sha, extra: extra.replace('notes.repository.ts', 'notes.absent.ts') });
+    commitPacket(dir, missing);
+    const r = json(dir, 'packet', 'rebase', PACKET, '--to', 'HEAD');
+    expect(r.status).toBe(2);
+    expect(r.out['rules']).toEqual([{ id: 'PL-14', status: 'fail', message: expect.stringMatching(/^context\[0\] domain\/notes\/api\/src\/notes\.absent\.ts does not exist at base [0-9a-f]{4}…$/) }]);
+  });
+
   it('exit 1: --to does not descend from base, or the spec digest differs there; exit 2 usage for a bad --to', () => {
     const { dir, base, sha } = packetWorkspace();
     write(dir, 'docs/a.md', 'a\n');

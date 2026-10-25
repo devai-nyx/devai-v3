@@ -1,18 +1,30 @@
-// Maps `parseDto`'s FLOW_VALIDATION_ERROR to the route's declared 400 VALIDATION entry and message key,
-// without the issues or the input values (09 §1.1). It reads the handler's `@ErrorContract` metadata, so
-// it runs where the handler is known: around the handler, as an interceptor.
+// Maps a route's rejections to its declared `@ErrorContract` entry (09 §1.1, D-129): `parseDto`'s
+// FLOW_VALIDATION_ERROR to the 400 VALIDATION entry, and the guards' 401 and 403 to the route's 401 and 403
+// entries. The body is exactly `{ code, messageKey, requestId }`, without issues, input values or the guard's
+// message. Anything else answers as STYNX core's filter would.
+//
+// Three pieces, because Nest gives an exception filter no handler: the guard records the handler's entries on
+// the request before authentication runs (it is the first `APP_GUARD`); the filter reads them; the module
+// registers the filter, imported last so that it is consulted before STYNX core's catch-all filter.
 import {
   BadRequestException,
-  type CallHandler,
+  type ArgumentsHost,
+  type CanActivate,
+  Catch,
+  type ExceptionFilter,
   type ExecutionContext,
+  ForbiddenException,
+  HttpException,
   Injectable,
-  type NestInterceptor,
+  Module,
+  UnauthorizedException,
 } from '@nestjs/common';
-import { Reflector } from '@nestjs/core';
-import { catchError, type Observable, throwError } from 'rxjs';
+import { APP_FILTER, Reflector } from '@nestjs/core';
 
 /** `@devai-nyx/decorators`' `ERROR_CONTRACT` metadata key. */
 const ERROR_CONTRACT = 'devai:errorContract';
+/** Where the guard leaves the handler's entries for the filter. */
+const ENTRIES = Symbol('errorContract');
 
 interface ErrorContractEntry {
   status: number;
@@ -20,8 +32,16 @@ interface ErrorContractEntry {
   messageKey: string;
 }
 
-function isFlowValidation(error: unknown): boolean {
-  if (!(error instanceof BadRequestException)) return false;
+interface HttpRequest {
+  headers: Record<string, string | string[] | undefined>;
+  [ENTRIES]?: ErrorContractEntry[];
+}
+
+interface HttpResponse {
+  status(code: number): { json(body: unknown): void };
+}
+
+function isFlowValidation(error: HttpException): boolean {
   const body: unknown = error.getResponse();
   return (
     typeof body === 'object' &&
@@ -31,25 +51,42 @@ function isFlowValidation(error: unknown): boolean {
   );
 }
 
+/** Records the handler's `@ErrorContract` entries; never refuses. */
 @Injectable()
-export class __PREFIX__ValidationFilter implements NestInterceptor {
+export class __PREFIX__ErrorContractGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
-    const entries =
-      this.reflector.get<ErrorContractEntry[] | undefined>(ERROR_CONTRACT, context.getHandler()) ??
-      [];
-    const declared = entries.find((e) => e.status === 400 && e.code === 'VALIDATION');
-    return next
-      .handle()
-      .pipe(
-        catchError((error: unknown) =>
-          throwError(() =>
-            declared && isFlowValidation(error)
-              ? new BadRequestException({ code: declared.code, messageKey: declared.messageKey })
-              : error,
-          ),
-        ),
-      );
+  canActivate(context: ExecutionContext): boolean {
+    const entries = this.reflector.get<ErrorContractEntry[] | undefined>(
+      ERROR_CONTRACT,
+      context.getHandler(),
+    );
+    if (entries) context.switchToHttp().getRequest<HttpRequest>()[ENTRIES] = entries;
+    return true;
   }
 }
+
+@Catch(BadRequestException, UnauthorizedException, ForbiddenException)
+class __PREFIX__ValidationFilter implements ExceptionFilter {
+  catch(error: HttpException, host: ArgumentsHost): void {
+    const http = host.switchToHttp();
+    const request = http.getRequest<HttpRequest>();
+    const response = http.getResponse<HttpResponse>();
+    const status = error.getStatus();
+    // 400 maps only parseDto's rejection, to the VALIDATION entry; 401 and 403 to the route's entry.
+    const entry = (request[ENTRIES] ?? []).find(
+      (e) => e.status === status && (status !== 400 || e.code === 'VALIDATION'),
+    );
+    if (entry === undefined || (status === 400 && !isFlowValidation(error))) {
+      response.status(status).json(error.getResponse());
+      return;
+    }
+    const header = request.headers['x-request-id'];
+    const requestId = typeof header === 'string' ? header : null;
+    response.status(status).json({ code: entry.code, messageKey: entry.messageKey, requestId });
+  }
+}
+
+/** Registers the filter; `AppModule` imports it last (see above). */
+@Module({ providers: [{ provide: APP_FILTER, useClass: __PREFIX__ValidationFilter }] })
+export class __PREFIX__ErrorContractModule {}

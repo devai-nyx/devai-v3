@@ -158,12 +158,17 @@ function render(path: string, id: string | undefined, rules: RuleLine[], exitCod
   return { stdout: rules.map((r) => `${r.id}  ${r.status}${r.message ? `  ${r.message}` : ''}`).join('\n') + '\n', exitCode };
 }
 
-/** Pre-DAG reading of a packet for `lint` and `rebase`: the packet, or the violated rule's line (exit 2). */
-async function readChecked(root: string, path: string): Promise<{ packet: Packet } | { rule: RuleLine; reason: string }> {
+/**
+ * Pre-DAG reading of a packet for `lint` and `rebase`: the packet, or the violated rule's line (exit 2).
+ * `at` judges the base-reading rules (PL-14, PL-04's "does not exist at base") at another commit: `rebase`
+ * passes its `--to` (D-124), where `base` will be.
+ */
+async function readChecked(root: string, path: string, at?: (p: Packet) => Promise<string | null>): Promise<{ packet: Packet } | { rule: RuleLine; reason: string }> {
   try {
     const text = readFileSync(resolve(root, path), 'utf8');
     const packet = parsePacket(path, text);
-    await preDag(root, packet, await packetPopulation(root));
+    const base = at ? await at(packet) : null;
+    await preDag(root, base ? { ...packet, base } : packet, await packetPopulation(root));
     return { packet };
   } catch (e) {
     if (e instanceof PacketInvalid) {
@@ -199,11 +204,12 @@ export async function packetLint(pathArg: string, format: Format, cwd: string): 
 export async function packetRebase(pathArg: string, to: string, format: Format, cwd: string): Promise<Result> {
   const { root } = await setup(cwd);
   const path = repoPath(root, pathArg);
-  const r = await readChecked(root, path);
-  if (!('packet' in r)) return render(path, undefined, [r.rule], 2, format, r.reason);
-  const p = r.packet;
   const target = await revParse(root, to);
   if (target === null) throw new CommandRefusal('usage', `--to ${to}: not a commit`);
+  // D-124: PL-14 reads `context` at the commit `base` moves to; PL-05 below still compares with the current base.
+  const r = await readChecked(root, path, async () => target);
+  if (!('packet' in r)) return render(path, undefined, [r.rule], 2, format, r.reason);
+  const p = r.packet;
   const fail = (id: string, message: string) => render(path, p.id, [{ id, status: 'fail', message }], 1, format);
   if (!(await isAncestor(root, p.base, target))) return fail('PL-05', `base moved backwards (introduced ${short(p.base)}, now ${short(target)})`);
   if (p.spec && p.spec.sha256 !== null) {
