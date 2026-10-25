@@ -95,6 +95,8 @@ interface PopulationFacts {
   /** Changed and present at the candidate. */
   changedPresent: readonly string[];
   packageDirs: readonly string[];
+  /** The affected `tsc -b` closure B.5 builds (B.1: it replaces the changed-package rule for `typecheck`). */
+  projects: readonly string[];
   manifests: readonly Manifest[];
   locales: number;
   commitsSinceBase: number;
@@ -125,7 +127,6 @@ export function populations(f: PopulationFacts): Record<NodeId, Population> {
   const n = (predicate: string, count: number, skippable = true): Population => ({ predicate, count, skippable });
   const always = (predicate = 'always applies', count = 1) => n(predicate, count, false);
   const cp = f.changedPresent;
-  const affected = new Set(f.changed.filter(tsInput).map((p) => packageOf(f.packageDirs, p)));
   const controllers = f.paths.filter((p) => /^(domain\/[^/]+\/api\/src|apps\/[^/]+\/src)\/.*\.controller\.ts$/.test(p));
   const angular = f.manifests.filter((m) => {
     const deps = { ...(m.json?.['dependencies'] as object | undefined), ...(m.json?.['devDependencies'] as object | undefined) };
@@ -138,7 +139,7 @@ export function populations(f: PopulationFacts): Record<NodeId, Population> {
     format: n('no changed *.{ts,mjs,json,md}', cp.filter((p) => ext(p, '.ts', '.mjs', '.json', '.md') && !(f.formatIgnored?.(p) ?? false)).length),
     lint: n('no changed *.ts, *.mts or *.html', cp.filter((p) => ext(p, '.ts', '.mts', '.html')).length),
     'lint-tests': n('no changed *.spec.ts', cp.filter((p) => p.endsWith('.spec.ts')).length),
-    typecheck: n('no affected project', affected.size),
+    typecheck: n('no affected project', f.projects.length),
     layout: always('always applies', f.paths.length),
     'sql-lint': n('no changed *.sql', cp.filter((p) => p.endsWith('.sql')).length),
     'spec-lint': n('no changed specs/** or product/**', f.changed.filter((p) => p.startsWith('specs/') || p.startsWith('product/')).length),
@@ -335,7 +336,7 @@ export async function runInventory(ctx: RunContext): Promise<{ outcome: NodeOutc
     projects,
     packageDirs,
     populations: populations({
-      paths, changed, changedPresent: changed.filter((p) => present.has(p)), packageDirs: ['.', ...packageDirs], manifests,
+      paths, changed, changedPresent: changed.filter((p) => present.has(p)), packageDirs: ['.', ...packageDirs], projects, manifests,
       locales: ctx.config.locales.length, commitsSinceBase, packet: ctx.packet !== undefined, formatIgnored: prettierIgnored(root),
     }),
   };

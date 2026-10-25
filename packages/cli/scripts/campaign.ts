@@ -98,8 +98,8 @@ export const S10: Record<number, string> = {
 export const OPEN: Record<string, string> = {
   guard: 'Open: the API shell wires no guard, so @RequireRoles and bearer auth are not enforced (R-3) and requests carry no tenant',
   tenant: 'Open: STYNX verifies no tenant, so a member token naming an unknown tenant is not 403 (R-3)',
+  testProject: 'Open: 05 §3 requires typecheck PASS for a test packet, but an acceptance file is in no tsc -b project, so typecheck is SKIPPED and PL-15 fails',
   rebase: 'Open: packet rebase runs PL-14 at the old base, so PKT-DEMO-004 (context: notes.repository.ts) cannot be rebased',
-  typecheck: 'Open: typecheck is UNKNOWN no-observations, not SKIPPED, when a test packet touches only test files (08 B.5 population)',
   evidence: 'Open: permissions-pattern evidence cannot be produced while route-contract is tooling-missing (S10 #4)',
   packetless: 'Open: negative cells run devai check --full without --packet while PKT-DEMO-004 is unusable',
 };
@@ -123,13 +123,13 @@ export const STEP6: Rows = {
   exit: 1,
   nodes: {
     'db-apply': 'FAIL', integration: 'FAIL', accept: 'FAIL',
-    'spec-tests': 'UNKNOWN setup-failed', typecheck: 'UNKNOWN no-observations',
-    'route-contract': 'UNKNOWN prerequisite-failed', 'permissions-pattern': 'UNKNOWN prerequisite-failed', review: 'UNKNOWN prerequisite-failed',
+    'spec-tests': 'UNKNOWN setup-failed', typecheck: 'SKIPPED',
+    'route-contract': 'UNKNOWN tooling-missing', 'permissions-pattern': 'UNKNOWN prerequisite-failed', review: 'UNKNOWN prerequisite-failed',
     generated: 'UNKNOWN tooling-missing',
     'sql-lint': 'SKIPPED', 'spec-lint': 'SKIPPED', actionlint: 'SKIPPED', openapi: 'SKIPPED', 'sql-typed': 'SKIPPED',
   },
   others: 'PASS',
-  findings: [['spec-tests', 'tenancy.tenants'], ['db-apply', 'packages/data/migrations/platform'], ['integration', 'GET /healthz with 200']],
+  findings: [['spec-tests', 'tenancy.tenants'], ['db-apply', 'packages/data/migrations/platform'], ['integration', 'GET /healthz with 200'], ['accept', 'required node skipped for kind: test: typecheck (inventory: no affected project)']],
 };
 
 // ---- process helpers ------------------------------------------------------------------------------
@@ -338,7 +338,7 @@ function campaign(c: Cell, o: OptionCell, work: string): boolean {
 
   // 6. --packet PKT-DEMO-003 --full --expect-red: exit 0, expect-red 3 (R-1, R-2, R-4)
   c.expectRows('6 check PKT-DEMO-003 --expect-red', c.check(['--packet', P3, '--full', '--expect-red']), STEP6, [
-    `exit 0, spec-tests PASS with expect-red 3 (R-1, R-2, R-4) after ${S10[2]}, ${S10[3]}, ${S10[1]}, ${S10[4]}, ${OPEN['typecheck']}, ${OPEN['guard']}, ${OPEN['tenant']}`,
+    `exit 0, spec-tests PASS with expect-red 3 (R-1, R-2, R-4) after ${S10[2]}, ${S10[3]}, ${S10[1]}, ${S10[4]}, ${OPEN['testProject']}, ${OPEN['guard']}, ${OPEN['tenant']}`,
   ]);
 
   // 7. rebase PKT-DEMO-004, add the reference service and repository bodies (D-098), commit
