@@ -14,22 +14,11 @@ across one approved spec at a time (12 §6, bootstrap history).
 ## Until you move
 
 Keep `@aarusso-nyx/devai` pinned within `2.x` until you move: `^2.6.2`, or an exact pin of your
-own choosing. Publishing 3.0.0 does not end v2. The v2 repository `aarusso-nyx/devai` stays
-unarchived through a bounded stabilization window, and during it 2.x receives defect fixes only: no
-features and no new law ([D-090](../../decisions.md)).
-
-The window closes on an observed event, not a date. It closes when the first adopter (STYNX through
-its own adoption, or DETRAN's first module) shows all of these:
-
-- one v3 module green in that adopter's CI (the `devai.yml` `matrix`, or `devai check --full`
-  exiting 0);
-- its applied SQL history preserved ([D-033](../../decisions.md));
-- a recovery path demonstrated: a `devai check` after a deliberate break returns to green.
-
-Then the Owner archives `aarusso-nyx/devai` and the agent reads back `archived: true` (host step
-H7). There is no rename and no notice. Archived repositories still serve their packages and clones,
-so your 2.x pin keeps resolving after that (12 §6; [D-065](../../decisions.md),
-[D-090](../../decisions.md)).
+own choosing. Publishing 3.0.0 does not end v2: v2 and v3 cohabit. The v2 repository
+`aarusso-nyx/devai` stays unarchived, and 2.x receives defect fixes only: no features and no new law
+([D-090](../../decisions.md)). There is no closing date and no archive step
+([D-142](../../decisions.md)), so your 2.x pin, v2's packages and its docs site keep resolving
+(12 §6).
 
 ## Why there is no converter
 
@@ -58,7 +47,7 @@ From 12 §6:
 4. Bring modules across one approved spec at a time. Keep the applied SQL history: applied
    migrations are immutable inputs, and a schema change is a new migration
    ([D-033](../../decisions.md), [D-043](../../decisions.md)).
-5. Keep the v2 repository building on its 2.x pin until its last module is ported, then archive it.
+5. Keep your v2 repository building on its 2.x pin until its last module is ported; archiving it then is your choice.
 
 [Install](install.md) covers the prerequisites and the flags.
 
