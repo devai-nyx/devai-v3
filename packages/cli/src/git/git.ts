@@ -1,7 +1,7 @@
 // The host `git` (07 §2 row git; no isomorphic-git, 07 §7), through the one spawner. Only the
 // invocations 08 names: ls-files, ls-tree, cat-file --batch, show, rev-parse, merge-base
 // [--is-ancestor], diff --name-status --no-renames, log, checkout-index (A.7 staged snapshot); B.27's `diff base..candidate` and its detached
-// scratch worktree (worktree add --detach / remove). Paths are raw bytes in git's -z output and are
+// scratch worktree (worktree add --detach / remove); A.1's init, add, commit and config (`devai init`). Paths are raw bytes in git's -z output and are
 // decoded as UTF-8 (git's own default for path names on the hosts 12 pins).
 import { spawn } from '../proc/spawn.js';
 

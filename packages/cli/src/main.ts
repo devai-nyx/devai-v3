@@ -2,12 +2,13 @@
 // 08 Part A preamble: every command reads devai.json first (A.8), resolves the runtime once (02 §6),
 // prints text or one JSON document (07 §3) and exits with 02 §8's three codes. Commands are added per
 // R6 wave; this file carries only what every command shares.
-import { readFileSync } from 'node:fs';
+import { readFileSync, realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { Command, CommanderError } from 'commander';
 import type { z } from 'zod';
 import { check } from './commands/check.js';
+import { init, type InitOptions } from './commands/init.js';
 import { packetLint, packetNew, packetRebase } from './commands/packet.js';
 import { packetsStatus } from './commands/packets.js';
 import { DevaiConfig } from './config.js';
@@ -89,6 +90,18 @@ export function buildProgram(state: { exitCode: number; argv: readonly string[] 
     .showHelpAfterError(false)
     .configureOutput({ writeErr: (s) => process.stderr.write(s) })
     .exitOverride();
+  // A.1.
+  program
+    .command('init')
+    .description('write the template into an empty folder, or attach to a repository with devai.json (08 A.1)')
+    .option('--product <slug>', 'product prefix (materialise mode)')
+    .option('--locales <tag,…>', 'locales, en-US first (default en-US)')
+    .option('--lgpd', 'opt in to S-15')
+    .option('--runtime <bare|docker>', 'declared runtime (default bare)')
+    .option('--dir <path>', 'target folder (default .)')
+    .option('--format <text|json>', 'output format (07 §3)')
+    .exitOverride()
+    .action(async (opts: { format?: string } & InitOptions) => run(opts, (format) => init(opts, format, process.cwd())));
   // A.3. The command prints its own refusals: its --format may follow options the program does not know.
   program
     .command('check')
@@ -187,6 +200,8 @@ export async function main(argv: string[]): Promise<number> {
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// Real paths on both sides: an installed bin runs through symlinks (pnpm's node_modules, /var on macOS),
+// and import.meta.url is already resolved.
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   main(process.argv.slice(2)).then((code) => process.exit(code));
 }

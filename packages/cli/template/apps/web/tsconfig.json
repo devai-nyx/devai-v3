@@ -1,0 +1,15 @@
+{
+  "extends": "@stynx-nyx/tsconfig/angular18.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist/out-tsc",
+    "composite": true,
+    "experimentalDecorators": true
+  },
+  "angularCompilerOptions": {
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  },
+  "include": ["src"]
+}

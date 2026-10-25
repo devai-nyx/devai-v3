@@ -1,1 +1,1 @@
-{ "boundary": { "roots": ["apps","domain"], "allowedPackages": ["@stynx-nyx/"], "forbiddenImports": [] } }
+{ "boundary": { "roots": ["apps","domain"], "allowedPackages": ["@stynx-nyx/"], "forbiddenImports": [] }, "apiCoverage": { "sourceRoots": ["apps/api/src"] }, "publicApi": { "packageRoots": [] } }

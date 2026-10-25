@@ -1,0 +1,52 @@
+{
+  "name": "__PRODUCT__",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": ">=9 <10"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "test": "devai check --only unit"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "tabWidth": 2,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "semi": true
+  },
+  "devDependencies": {
+    "@angular-eslint/eslint-plugin": "22.0.0",
+    "@angular-eslint/eslint-plugin-template": "22.0.0",
+    "@angular-eslint/template-parser": "22.0.0",
+    "@angular/build": "22.2.1",
+    "@angular/cli": "22.2.1",
+    "@angular/compiler-cli": "22.2.1",
+    "@changesets/cli": "2.31.0",
+    "@commitlint/cli": "21.2.2",
+    "@commitlint/config-conventional": "21.2.2",
+    "@nestjs/common": "11.2.3",
+    "@nestjs/core": "11.2.3",
+    "@playwright/test": "1.60.0",
+    "@stynx-nyx/cli": "3.0.0",
+    "@stynx-nyx/eslint-config": "3.0.0",
+    "@stynx-nyx/migration-linter": "3.0.0",
+    "@stynx-nyx/tsconfig": "3.0.0",
+    "@swc/core": "1.16.2",
+    "@types/node": "24.13.4",
+    "@types/pg": "8.20.0",
+    "depcheck": "1.4.7",
+    "eslint": "10.10.0",
+    "github-actionlint": "1.7.12",
+    "knip": "6.35.1",
+    "madge": "8.0.0",
+    "pg": "8.23.1",
+    "prettier": "3.9.6",
+    "reflect-metadata": "0.2.2",
+    "typescript": "~6.0.3",
+    "unplugin-swc": "1.5.9",
+    "vitest": "4.1.11"
+  }
+}

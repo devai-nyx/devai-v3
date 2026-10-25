@@ -1,0 +1,10 @@
+{
+  "categories": [
+    { "id": "adopters", "label": "Adopters", "pages": ["adopters/layout.md"] },
+    {
+      "id": "framework",
+      "label": "Framework contracts",
+      "pages": ["framework/contracts/openapi.json", "framework/contracts/public-api-baselines.json"]
+    }
+  ]
+}

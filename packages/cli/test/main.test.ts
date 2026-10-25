@@ -1,6 +1,6 @@
 // 08 Part A preamble, exercised on the built binary (D-057: emitted JS). `build` runs before `test` (ci.yml).
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -14,6 +14,12 @@ describe('devai (preamble)', () => {
   it('--version prints the package version and exits 0', () => {
     const r = run('--version');
     expect(r.status).toBe(0);
+    expect(r.stdout.trim()).toBe('3.0.0');
+  });
+  it('runs when invoked through a symlink, as an installed bin is', () => {
+    const link = resolve(mkdtempSync(resolve(tmpdir(), 'devai-w0-')), 'devai.js');
+    symlinkSync(bin, link);
+    const r = spawnSync(process.execPath, [link, '--version'], { encoding: 'utf8' });
     expect(r.stdout.trim()).toBe('3.0.0');
   });
   it('an unknown option is exit 2 usage, as JSON when asked', () => {
