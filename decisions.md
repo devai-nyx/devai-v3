@@ -21,6 +21,8 @@ attention is reserved for intentions, business rules, specs and the error state,
 Amended 2026-10-24 (D-080): the control-defining paths (`.github/**`, `scripts/hooks/**`,
 `devai.json`) are the one place where the merge gate must not be definable by the PR it gates;
 that is enforced by a ruleset-required workflow pinned to `main`, not by human review.
+Amended again 2026-10-24 (D-091): the ruleset is retired (GitHub Free cannot express it); the PR
+can redefine its own check and the residual risk is stated in D-091, still not met by human review.
 Source: adjudications 2, 11.
 
 ## D-004 · 2026-10-17 · Mutation testing is outside the development cycle
@@ -941,7 +943,7 @@ back to (b)'s statement, which docs/adopters/ci.md says. The template ships no C
 D-003, 08 A.1 (Output), 09 §1.1 (`devai.yml` row), 12 §5 H3/H5 (in `devai3/foundation/12-succession.md`
 until #45 lands 11 and 12 in this repository), docs/adopters/ci.md, docs/dev/contributing.md.
 Host act (Owner): the ruleset on devai-v3 before H5 makes `matrix` required. Chosen: (c).
-Source: Owner (packet §6).
+Source: Owner (packet §6). Option (c) superseded by D-091; the CODEOWNERS deferral stands.
 
 ## D-081 · 2026-10-24 · A skipped or pending test case is collected but not observed: `unit` and `integration` report a shortfall `FAIL` (closes the D-077 open item)
 08 B.11 counted `skipped` and `pending` cases as observed but not evaluated and said they are "not a
@@ -1174,6 +1176,43 @@ during the window"); item 16 entirely (the exact 2.6.2 pin is replaced by a pin 
 `2.x`). D-065's text is not edited. Amends 12 §5 (H7 row), §6 and §8; docs/adopters/moving-from-v2.md,
 docs/adopters/index.md, docs/dev/release.md, docs/theory/stynx.md. Host act (Owner): H7, after the
 criteria. Chosen: (a). Source: Owner (panel 2026-10-24, "Bounded window").
+
+## D-091 · 2026-10-24 · DEVAI requires nothing beyond GitHub Free; D-080's ruleset is retired
+On 2026-10-24 the Owner ran the H3 ruleset command from 12 §5 against devai-nyx/devai-v3 (public,
+organization on the free plan, id 1425059721). GitHub answered `422 Validation Failed`, "Invalid rule
+'workflows': Invalid parameter workflows: Workflow error at index 0", and created nothing
+(`gh api repos/devai-nyx/devai-v3/rulesets` → `[]`). [fact] GitHub's rulesets documentation offers
+"Require workflows to pass before merging" only in organization or enterprise rulesets, and
+organization rulesets need GitHub Team or Enterprise; repository rulesets cannot carry the rule, by
+API or web UI. D-080's premise ("available on public repositories and paid plans") was wrong.
+Options: (a) buy GitHub Team for devai-nyx and move the rule into an organization ruleset (not
+known to suffice: GitHub's 2023 changelog limited required workflows to Enterprise); (b) a
+free-plan substitute: a `pull_request_target` guard job that fails when a PR touches
+`.github/workflows/**`, or CODEOWNERS review on those paths; (c) retire the ruleset and adopt a
+standing rule that no DEVAI step, host act, template file or adopter instruction needs more than
+GitHub Free. Chosen: (c). Owner's words: "Retire completely such feature, since it could not be
+fulfilled with available tools", and "no feature demand more than basic free github plan".
+Rule. DEVAI's law, CLI output, template and docs use only what GitHub Free provides to a public
+repository: Actions on standard runners, GitHub Packages, repository secrets, labels, scheduled
+workflows, auto-merge, and classic branch protection with required status checks. Classic branch
+protection is free only on public repositories; on a private free-plan repository nothing is
+enforced and the `devai` check is what the pilot reads before merging (02 §9 already makes merging
+the pilot's act or protection's). A later proposal that needs a paid feature is out of scope unless
+a decision lifts this rule. [fact] Audit on 2026-10-24 of decisions.md, docs/framework, docs/history,
+docs/adopters, docs/dev, `ci.yml` and the template: the ruleset was the only paid dependency;
+devai-nyx and stynx-nyx are on the free plan; devai-v3, stynx-nyx/stynx and aarusso-nyx/detran are
+public.
+Residual risk (D-080 option (b), now stated). For `pull_request` events GitHub computes the
+required check from the PR's own copy of the workflow, so a PR that edits `ci.yml` (devai-v3) or
+`devai.yml` (adopters) can weaken the check it must pass. What remains: the `protected:ci` label
+(D-019), `review` gating when the packet did not pre-declare the class (D-078, `protected:unplanned`),
+protection's `enforce_admins` and `strict`, and the pilot's reading of control-defining changes for
+intent (D-003). No human review gate is added; CODEOWNERS stays deferred as in D-080.
+Supersedes D-080 option (c) and its host act; D-080's text is not edited beyond its marker. Amends
+D-003's amendment line, 08 A.1 (Output: one host line), 09 §1.1 (`devai.yml` row), 12 §5 H3 and H5
+(ruleset struck), docs/adopters/ci.md, docs/dev/contributing.md, docs/history/index.md. Host act:
+none; H3 is complete with the protection read-back `[["build"],true]`.
+Source: Owner (H3 session, 2026-10-24).
 
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
