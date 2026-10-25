@@ -17,6 +17,8 @@ export const HINTS: Record<Reason, string> = {
   "spec-invalid": "fix the SL line above in a spec packet",
   "spec-superseded": "pin the successor named in the status line",
   "output-exists": "the module exists: use --regenerate",
+  // D-113 (law text pending): no 10 §4 row yet.
+  "config-mismatch": "omit --product, or pass the productPrefix devai.json records; the re-run keeps the files on disk",
   "spec-mismatch": "regenerate only from the spec the manifest names; a successor spec's module is not supported: note it under ## Notes",
   "no-observations": "the tool saw nothing to check: put the files where the tier glob expects them (04 §4)",
   "prerequisite-failed": "fix <prerequisite> first; this node did not run",

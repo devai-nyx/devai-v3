@@ -153,9 +153,10 @@ describe('devai init when the install fails (D-097)', () => {
     const out = JSON.parse(json.stdout) as { exitCode: number; reason: string; preflight: { binary: string; status: string; remedy?: string }[] };
     expect(out).toMatchObject({ exitCode: 2, reason: 'tooling-missing' });
     expect(out.preflight.find((p) => p.binary === '@devai-nyx/cli')).toMatchObject({ status: 'missing', remedy: 'pnpm add -D --save-exact @devai-nyx/cli@3.0.0' });
-    // D-112: unborn HEAD, so the re-run is a first run; another --product is refused, the recorded one is not.
+    // D-112, D-113: unborn HEAD, so the re-run is a first run; another --product is exit 2 config-mismatch.
     const stub = pnpmShim('stub');
-    expect(JSON.parse(run(stub.env, dir, 'init', '--product', 'other', '--format', 'json').stdout)).toMatchObject({ reason: 'usage' });
+    const other = run(stub.env, dir, 'init', '--product', 'other', '--format', 'json');
+    expect([other.status, JSON.parse(other.stdout)]).toMatchObject([2, { reason: 'config-mismatch' }]);
     expect(spawnSync('git', ['rev-parse', '--verify', 'HEAD'], { cwd: dir }).status).not.toBe(0);
     const again = JSON.parse(run(stub.env, dir, 'init', '--format', 'json').stdout) as { mode: string; written: string[] };
     expect(again.mode).toBe('materialise');

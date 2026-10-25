@@ -278,9 +278,10 @@ export async function init(opts: InitOptions, format: Format, cwd: string): Prom
   } else {
     let entries: Entry[];
     if (configured) {
-      // D-112: the re-run of a first run that committed nothing; the inputs are the ones devai.json records.
+      // D-112, D-113: the re-run of a first run that committed nothing keeps the files on disk and takes
+      // the inputs devai.json records.
       const config = loadConfig(dir);
-      if (opts.product !== undefined && opts.product !== config.productPrefix) throw new CommandRefusal('usage', `--product ${opts.product}: ${resolve(dir, 'devai.json')} records ${config.productPrefix}`);
+      if (opts.product !== undefined && opts.product !== config.productPrefix) throw new CommandRefusal('config-mismatch', `--product ${opts.product}: ${resolve(dir, 'devai.json')} records ${config.productPrefix}`);
       product = config.productPrefix;
       mode = config.runtime.mode;
       entries = templateEntries(tokensOf(product, config.locales));
