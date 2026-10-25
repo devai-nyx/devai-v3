@@ -454,7 +454,7 @@ kept = 08's remedy is actionable; rewritten = it is not, or is wrong. All ≤ 16
 | `setup-failed` | new | the suite failed before any case: fix the import, app start or DB setup at the locator |
 | `expect-red-not-reached` | rewritten | was "fix the arrange step" → make the case fail at an expect; seed with SQL, not unbuilt routes |
 | `assertion-unresolved` | new | fail through expect(); a throw without a source-mapped AssertionError cannot be classified |
-| `generator-version-mismatch` | kept | "pnpm add -D @devai-nyx/cli@<version>" |
+| `generator-version-mismatch` | kept | "pnpm add -w -D @devai-nyx/cli@<version> && pnpm install" |
 | `generator-unavailable` | kept | "regenerate in a generate packet" |
 | `catalog-unresolved` | new | regenerate the module in a generate packet |
 | `slice-too-large` | rewritten | was "narrow the slice" → move code out of the listed guard-reachable files, or note it for the pilot |

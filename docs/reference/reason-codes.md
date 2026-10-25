@@ -79,7 +79,7 @@ Some node blocks attach detail to a code, for example `unsupported-oid <oid>`, `
 | 37 | `setup-failed` | `spec-tests`, `e2e`; the C.5 Vitest adapter | 2 | new | the suite failed before any case: fix the import, app start or DB setup at the locator |
 | 38 | `expect-red-not-reached` | `spec-tests` | 2 | rewritten | was "fix the arrange step" → make the case fail at an expect; seed with SQL, not unbuilt routes |
 | 39 | `assertion-unresolved` | `spec-tests` | 2 | new | fail through expect(); a throw without a source-mapped AssertionError cannot be classified |
-| 40 | `generator-version-mismatch` | `generated` | 2 | kept | "`pnpm add -D @devai-nyx/cli@<version>`" |
+| 40 | `generator-version-mismatch` | `generated` | 2 | kept | "`pnpm add -w -D @devai-nyx/cli@<version> && pnpm install`" |
 | 41 | `generator-unavailable` | `generated` | 2 | kept | "regenerate in a generate packet" |
 | 42 | `catalog-unresolved` | `i18n` | 2 | new | regenerate the module in a generate packet |
 | 43 | `slice-too-large` | `permissions-pattern` | 2 | rewritten | was "narrow the slice" → move code out of the listed guard-reachable files, or note it for the pilot |
