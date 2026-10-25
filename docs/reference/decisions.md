@@ -1,14 +1,14 @@
 ---
 title: Decisions
 sidebar_position: 12
-description: Index of the 102 numbered decisions D-001 to D-102 in decisions.md, with date and title.
+description: Index of the 107 numbered decisions D-001 to D-107 in decisions.md, with date and title.
 ---
 
 # Decisions
 
-[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **102 decisions** (D-001…D-102), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
+[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **107 decisions** (D-001…D-107), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
 
-Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 28 on 2026-10-24 (D-075…D-102). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
+Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 28 on 2026-10-24 (D-075…D-102), 5 on 2026-10-25 (D-103…D-107). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
 
 | Id | Date | Title |
 |---|---|---|
@@ -114,16 +114,26 @@ Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-0
 | D-100 | 2026-10-24 | R6 closes modulo the S10 list of STYNX defects (cross-references D-088) |
 | D-101 | 2026-10-24 | The sensor runs without `--bare` |
 | D-102 | 2026-10-24 | The remaining R6 wave Open items are ratified as recorded |
+| D-103 | 2026-10-25 | Module packages declare `@stynx-nyx/tsconfig`, the preset their `tsconfig.json` extends (amends D-094's list) |
+| D-104 | 2026-10-25 | The generator tags the seeded exports a code packet will consume `/** @public */` |
+| D-105 | 2026-10-25 | The `unit` tier initialises Angular's TestBed for web specs from a template setup file |
+| D-106 | 2026-10-25 | Campaign step 3 builds the workspace before the generate commit; `new module` prints the build last |
+| D-107 | 2026-10-25 | W10's readings are ratified as recorded (devai-v3#69 Open 3, 4, 6–11) |
 
 ## Still open
 
-The file's closing "Open" section lists five items ([decisions.md](../../decisions.md)):
+The file's closing "Open" section lists ten items ([decisions.md](../../decisions.md)):
 
 - [D-026](../../decisions.md) (`kind:` packets) is provisional until the first DETRAN module is built with `kind:` packets.
 - [D-047](../../decisions.md) (edit-loop ceiling) is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
 - Mutation testing's home ([D-004](../../decisions.md)): outside the cycle or not at all; not blocking v3.0.
 - The 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck ([D-058](../../decisions.md)); not blocking v3.0.
 - STYNX's local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 ([D-069](../../decisions.md)); a STYNX item, not blocking 3.0.0.
+- [D-106](../../decisions.md)'s `pnpm -r build` builds nothing while no template package has a `build` script; not ruled.
+- [D-106](../../decisions.md)'s printed line, read as `mount: then pnpm -r build`; its exact text is not ruled.
+- [D-105](../../decisions.md)'s setup file: whether it loads for API specs too, `@angular/core` at the root, and the DOM environment; not ruled.
+- [D-104](../../decisions.md)'s tag on response schemas in `generated` DTO files cannot be removed by the code packet; not ruled.
+- [D-107](../../decisions.md): who makes `init`'s commits after a failed install or a hook-refused commit; not stated.
 
 ## How decisions are made
 
