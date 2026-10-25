@@ -73,6 +73,11 @@ without it pnpm 9.15.0 refuses to add to the workspace root, and R10's `init` wo
 [D-140](../../decisions.md) follows the add with `pnpm install`, since `add -w` links only the root importer;
 every printed `pnpm add` remedy takes the `-w … && pnpm install` shape.
 R7 is confirmed on the release host.
+**R10 is done** (2026-10-25): `v3.0.0` is tagged on `8d87aea2` and run 40234658131 passed `build`, the
+`matrix` shards, `matrix` and `publish`; `npm view @devai-nyx/{cli,decorators}@3.0.0 version` prints `3.0.0`
+twice, and `pnpm dlx @devai-nyx/cli@3.0.0 init --product demo` in an empty directory exits 0 with both
+`init` commits. That run needed a user-level registry config, now on [Install](../adopters/install.md).
+**H8 is applied**: both packages are public. **3.0.0 is released.**
 
 **Not blocking 3.0.0** (12 §4): the D-047 edit-loop p95 measurement (3.0.0 ships 90000); the first
 DETRAN campaign that settles D-026; each adopter's own `review.mustRun` flip (D-028); the open items

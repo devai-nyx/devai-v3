@@ -16,7 +16,8 @@
   },
   "types": "./dist/index.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "!dist/.tsbuildinfo"
   ],
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"

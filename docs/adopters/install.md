@@ -21,7 +21,7 @@ tool is a printed line with its install command ([08 A.1](../framework/08-cli-an
 | git and a POSIX `sh` | snapshots, diffs, hooks; `database/apply.sh` is POSIX `sh` ([07 §2, §4](../framework/07-dependencies.md), [09 §1](../framework/09-rail.md)) | `db-apply` is `UNKNOWN: shell-missing` |
 | PostgreSQL 16 for the declared runtime, plus the `psql` client | `needs: postgres` nodes create a scratch database on it ([02 §6](../framework/02-architecture.md), [08 B.20](../framework/08-cli-and-nodes.md)) | `UNKNOWN: postgres-unreachable` or `psql-missing` |
 | Docker with Compose, in docker mode only | `docker compose up -d postgres` from the template's `compose.yaml` | `UNKNOWN: docker-unreachable` |
-| A token for GitHub Packages in `NODE_AUTH_TOKEN` | the template `.npmrc` points `@devai-nyx` and `@stynx-nyx` at `npm.pkg.github.com` and reads `${NODE_AUTH_TOKEN}` ([09 §1.1](../framework/09-rail.md)) | install fails |
+| A token for GitHub Packages in `NODE_AUTH_TOKEN` | the template `.npmrc` points `@devai-nyx` and `@stynx-nyx` at `npm.pkg.github.com` and reads `${NODE_AUTH_TOKEN}` ([09 §1.1](../framework/09-rail.md)); the first `pnpm dlx` also needs the [user-level registry config](#registry-config-for-the-first-run) | install fails |
 | The published STYNX tooling (`@stynx-nyx/eslint-config`, `tsconfig`, `migration-linter`, `cli`) | DEVAI invokes it and never vendors it (S-19, [D-029](../../decisions.md)) | dependent nodes are `UNKNOWN: tooling-missing` with the install command |
 | `claude` and `codex` CLIs, logged in, on the pilot's machine | the reviewer and the `permissions-pattern` sensor run there, never in CI ([D-037](../../decisions.md), [07 §6](../framework/07-dependencies.md)) | `review` / sensor `UNKNOWN` (`model-error`, `capability-missing`) |
 | Playwright browsers | `e2e` needs them provisioned beforehand ([08 B.23](../framework/08-cli-and-nodes.md)) | `UNKNOWN: browsers-missing`, remedy `pnpm exec playwright install` |
@@ -31,6 +31,30 @@ In bare mode the database URL is an admin URL on the declared server: `db-apply`
 `postgres-unreachable` ([08 B.20](../framework/08-cli-and-nodes.md)).
 
 ## Create a repository (materialise mode)
+
+### Registry config for the first run
+
+`pnpm dlx` runs before the scaffold exists, so there is no project `.npmrc` yet to tell pnpm where
+`@devai-nyx` lives. Put the same three lines as the template's `.npmrc` in a user-level config:
+`~/.npmrc`, or a file named by `npm_config_userconfig`:
+
+```ini
+@devai-nyx:registry=https://npm.pkg.github.com
+@stynx-nyx:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}
+```
+
+and export `NODE_AUTH_TOKEN`. GitHub Packages requires a token even for public packages; a classic
+token with `read:packages` is enough. Once `init` has written the repository, its own `.npmrc` (the
+same lines) takes over for every later install there, and the user-level file is no longer needed
+for that repository.
+
+```sh
+export NODE_AUTH_TOKEN=<token with read:packages>
+npm_config_userconfig=/path/to/devai.npmrc pnpm dlx @devai-nyx/cli@3.0.0 init --product <prefix> --dir <empty-dir>
+```
+
+### Run init
 
 Run the CLI from the registry into an empty directory (12 §6, bootstrap history):
 
