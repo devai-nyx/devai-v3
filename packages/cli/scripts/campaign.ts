@@ -131,11 +131,19 @@ export const STEP6: Rows = {
   absent: [['accept', 'required node skipped for kind: test']],
 };
 
-/**
- * Campaign step 8 once PKT-DEMO-004 rebases (not observable yet: Open `range`): `db-apply` still FAILs on
- * S10 #2, so only that row is pinned until a run shows the rest.
- */
-export const STEP8: Rows = { exit: 1, nodes: { 'db-apply': 'FAIL', accept: 'FAIL' } };
+/** Campaign step 8 today: PKT-DEMO-004's bodies, every DB-backed node behind `db-apply`'s FAIL (S10 #2). */
+export const STEP8: Rows = {
+  exit: 1,
+  nodes: {
+    'db-apply': 'FAIL', accept: 'FAIL',
+    'route-contract': 'UNKNOWN tooling-missing', generated: 'UNKNOWN tooling-missing',
+    'sql-typed': 'UNKNOWN prerequisite-failed', 'spec-tests': 'UNKNOWN prerequisite-failed', integration: 'UNKNOWN prerequisite-failed',
+    'permissions-pattern': 'UNKNOWN prerequisite-failed', review: 'UNKNOWN prerequisite-failed',
+    'sql-lint': 'SKIPPED', 'spec-lint': 'SKIPPED', actionlint: 'SKIPPED', openapi: 'SKIPPED',
+  },
+  others: 'PASS',
+  findings: [['db-apply', 'packages/data/migrations/platform'], ['route-contract', 'reads RequireRoles']],
+};
 
 // ---- process helpers ------------------------------------------------------------------------------
 
@@ -464,14 +472,14 @@ export const NEGATIVES: Negative[] = [
     id: 'N7a', title: "one it('R-3: …') removed",
     run: (c) => {
       edit(c, ACCEPTANCE, /\n\n {2}it\('R-3: role-boundary'[\s\S]*?\n {2}\}\);\n/, '\n');
-      c.expectRows('N7a', c.check(nRun(c)), { exit: 1, nodes: { 'test-integrity': 'FAIL', format: 'PASS' }, findings: [['test-integrity', "it('R-3: …') removed for an acceptance: yes requirement [S-63]"]] }, [`spec-tests FAIL uncovered R-3 [S-65] under --packet PKT-DEMO-004 after PKT-DEMO-004 passes the pre-DAG rules`, ...nPending(c)]);
+      c.expectRows('N7a', c.check(nRun(c)), { exit: 1, nodes: { 'test-integrity': 'FAIL', format: 'PASS' }, findings: [['test-integrity', "it('R-3: …') removed for an acceptance: yes requirement [S-63]"]] }, [`spec-tests FAIL uncovered R-3 [S-65] (spec-tests is prerequisite-failed today) after ${S10[2]}`, ...nPending(c)]);
     },
   },
   {
     id: 'N7b', title: 'acceptance file deleted',
     run: (c) => {
       rmSync(resolve(c.dir, ACCEPTANCE));
-      c.expectRows('N7b', c.check(nRun(c)), { exit: 1, nodes: { 'test-integrity': 'FAIL' }, findings: [['test-integrity', 'acceptance file changed without @acceptance-change [S-63]']] }, [`spec-tests SKIPPED → accept FAIL PL-15 required node skipped for kind: code under --packet PKT-DEMO-004 after PKT-DEMO-004 passes the pre-DAG rules`, ...nPending(c)]);
+      c.expectRows('N7b', c.check(nRun(c)), { exit: 1, nodes: { 'test-integrity': 'FAIL', 'spec-tests': 'SKIPPED', accept: 'FAIL' }, findings: [['test-integrity', 'acceptance file changed without @acceptance-change [S-63]'], ['accept', 'required node skipped for kind: code: spec-tests']] }, [...nPending(c)]);
     },
   },
   {
@@ -529,19 +537,15 @@ export const NEGATIVES: Negative[] = [
   {
     id: 'N12', title: '@stynx-nyx/cli uninstalled',
     run: (c) => {
-      const moved: [string, string][] = [];
-      for (const p of ['node_modules/.bin/stynx', 'node_modules/@stynx-nyx/cli']) {
-        const from = resolve(c.dir, p);
-        if (existsSync(from)) {
-          renameSync(from, `${from}.uninstalled`);
-          moved.push([from, `${from}.uninstalled`]);
-        }
-      }
+      // A real uninstall changes the root manifest and the lock, so no verdict cached for the installed
+      // candidate stands; the reset after the row restores both, and the install restores node_modules.
+      c.exec(['pnpm', 'remove', '-w', '@stynx-nyx/cli']);
       try {
         // The shell's own wording follows (bash: `No such file or directory`, dash: `not found`).
         c.expectRows('N12', c.check(nRun(c)), { exit: 1, nodes: { 'route-contract': 'UNKNOWN tooling-missing', boundary: 'UNKNOWN tooling-missing', 'db-apply': 'FAIL', openapi: 'SKIPPED' }, findings: [['route-contract', 'stynx not resolvable from node_modules/.bin'], ['boundary', 'stynx not resolvable from node_modules/.bin'], ['db-apply', 'database/apply.sh exited 1'], ['db-apply', 'tooling-missing — db-apply: stynx not resolvable from node_modules/.bin (rls-negative)']] }, [...nPending(c)]);
       } finally {
-        for (const [from, to] of moved) renameSync(to, from);
+        reset(c);
+        c.exec(['pnpm', 'install', '--no-frozen-lockfile']);
       }
     },
   },
@@ -550,11 +554,18 @@ export const NEGATIVES: Negative[] = [
     run: (c) => {
       edit(c, P4, 'protected: [spec]', 'protected: []');
       mkdirSync(resolve(c.dir, '.github/workflows'), { recursive: true });
-      writeFileSync(resolve(c.dir, '.github/workflows/notes.yml'), 'name: notes\non: push\njobs: {}\n');
+      writeFileSync(resolve(c.dir, '.github/workflows/notes.yml'), 'name: notes\non: push\njobs:\n  noop:\n    runs-on: ubuntu-24.04\n    steps:\n      - run: echo notes\n');
       c.commit('ci(notes): add a workflow\n\nPacket: PKT-DEMO-004');
       edit(c, P4, 'protected: []', 'protected: [ci]');
       c.commit('chore(packets): widen PKT-DEMO-004 protected\n\nPacket: PKT-DEMO-004');
-      c.expectRows('N13', c.check(['--packet', P4, '--full']), { exit: 2, message: 'does not exist at base' }, [`protected-paths declared: false for ci; protected:unplanned; review gating (D-078), after PKT-DEMO-004 passes the pre-DAG rules`]);
+      const r = c.check(nRun(c));
+      const pp = r.nodes?.find((n) => n.id === 'protected-paths');
+      const touched = (pp?.details as { touched?: { class: string; declared: boolean }[] } | undefined)?.touched ?? [];
+      const ci = touched.find((t) => t.class === 'ci');
+      c.record('N13', `${summary(r)} · ci touched, declared: ${String(ci?.declared)}`, [
+        ...compare(r, { exit: 1, nodes: { 'protected-paths': 'PASS', review: 'UNKNOWN prerequisite-failed' } }),
+        ...(ci?.declared === false ? [] : ['protected-paths: ci not touched with declared: false (D-078)']),
+      ], [`protected:unplanned makes review gating (D-078) once review runs, after ${S10[1]}, ${S10[2]}, ${S10[4]}`, ...nPending(c)]);
     },
   },
   {
@@ -562,7 +573,7 @@ export const NEGATIVES: Negative[] = [
     run: (c) => {
       c.check(nRun(c));
       edit(c, 'apps/api/src/validation.filter.ts', '@Injectable()', '// edited\n@Injectable()');
-      c.expectRows('N14', c.check(nRun(c)), { exit: 1, cached: { integration: false } }, [`spec-tests cache miss and re-run, unit hit for unaffected projects (D-076), under --packet after PKT-DEMO-004 passes the pre-DAG rules; a green --full first needs ${S10[2]}`, ...nPending(c)]);
+      c.expectRows('N14', c.check(nRun(c)), { exit: 1, cached: { integration: false } }, [`spec-tests cache miss and re-run, unit a hit for unaffected projects (D-076), after a green --full, which needs ${S10[2]}`, ...nPending(c)]);
     },
   },
   {
@@ -572,7 +583,7 @@ export const NEGATIVES: Negative[] = [
       writeFileSync(resolve(c.dir, 'pnpm-lock.yaml'), `${readFileSync(resolve(c.dir, 'pnpm-lock.yaml'), 'utf8')}\n`);
       const r = c.check(nRun(c));
       const hits = (r.nodes ?? []).filter((n) => n.cached === true).map((n) => n.id);
-      c.record('N15', summary(r), hits.length === 0 ? [] : [`cache hits after a toolchain bump: ${hits.join(', ')}`], [`review re-runs (D-076) under --packet --full after PKT-DEMO-004 passes the pre-DAG rules`]);
+      c.record('N15', summary(r), hits.length === 0 ? [] : [`cache hits after a toolchain bump: ${hits.join(', ')}`], [`review re-runs (D-076) once it runs at all, after ${S10[1]}, ${S10[2]}, ${S10[4]}`, ...nPending(c)]);
     },
   },
   {
@@ -593,7 +604,7 @@ export const NEGATIVES: Negative[] = [
     run: (c) => {
       c.exec(['git', 'commit', '--allow-empty', '-q', '-m', 'chore(notes): one\n\nPacket: PKT-DEMO-004\nCo-Authored-By: Claude <noreply@anthropic.com>']);
       c.exec(['git', 'commit', '--allow-empty', '-q', '-m', 'chore(notes): two\n\nPacket: PKT-DEMO-004\nCo-Authored-By: GPT <noreply@openai.com>']);
-      c.expectRows('N17', c.check(['--packet', P4, '--full']), { exit: 2, message: 'does not exist at base' }, [`review UNKNOWN: family; review.json absent; exit 2 (D-079), after PKT-DEMO-004 passes the pre-DAG rules`]);
+      c.expectRows('N17', c.check(nRun(c)), { exit: 1, nodes: { review: 'UNKNOWN prerequisite-failed' } }, [`review UNKNOWN: family; review.json absent; exit 2 (D-079), once review runs, after ${S10[1]}, ${S10[2]}, ${S10[4]}`, ...nPending(c)]);
     },
   },
   {
