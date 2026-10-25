@@ -1637,9 +1637,49 @@ D-107's attach reading is narrowed to repositories with a `Packet:` commit. Reco
 attach mode to "hooks and git config only" (08 A.1) and lets the same command finish what it started;
 (a) gives attach mode a write path; (b) moves the pilot's first commits out of DEVAI. D-107 is not
 edited; this entry narrows its Open 8 reading: attach mode is a repository with `devai.json` and a
-commit carrying a `Packet:` trailer. Amends 08 A.1 (Modes, Exit), 09 §1 (Modes),
-docs/adopters/install.md (attach mode). Chosen: (c). Source: Owner (panels, 2026-10-25; packet
+commit carrying a `Packet:` trailer. The first run here is D-113's re-run: it keeps the files on
+disk, skips materialise, re-runs the install and makes the two `init` commits (wording amended by
+D-113, 2026-10-25). Amends 08 A.1 (Modes, Exit), 09 §1 (Modes), docs/adopters/install.md (attach
+mode). Chosen: (c). Source: Owner (panels, 2026-10-25; packet
 `PACKET-2026-10-24-R6-CLOSE.md` Part D, Owner's workspace).
+
+## D-113 · 2026-10-25 · An `init` re-run keeps the files on disk, re-runs the install and makes the two commits; `--product` must match (`config-mismatch`)
+[fact] D-112 makes a re-run of `init` on a repository whose `HEAD` is unborn or that has no `Packet:`
+commit a first run, not attach mode; but 08 A.1 rejects `--product` "when one [`devai.json`] exists" and
+requires `--dir` "empty or absent in materialise mode" (`dir-not-empty`), so the re-run D-112 admits
+meets two rules written for an empty directory, and whether it rewrites the template was not stated
+(devai-v3#71 Open 1). Options: (a) a re-run where `HEAD` is unborn or no `Packet:` commit exists keeps
+the files on disk and skips materialise; it accepts the existing `devai.json` and template (`--product`
+must match the recorded product or be omitted; a mismatch is exit 2 `config-mismatch`), re-runs the
+`pnpm add`/install and makes the two `init` commits; nothing is rewritten; (b) materialise over the
+existing files, with `dir-not-empty` waived when `HEAD` is unborn; (c) no re-run: the operator deletes
+the directory. Recommended: (a). It finishes the interrupted `init` without discarding the pilot's
+fixes to the findings that refused the commit; (b) overwrites those fixes; (c) discards them.
+[inference] "The recorded product" is `devai.json` `productPrefix`, the field `--product` writes (09
+§1.1). `config-mismatch` is a new command-level reason code: this entry is the decision D-055 requires
+for it; it joins 08 C.2's `ReasonCode` enum and 10 §4's hint table. Its hint, written here, is
+`--product differs from devai.json productPrefix; omit it or pass the recorded product`. D-112's
+wording is amended by this entry ("a first run" now reads as this re-run). Amends 08 A.1 (Arguments,
+Modes, Reads, Exit, Failure → reason), 08 C.2 (`ReasonCode`), 09 §1 (Modes), 10 §4 (hint table),
+docs/adopters/install.md, docs/reference/reason-codes.md, docs/reference/cli.md. Code follow-up: the
+re-run path and the reason code in `packages/cli/src/report.ts`, whose byte-parity test with 08 C.2 is
+`it.fails` until then. Chosen: (a). Source: Owner (panels, 2026-10-25; packet
+`PACKET-2026-10-24-R6-CLOSE.md` Part E, Owner's workspace).
+
+## D-114 · 2026-10-25 · `unit` invokes Vitest on the affected spec files by path; an empty Vitest project is left out at load
+[fact] 08 B.11's Invokes row passes `--project <affected…>` (`08-cli-and-nodes.md:358`); with D-110's
+Vitest projects `--project` selects `unit-api`/`unit-web` by name, not workspace packages, and the
+implementation passes the population's files instead (`packages/cli/src/nodes/unit.ts:2`); whether a
+project whose patterns match no file is left out was not stated (devai-v3#71 Open 2). Options: (a) 08
+B.11's Invokes row reads "the affected spec files, by path" (what `packages/cli/src/nodes/unit.ts` does);
+a Vitest project whose patterns match no file is left out of the config at load exactly as an empty
+tier is (S-62 reading extended), so a template without a web module runs `unit-api` only; (b) keep
+`--project` and map affected packages to project names. Recommended: (a). The census already names
+the files, and a path selects across both projects; (b) adds a mapping the files make unnecessary.
+Amends 08 B.11 (Invokes), 09 §1.1 (`vitest.config.ts` row). No code change: the node already passes
+paths, and the template config already filters out a project with no file
+(`packages/cli/template/vitest.config.ts:22-39`, devai-v3#72). Chosen: (a). Source:
+Owner (panels, 2026-10-25; packet `PACKET-2026-10-24-R6-CLOSE.md` Part E, Owner's workspace).
 
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
@@ -1647,12 +1687,10 @@ docs/adopters/install.md (attach mode). Chosen: (c). Source: Owner (panels, 2026
 - Mutation testing's home (D-004: outside the cycle or not at all) — not blocking v3.0.
 - 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck (D-058) — not blocking v3.0.
 - STYNX local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 (D-069) — STYNX item, not blocking 3.0.0.
-- D-112's first-run re-run meets two 08 A.1 rules written for an empty `--dir`: `--product` is
-  "rejected when [`devai.json`] exists", and materialise needs `--dir` "empty or absent"
-  (`dir-not-empty`); and whether the re-run rewrites the template or keeps the files on disk is not
-  stated. Not ruled.
-- D-110 against 08 B.11: its Invokes row passes `--project <affected…>`, and with Vitest projects
-  `--project` selects `unit-api`/`unit-web` by name, not workspace packages (the implementation passes
-  the population's files, `packages/cli/src/nodes/unit.ts:2`). Whether B.11's text changes, and
-  whether a project whose patterns match no file is left out of the config (as an empty tier is), is
-  not ruled.
+- D-113's re-run when `init`'s template commit landed (it carries `Packet: PKT-DEMO-001`) but the
+  packets commit was refused: the repository then has a `Packet:` commit, so D-112 makes a re-run
+  attach mode, which makes no commit, and the packets commit has no path. Not ruled.
+- D-113's re-run and the other `init` arguments: whether `--locales`, `--lgpd` and `--runtime` are
+  ignored, must match `devai.json`, or are refused, is not stated (only `--product` is ruled).
+- D-113's `config-mismatch` hint in 10 §4 (`--product differs from devai.json productPrefix; omit it or
+  pass the recorded product`) was written in the recording PR; the ruling gave no hint text.

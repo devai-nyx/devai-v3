@@ -99,8 +99,9 @@ worktree's config, and there is no husky ([08 A.1](../framework/08-cli-and-nodes
 [D-057](../../decisions.md)).
 
 A repository with `devai.json` but no `Packet:` commit (its `HEAD` unborn after a failed install, or
-a commit the hooks refused) is not attached: running `init` again there is a first run
-([D-112](../../decisions.md)).
+a commit the hooks refused) is not attached: running `init` again there is a first run ([D-112](../../decisions.md)). It keeps
+the files on disk, re-runs the `pnpm add` and makes the two commits; pass `--product` only with the
+recorded product, or omit it (a different one is exit 2 `config-mismatch`, [D-113](../../decisions.md)).
 
 ## The 3.0.0 pins
 

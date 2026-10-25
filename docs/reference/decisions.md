@@ -1,14 +1,14 @@
 ---
 title: Decisions
 sidebar_position: 12
-description: Index of the 112 numbered decisions D-001 to D-112 in decisions.md, with date and title.
+description: Index of the 114 numbered decisions D-001 to D-114 in decisions.md, with date and title.
 ---
 
 # Decisions
 
-[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **112 decisions** (D-001…D-112), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
+[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **114 decisions** (D-001…D-114), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
 
-Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 28 on 2026-10-24 (D-075…D-102), 10 on 2026-10-25 (D-103…D-112). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
+Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 28 on 2026-10-24 (D-075…D-102), 12 on 2026-10-25 (D-103…D-114). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
 
 | Id | Date | Title |
 |---|---|---|
@@ -124,18 +124,21 @@ Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-0
 | D-110 | 2026-10-25 | The `unit` tier is two Vitest projects in the one root config: `unit-api` and `unit-web` (refines D-105) |
 | D-111 | 2026-10-25 | The `/** @public */` tag is permanent in `generated` DTO files, removable only in seed files (refines D-104) |
 | D-112 | 2026-10-25 | A re-run of `init` on a repository without a `Packet:` commit is a first run, not attach mode (narrows D-107's Open 8 reading) |
+| D-113 | 2026-10-25 | An `init` re-run keeps the files on disk, re-runs the install and makes the two commits; `--product` must match (`config-mismatch`) |
+| D-114 | 2026-10-25 | `unit` invokes Vitest on the affected spec files by path; an empty Vitest project is left out at load |
 
 ## Still open
 
-The file's closing "Open" section lists seven items ([decisions.md](../../decisions.md)):
+The file's closing "Open" section lists eight items ([decisions.md](../../decisions.md)):
 
 - [D-026](../../decisions.md) (`kind:` packets) is provisional until the first DETRAN module is built with `kind:` packets.
 - [D-047](../../decisions.md) (edit-loop ceiling) is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
 - Mutation testing's home ([D-004](../../decisions.md)): outside the cycle or not at all; not blocking v3.0.
 - The 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck ([D-058](../../decisions.md)); not blocking v3.0.
 - STYNX's local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 ([D-069](../../decisions.md)); a STYNX item, not blocking 3.0.0.
-- [D-112](../../decisions.md)'s first-run re-run against 08 A.1's `--product` and `dir-not-empty` rules, and whether it rewrites the template; not ruled.
-- [D-110](../../decisions.md) against 08 B.11's `--project <affected…>`, and whether an empty Vitest project is left out; not ruled.
+- [D-113](../../decisions.md)'s re-run after the template commit landed but the packets commit was refused; not ruled.
+- [D-113](../../decisions.md)'s re-run and `--locales`, `--lgpd`, `--runtime`; not stated.
+- [D-113](../../decisions.md)'s `config-mismatch` hint text, written in the recording PR; not ruled.
 
 ## How decisions are made
 
