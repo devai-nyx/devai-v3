@@ -1,4 +1,4 @@
-<!-- Ratified 2026-10-19 (D-064, D-065, D-066); promoted from agents/consolidate-8/claude-opus/, revised for D-064's Owner choices (P-8-08 relicensing, P-8-09 public). One-time plan. Amended in place by D-080 (§5 H3/H5), D-090 (§5 H7, §6, §8), D-091 (§5 H3/H5, ruleset struck), D-100 (§4 R6, done clause), D-128 (§3.1), D-130 (§4 R8, N rows) and D-134 (§4 R8 close, §3.1); the line below is consolidation 8's provenance as of 2026-10-18. -->
+<!-- Ratified 2026-10-19 (D-064, D-065, D-066); promoted from agents/consolidate-8/claude-opus/, revised for D-064's Owner choices (P-8-08 relicensing, P-8-09 public). One-time plan. Amended in place by D-080 (§5 H3/H5), D-090 (§5 H7, §6, §8), D-091 (§5 H3/H5, ruleset struck), D-100 (§4 R6, done clause), D-128 (§3.1), D-130 (§4 R8, N rows), D-134 (§4 R8 close, §3.1) and D-141 (§5 `pages`, H9); the line below is consolidation 8's provenance as of 2026-10-18. -->
 <!-- Consolidation 8 · Claude Opus 5.5 · 2026-10-18. Base: draft-round-8/claude-opus (reviews split; NOTES §1). Binding: decisions.md D-001–D-063, 01–10; 11 PROVISIONAL. P-8-nn, E-8-nn and Owner items: agents/campaign-8/. devai: = v2 @ 4289ff51 (origin aarusso-nyx/devai); stynx: @ 63e5f788; detran: @ 50b6c174; gh: = `gh api` 2026-10-18/19; ref: = reference/succession-2026-07/. Not promoted. -->
 # 12 — Succession plan
 
@@ -143,6 +143,7 @@ D-058's first-call calibration (`decisions.md:466-468`), read from `details` (`0
 - `build`: the §2 command, plus `tsc -b` from R6.
 - `matrix`: 09 §4, both runtimes, when `packages/cli/**` changes, as a job condition, never a workflow `paths` filter (an absent required check blocks merges silently, `detran:AGENTS.md:10`).
 - `publish`: on a `v*` tag, `needs: [build, matrix]`, only if `git merge-base --is-ancestor $GITHUB_SHA origin/main`; `permissions: packages: write`; `pnpm -r publish` with `GITHUB_TOKEN` (P-8-07 → D-064).
+- `pages`: on push to `main` only, `needs: [build]`; builds `site/` and deploys it with `actions/upload-pages-artifact` + `actions/deploy-pages` (environment `github-pages`) to `https://devai-nyx.github.io/devai-v3/`. It is not a PR check; protection stays `[["build","matrix"],true]` (D-141).
 
 The template's `devai.yml` (02 §1) is the adopters' required check.
 
@@ -156,6 +157,7 @@ The template's `devai.yml` (02 §1) is the adopters' required check.
 | H6 | agent | `git tag -a v3.0.0 -m "DEVAI 3.0.0" <green main sha> && git push origin v3.0.0` | `publish` |
 | H8 | Owner | After R10: package settings → Change visibility → Public for `@devai-nyx/cli` and `@devai-nyx/decorators`; read-back `gh api orgs/devai-nyx/packages/npm/cli --jq .visibility` → `public` (and `npm/decorators`) | D-064 (P-8-09) |
 | H7 | Owner, then agent | `gh repo archive aarusso-nyx/devai --yes` after R10 and after §6's window closes (D-090); agent: `gh api repos/aarusso-nyx/devai --jq .archived` → `true` | §6 |
+| H9 | Owner, then agent | Owner: Settings → Pages → Source "GitHub Actions"; read-back `gh api repos/devai-nyx/devai-v3/pages --jq .build_type` → `workflow` (done 2026-10-25, `html_url` `https://devai-nyx.github.io/devai-v3/`). Agent: the `pages` job above and the repository `homepage` set to that URL | D-141; adopters reach v3's docs, not v2's |
 | per adopter clone | agent | `devai init` (attach) → `core.hooksPath scripts/hooks`, worktree identity (`08-cli-and-nodes.md:23-27`); needs `devai.json`, so not the DEVAI repository | hooks (D-057) |
 
 [inference] A check, read-back, `npm view` or exit code decides each step; none needs a human reading a diff.
