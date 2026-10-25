@@ -2092,6 +2092,14 @@ unchanged (its `site/` entry needs no deploy note). Code follow-up: the `pages` 
 `docs/dev/release.md`'s "Docs site" paragraph (session `pages-deploy`, branch `pages-deploy`). Chosen:
 (a). Source: Owner (message 2026-10-25, "GH Pages set. Do it as proposed."; packet
 `PACKET-2026-10-25-R10.md`, section D-141, Owner's workspace).
+**Readings** (ratified by the Owner, 2026-10-25, packet `PACKET-2026-10-25-R10.md`, D-141 readings;
+devai-v3#94 Open):
+1. The site deploys from `main` only, never on `v*` tags; the docs on `main` are the current law.
+2. The site's `onBrokenAnchors` stays `'warn'`; `onBrokenLinks` fails the build
+   (`site/docusaurus.config.ts:14-15`).
+3. The site root `/devai-v3/` answers 200 and redirects client-side to `/devai-v3/docs/`
+   (`site/src/pages/index.tsx`), as the W0 site did.
+12 §5's `pages` bullet already reads "on push to `main` only", so reading 1 changes no other text.
 
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
