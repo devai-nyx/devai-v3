@@ -81,8 +81,7 @@ The [quickstart](../start/quickstart.md) walks through it.
 
 ## Join an existing repository (attach mode)
 
-On a fresh clone, where `devai.json` already exists and history has a commit with a `Packet:`
-trailer, install dependencies (the template README's
+On a fresh clone, where `devai.json` already exists and history has both `init` commits, install dependencies (the template README's
 install line, [10 §1](../framework/10-agent-surface.md)) and run `init` without `--product`
 (passing it is rejected in this mode):
 
@@ -98,10 +97,12 @@ in every clone and worktree: the hook path and the agent identity are written to
 worktree's config, and there is no husky ([08 A.1](../framework/08-cli-and-nodes.md),
 [D-057](../../decisions.md)).
 
-A repository with `devai.json` but no `Packet:` commit (its `HEAD` unborn after a failed install, or
-a commit the hooks refused) is not attached: running `init` again there is a first run ([D-112](../../decisions.md)). It keeps
-the files on disk, re-runs the `pnpm add` and makes the two commits; pass `--product` only with the
-recorded product, or omit it (a different one is exit 2 `config-mismatch`, [D-113](../../decisions.md)).
+A repository with `devai.json` but without both `init` commits (its `HEAD` unborn after a failed
+install, or a commit the hooks refused) is not attached: running `init` again there is a first run
+([D-112](../../decisions.md), [D-115](../../decisions.md)). It keeps the files on disk, re-runs the
+`pnpm add` and makes whichever `init` commit is missing; pass `--product`, `--locales`, `--lgpd` and
+`--runtime` only with their recorded values, or omit them (a different one is exit 2
+`config-mismatch`, [D-113](../../decisions.md), [D-116](../../decisions.md)).
 
 ## The 3.0.0 pins
 

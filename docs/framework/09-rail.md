@@ -16,9 +16,9 @@ Tags: `[fact]` cited source, `[inference]` consequence, `[opinion]` contract cho
 3. Commits the tree as `chore(template): devai init <product>` with the trailer `Packet: PKT-DEMO-001`, with the hooks live (no `--no-verify`).
 4. Renders the four `CMP-DEMO-001` packets with `base` = the template commit and commits them as `chore(packets): seed CMP-DEMO-001` (08 A.1).
 
-A re-run on a repository whose `HEAD` is unborn or that has no commit with a `Packet:` trailer (a failed install or a hook-refused commit, D-107) is a first run, not attach mode (D-112): it keeps the files on disk and skips step 1, accepts the existing `devai.json` and template (`--product` omitted or equal to `productPrefix`, else exit 2 `config-mismatch`), re-runs step 2 and makes the two commits of steps 3–4; nothing is rewritten (D-113).
+A re-run on a repository whose `HEAD` is unborn or lacks either commit of steps 3–4 (a failed install or a hook-refused commit, D-107) is a first run, not attach mode (D-112, D-115): it keeps the files on disk and skips step 1, accepts the existing `devai.json` and template (`--product`, `--locales`, `--lgpd`, `--runtime` omitted or equal to their recorded values, else exit 2 `config-mismatch`; D-116), re-runs step 2 and makes whichever commit of steps 3–4 is missing; nothing is rewritten (D-113, D-115).
 
-*Attach* (`devai.json` present and a `Packet:` commit in history, e.g. a fresh clone; D-112): writes only the three hooks and sets `core.hooksPath scripts/hooks`, `user.name` and `user.email` in the worktree config (D-057, D-058).
+*Attach* (`devai.json` present and both commits of steps 3–4 in history, e.g. a fresh clone; D-112, D-115): writes only the three hooks and sets `core.hooksPath scripts/hooks`, `user.name` and `user.email` in the worktree config (D-057, D-058).
 
 Both modes end with the preflight (exit 2 `tooling-missing`).
 
@@ -198,7 +198,7 @@ Controller drift is `route-contract`'s finding (02 §7).
 1. `init`.
 2. `--packet PKT-DEMO-002 --full`: PL-15 line, exit 1.
 3. `devai packet rebase packets/CMP-DEMO-001/PKT-DEMO-002.md --to HEAD` (moves its `base` past `init`'s packets commit, D-095), `new module [--web]`, then mount, `pnpm install`, `pnpm -r build` (the apps' `tsc -b` builds the referenced module, so the pre-commit hook's typed lint sees its types; D-106) and the write pairs. Commit with `Packet: PKT-DEMO-002`.
-4. `--packet PKT-DEMO-002 --full`: exit 0, or exit 1 or 2 where every `FAIL` row traces to the S10 list and every other non-PASS row is `UNKNOWN tooling-missing` or `prerequisite-failed` behind a traced row, until STYNX ships the S10 list (D-100).
+4. `--packet PKT-DEMO-002 --full`: exit 0, or exit 1 or 2 where every `FAIL` row traces to the S10 list (`accept`'s `FAIL` traces when every finding it carries is a traced or `tooling-missing` row, D-118) and every other non-PASS row is `UNKNOWN tooling-missing` or `prerequisite-failed` behind a traced row, until STYNX ships the S10 list (D-100).
 5. `packet rebase PKT-DEMO-003 --to HEAD`, add the reference acceptance file `packages/cli/fixtures/campaign/SPEC-DEMO-001.acceptance.spec.ts` as `domain/notes/api/test/acceptance/spec-demo-001.acceptance.spec.ts` (05 §3), commit.
 6. `--packet PKT-DEMO-003 --full --expect-red`: exit 0, `expect-red 3 (R-1, R-2, R-4)`.
 7. Rebase PKT-DEMO-004, add the reference service and repository bodies `packages/cli/fixtures/campaign/notes.service.ts` and `notes.repository.ts` as `domain/notes/api/src/`'s two seeds, commit.

@@ -428,7 +428,7 @@ kept = 08's remedy is actionable; rewritten = it is not, or is wrong. All ≤ 16
 | `spec-invalid` | new | fix the SL line above in a spec packet |
 | `spec-superseded` | new | pin the successor named in the status line |
 | `output-exists` | new | the module exists: use --regenerate |
-| `config-mismatch` | new | --product differs from devai.json productPrefix; omit it or pass the recorded product |
+| `config-mismatch` | new | <flag> differs from devai.json <field>; omit it or pass the recorded value |
 | `spec-mismatch` | new | regenerate only from the spec the manifest names; a successor spec's module is not supported: note it under ## Notes |
 | `no-observations` | new | the tool saw nothing to check: put the files where the tier glob expects them (04 §4) |
 | `prerequisite-failed` | new | fix <prerequisite> first; this node did not run |

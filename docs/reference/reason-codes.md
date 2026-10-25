@@ -47,7 +47,7 @@ Some node blocks attach detail to a code, for example `unsupported-oid <oid>`, `
 | 12 | `spec-superseded` | `packet new` (pinning kinds, spec carries `superseded-by`) | 2 | new | pin the successor named in the status line |
 | 13 | `output-exists` | `new module` (`--out` exists without `--regenerate`) | 2 | new | the module exists: use --regenerate |
 | 14 | `spec-mismatch` | `new module --regenerate` (manifest `specId` ≠ spec id and ≠ `supersedes.id`) | 2 | new | regenerate only from the spec the manifest names; a successor spec's module is not supported: note it under ## Notes |
-| 15 | `config-mismatch` | `init` re-run (`HEAD` unborn or no `Packet:` commit) with `--product` ≠ `devai.json` `productPrefix` ([D-113](../../decisions.md)) | 2 | new | `--product` differs from devai.json productPrefix; omit it or pass the recorded product |
+| 15 | `config-mismatch` | `init` re-run (`HEAD` unborn or lacking an `init` commit, [D-115](../../decisions.md)) with `--product`, `--locales`, `--lgpd` or `--runtime` ≠ its `devai.json` value ([D-113](../../decisions.md), [D-116](../../decisions.md)) | 2 | new | `<flag>` differs from devai.json `<field>`; omit it or pass the recorded value |
 
 ## Node level (40)
 
