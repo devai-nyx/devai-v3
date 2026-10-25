@@ -1350,7 +1350,7 @@ package binary missing and exits 2 (devai-v3#66 Open 12), while 12 §4 R10 requi
 integrity of the tarball that contains it (devai-v3#66 Open 4), and the remedy printed today
 (`pnpm add -D --save-exact @devai-nyx/cli@3.0.0`) 404s until R10 (devai-v3#67 Open 13). Options:
 (a) materialise writes the template, runs `git init`, then
-`pnpm add -D --save-exact @devai-nyx/cli@<its own version>`, which installs the workspace and
+`pnpm add -w -D --save-exact @devai-nyx/cli@<its own version>` (`-w` added by D-139), which installs the workspace and
 completes the lock in the scaffold, then makes the two commits (the hooks resolve, so no
 `--no-verify`), then the preflight; a failed install is exit 2 `tooling-missing` with that command as
 the remedy; the template manifest ships without `@devai-nyx/cli` and the shipped lock covers
@@ -2035,9 +2035,27 @@ wording is amended. Amends 09 §1.1 (`tsconfig.test.json` row). No code change: 
 does this. Chosen: (a). Source: Owner (panels, 2026-10-25; packet `PACKET-2026-10-25-R8.md`, third round, Owner's
 workspace).
 
+## D-139 · 2026-10-25 · `init`'s materialise install adds `-w`: `pnpm add -w -D --save-exact @devai-nyx/cli@<own version>` (amends D-097)
+[fact] Materialise `init` runs D-097's `pnpm add -D --save-exact @devai-nyx/cli@<own version>` in the
+scaffold root (`packages/cli/src/commands/init.ts:231`); the template ships `pnpm-workspace.yaml` there
+(09 §1.1), and pnpm 9.15.0 refuses with `ERR_PNPM_ADDING_TO_ROOT` unless `-w` is given. The matrix's
+PATH shim rewrote `add` → `install` (`packages/cli/scripts/campaign.ts:659`), so CI never saw it, and
+`pnpm dlx @devai-nyx/cli@3.0.0 init --product demo` would exit 2 and fail R10's done clause
+(devai-v3#90 Open 1). Options: (a) the command is `pnpm add -w -D --save-exact
+@devai-nyx/cli@<own version>` wherever the law prints it; the template `.npmrc` (09 §1.1) is unchanged;
+(b) `ignore-workspace-root-check=true` in the template `.npmrc`; (c) both; (d) tag 3.0.0 as it stands.
+Recommended: (a). The flag states the intent at the one call that needs it; (b) silences the check for
+every adopter command; (d) ships an `init` that cannot succeed. D-097's wording is amended. Amends 08 A.1
+(Modes, Exit remedy), 09 §1 (step 2), D-097, docs/adopters/install.md. Code follow-up (R10, in
+parallel): `installCommand` and its tests. Chosen: (a). Source: Owner (panel, 2026-10-25; packet
+`PACKET-2026-10-25-R10.md`, Owner's workspace).
+
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
 - Mutation testing's home (D-004: outside the cycle or not at all) — not blocking v3.0.
 - 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck (D-058) — not blocking v3.0.
 - STYNX local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 (D-069) — STYNX item, not blocking 3.0.0.
+- D-139 adds `-w` to `init`'s install only. 10 §4's `generator-version-mismatch` remedy
+  `pnpm add -D @devai-nyx/cli@<version>` (and its copies in docs/reference and docs/guides) is also run
+  in the workspace root and would meet the same `ERR_PNPM_ADDING_TO_ROOT`; not ruled whether it gains `-w`.

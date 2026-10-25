@@ -63,6 +63,8 @@ population as coded, and let R8 close on a green `matrix` in both runtimes, the 
 R9. [D-135](../../decisions.md)–[D-138](../../decisions.md) drop PKT-DEMO-004's repository range, ratify the
 shell's filter wiring, add the public health controller to S10 (#8; the probes answer 401 until then) and
 let the test config reach the modules through the apps.
+[D-139](../../decisions.md) adds `-w` to `init`'s install (`pnpm add -w -D --save-exact @devai-nyx/cli@<own version>`):
+without it pnpm 9.15.0 refuses to add to the workspace root, and R10's `init` would exit 2.
 R7 is confirmed on the release host.
 
 **Not blocking 3.0.0** (12 §4): the D-047 edit-loop p95 measurement (3.0.0 ships 90000); the first
