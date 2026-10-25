@@ -65,6 +65,10 @@ export interface RunContext {
   inventory?: InventoryData;
   /** Set by `db-apply` (B.20), run or reused: the scratch database its consumers use. */
   scratch?: Scratch;
+  /** `--full` (A.3): `db-apply` is never reused and its database is dropped at command end (B.20). */
+  full?: boolean;
+  /** Set once the `--full` cleanup dropped (or tried to drop) `scratch`. */
+  scratchDropped?: boolean;
   /**
    * The packet the run is bound to (`--packet`): `spec-tests` reads its kind, observations and pin; the
    * model nodes read the `PacketFacts` part (`modelPacket` in model/packet.ts); `packet-scope` and
@@ -186,7 +190,9 @@ export async function runPlan(ctx: RunContext, deps: RunnerDeps, digest0: string
     }
     if (key) {
       const hit = deps.store.lookup(id, key);
-      if (hit && (!adapter.reuse || (await adapter.reuse(ctx, hit)))) return void rows.set(id, { ...hit, durationMs: Date.now() - start, cached: true, cacheKey: key });
+      // B.20: reuse is the edit loop's; under --full `db-apply` applies afresh into a database it then drops.
+      const reusable = !(ctx.full === true && id === 'db-apply');
+      if (hit && reusable && (!adapter.reuse || (await adapter.reuse(ctx, hit)))) return void rows.set(id, { ...hit, durationMs: Date.now() - start, cached: true, cacheKey: key });
     }
     let o: NodeOutcome;
     try {

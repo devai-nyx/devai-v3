@@ -1,13 +1,15 @@
 // 08 A.3 `devai check`: `--only`, `--format`, `--prune` (W1); `--packet`, `--hook`, `--expect-red`,
-// `--summary` (W4). `--full` still refuses with exit 2 `usage`: R6 closed without wiring it (W9);
-// a plan containing a node without an adapter refuses with "node <id> arrives in a later wave".
+// `--summary` (W4); `--full` (W10, D-100): every applicable node, the report written in both formats,
+// `accepted: true` on a `--packet --full` exit 0, and the scratch database dropped at command end after
+// its last consumer (B.20). A plan containing a node without an adapter refuses with "node <id> arrives
+// in a later wave".
 import { readFileSync, realpathSync, rmSync } from 'node:fs';
 import { relative, resolve } from 'node:path';
 import { CandidateIo, commitTree, digestOf, type Listing, staged, workingTree } from '../candidate/digest.js';
 import { CacheStore, prune } from '../cache/store.js';
 import type { DevaiConfig } from '../config.js';
 import { reachable, running } from '../db/provide.js';
-import { pruneScratch } from '../db/scratch.js';
+import { dropScratch, pruneScratch, SCRATCH_DIR } from '../db/scratch.js';
 import { diffNameStatus, GitFailed, GitMissing, lsFilesTracked, lsFilesUntracked, revParse, show, topLevel } from '../git/git.js';
 import { CommandRefusal, cliVersion, type Format, loadConfig, resolveRuntime } from '../main.js';
 import { acceptOutcome } from '../nodes/accept.js';
@@ -44,6 +46,7 @@ import { Report } from '../report.js';
 import { type NodeId, NODE_IDS } from '../runner/edges.js';
 import { exitCodeOf } from '../runner/gating.js';
 import { type HookStage, plan } from '../runner/plan.js';
+import type { NodeRow } from '../cache/result-digest.js';
 import { type NodeAdapter, type RunContext, runPlan } from '../runner/run.js';
 import { renderText } from '../text/report.js';
 import { renderSummary } from '../text/summary.js';
@@ -97,21 +100,26 @@ export const ADAPTERS: Partial<Record<NodeId, NodeAdapter>> = {
 /** A.3: the packet-bound nodes `--only` refuses without `--packet` (D-084 item 19). */
 const PACKET_ONLY: readonly string[] = ['review', 'permissions-pattern', 'packet-scope', 'spec-tests'];
 
-/** Flags whose behaviour arrives after R6. */
-const LATER: [keyof CheckFlags, string, string][] = [
-  ['full', '--full', 'not wired at the R6 close; the R8 matrix needs it'],
-];
 
 export interface CheckResult {
   stdout: string;
   exitCode: 0 | 1 | 2;
 }
 
-export async function repositoryRoot(cwd: string): Promise<{ root: string; head: string }> {
+/** git's empty tree: what the index is compared with before a repository's first commit. */
+export const EMPTY_TREE = '4b825dc642cb6eb9a060e54bf8d69288fbee4904';
+
+/**
+ * The repository root and HEAD. `unborn` admits a HEAD without a commit, read as the empty tree: the
+ * `pre-commit` and `commit-msg` hooks of a repository's first commit, which D-097's `init` makes with
+ * the hooks live (`git diff --cached` already compares the index with the empty tree there).
+ */
+export async function repositoryRoot(cwd: string, unborn = false): Promise<{ root: string; head: string }> {
   const top = await topLevel(cwd);
   if (top === null) throw new CommandRefusal('not-a-repository', `${cwd}: not inside a git work tree`);
   if (realpathSync(top) !== realpathSync(cwd)) throw new CommandRefusal('not-a-repository', `${cwd}: run devai at the repository root ${top}`);
   const head = await revParse(cwd, 'HEAD');
+  if (head === null && unborn) return { root: cwd, head: EMPTY_TREE };
   if (head === null) throw new CommandRefusal('not-a-repository', `${cwd}: HEAD has no commit`);
   return { root: cwd, head };
 }
@@ -163,7 +171,6 @@ function validate(flags: CheckFlags): { only: NodeId[]; hook: HookStage | undefi
   for (const n of only) if (!(NODE_IDS as readonly string[]).includes(n)) throw new CommandRefusal('usage', `--only ${n}: not one of the 28 nodes of 02 §2`);
   // A.3 (D-084 item 19): `--only` on a packet-bound node needs `--packet`.
   for (const n of only) if (PACKET_ONLY.includes(n) && !flags.packet) throw new CommandRefusal('usage', `${n} needs --packet`);
-  for (const [key, flag, wave] of LATER) if (flags[key]) throw new CommandRefusal('usage', `${flag} arrives in a later wave (${wave})`);
   let hook: HookStage | undefined;
   if (flags.hook !== undefined) {
     if (!(HOOK_STAGES as readonly string[]).includes(flags.hook)) throw new CommandRefusal('usage', `--hook ${flags.hook}: expected pre-commit, pre-push or commit-msg`);
@@ -184,8 +191,9 @@ export async function check(argv: readonly string[], flags: CheckFlags, format: 
   const { only, hook } = validate(flags);
 
   let scratch: string | null = null;
+  let ctx: RunContext | null = null;
   try {
-    const { root, head } = await repositoryRoot(cwd);
+    const { root, head } = await repositoryRoot(cwd, hook === 'pre-commit' || hook === 'commit-msg');
     if (flags.prune) {
       await pruneScratch(root, await running(root, config, runtime), (line) => process.stderr.write(line + '\n')); // B.20: descriptor-named databases only
       const removed = prune(root);
@@ -214,20 +222,21 @@ export async function check(argv: readonly string[], flags: CheckFlags, format: 
     const digest0 = digestOf(listing);
     const store = new CacheStore(root);
 
-    if (flags.summary && pk) return summaryOf(store, pk.packet, digest0, head, config, format);
+    if (flags.summary && pk && !flags.full) return summaryOf(store, pk.packet, digest0, head, config, format);
 
     let pushChanged: string[] = [];
     if (hook === 'pre-push') {
       pushChanged = [...(await diffNameStatus(root, { from: 'HEAD' })), ...(base ? await diffNameStatus(root, { from: base, to: 'HEAD' }) : [])].map((d) => d.path);
     }
-    const p = plan({ packet: pk !== null, full: false, only, ...(hook ? { hook } : {}), dataLayerChanged: dataLayerChanged(pushChanged),
+    const p = plan({ packet: pk !== null, full: flags.full === true, only, ...(hook ? { hook } : {}), dataLayerChanged: dataLayerChanged(pushChanged),
       postgresReachable: !hook && (only.length === 0 || only.includes('sql-typed')) && (await reachable(root, config, runtime)) });
     const missing = p.nodes.find((n) => n !== 'inventory' && n !== 'accept' && !ADAPTERS[n]);
     if (missing) throw new CommandRefusal('usage', `node ${missing} arrives in a later wave`);
 
     if (hook === 'pre-commit') scratch = await materialiseStaged(root, listing, digest0);
-    const ctx: RunContext = {
+    ctx = {
       root: scratch ?? root, config, runtime, cliVersion: cliVersion(), listing, base, head, plan: p,
+      ...(flags.full ? { full: true } : {}),
       ...(pk ? { packet: pk } : {}),
       ...(hook ? { hook } : {}),
       ...(hook === 'commit-msg' ? { messageFile: flags.args![0]! } : {}),
@@ -248,21 +257,26 @@ export async function check(argv: readonly string[], flags: CheckFlags, format: 
       diagnostic: (line) => process.stderr.write(line + '\n'),
     }, digest0);
 
+    // B.20 under --full: the scratch database is dropped after its last consumer, i.e. at command end.
+    if (flags.full) await dropFullScratch(root, ctx, out.rows);
     const exitCode = exitCodeOf(out.rows, config, out.candidateChanged);
     const report = Report.parse({
       schemaVersion: '3',
       command: ['devai', 'check', ...argv].join(' '),
       packetId: pk?.packet.id ?? null, kind: pk?.packet.kind ?? null, specId: pk?.packet.spec?.id ?? null, specSha256: pk?.packet.spec?.sha256 ?? null,
       base, head, candidateDigest: digest0, toolchainDigest: out.toolchainDigest, runtime,
-      accepted: false,
+      // 08 A.3: `accepted: true` only on `--packet --full` exit 0.
+      accepted: flags.full === true && pk !== null && exitCode === 0 && !out.candidateChanged,
       exitCode,
       ...(out.candidateChanged ? { reason: 'candidate-changed' as const } : {}),
       nodes: out.rows,
       durationMs: Date.now() - started,
     });
-    // A.3 Writes: every --format json run (and every --full run); a candidate-changed result is discarded.
-    if (format === 'json' && !out.candidateChanged) store.writeReport(digest0, report);
+    // A.3 Writes: every --format json run and every --full run; a candidate-changed result is discarded.
+    if ((format === 'json' || flags.full) && !out.candidateChanged) store.writeReport(digest0, report);
     if (format === 'json') return { stdout: JSON.stringify(report, null, 2) + '\n', exitCode };
+    // A.3 `--summary` after a `--full` run: the Part C summary of this report.
+    if (flags.summary && pk) return { stdout: renderSummary({ report, config, title: pk.packet.title }).join('\n') + '\n', exitCode };
 
     // C.3 line 2 (D-076): the first untracked path, when the working-tree digest differs from HEAD's tree.
     let untracked: string | null = null;
@@ -276,7 +290,28 @@ export async function check(argv: readonly string[], flags: CheckFlags, format: 
     throw e;
   } finally {
     if (scratch) rmSync(scratch, { recursive: true, force: true });
+    // B.20 "also on failure": a run that threw still drops the database it created.
+    if (flags.full && ctx?.scratch && !ctx.scratchDropped) await dropFullScratch(ctx.root, ctx, []);
   }
+}
+
+/**
+ * B.20 cleanup under `--full`: drop the scratch database this run's `db-apply` created, after every
+ * consumer has run; delete its descriptor. A failed drop sets `details.dropped: false`, keeps the
+ * descriptor for `--prune`, prints one stderr line and leaves the node's status alone.
+ */
+async function dropFullScratch(root: string, ctx: RunContext, rows: readonly NodeRow[]): Promise<void> {
+  const s = ctx.scratch;
+  if (!s || ctx.scratchDropped) return;
+  ctx.scratchDropped = true;
+  const failed = await dropScratch(s.server, s.database);
+  const row = rows.find((r) => r.id === 'db-apply');
+  if (failed !== null) {
+    process.stderr.write(`devai: drop ${s.database} failed: ${failed}; its descriptor stays for the next --prune\n`);
+    return;
+  }
+  rmSync(resolve(root, SCRATCH_DIR, `${s.database.slice('devai_'.length)}.json`), { force: true });
+  if (row?.details?.node === 'db-apply') row.details.dropped = true;
 }
 
 /**

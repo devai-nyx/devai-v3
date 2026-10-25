@@ -2,12 +2,28 @@
 // `*.{ts,mjs,json,md}` (B.1 population table). A listed path is `not formatted`; a syntax error
 // Prettier reports for a candidate file is a defect; anything else on an exit of 2, or an exit
 // outside {0, 1, 2}, is `runner-crashed` (B.2 Status, 08 §0 fifth convention).
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import ignore from 'ignore';
 import type { NodeAdapter, NodeOutcome, RunContext } from '../runner/run.js';
 import { changedPresent, type Finding, runTool, firstLine, unknown, unknownOutcome } from '../proc/tool.js';
 
 export const FORMAT_INSTALL = 'pnpm add -D --save-exact prettier@3.9.6';
 const STANDARD = 'S-41';
 const formattable = (p: string) => /\.(ts|mjs|json|md)$/.test(p);
+
+/**
+ * D-096: the paths `<root>/.prettierignore` names (gitignore syntax, as Prettier reads it) are not `format`
+ * observations; the 09 §1.1 row lists the fixed-byte law texts. An absent or unreadable file names none.
+ */
+export function prettierIgnored(root: string): (path: string) => boolean {
+  let text: string;
+  try { text = readFileSync(join(root, '.prettierignore'), 'utf8'); } catch { return () => false; }
+  const ig = ignore().add(text);
+  return (p) => ig.ignores(p);
+}
+/** B.2's candidates: changed, present `*.{ts,mjs,json,md}` that `.prettierignore` does not name. */
+export const formatCandidates = (ctx: RunContext): string[] => { const ignored = prettierIgnored(ctx.root); return changedPresent(ctx, (p) => formattable(p) && !ignored(p)); };
 
 interface Listed {
   paths: string[];
@@ -37,9 +53,9 @@ export const format: NodeAdapter = {
   id: 'format',
   contract: 1,
   configFiles: () => ['package.json', '.prettierignore'],
-  inputs: (ctx) => changedPresent(ctx, formattable),
+  inputs: formatCandidates,
   async run(ctx: RunContext): Promise<NodeOutcome> {
-    const files = changedPresent(ctx, formattable);
+    const files = formatCandidates(ctx);
     const expected = files.length;
     if (expected === 0) return { status: 'PASS', expected: 0, observed: 0, evaluated: 0, findings: [] };
     const r = await runTool({

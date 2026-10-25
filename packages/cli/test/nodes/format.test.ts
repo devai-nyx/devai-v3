@@ -26,6 +26,18 @@ describe('B.2 format', () => {
     });
   });
 
+  it('D-096: a path .prettierignore names is not an observation (the 09 §1.1 law texts keep their bytes)', async () => {
+    const ignore = 'AGENTS.md\n.agents/**\npackets/**\n';
+    const dir = workspace({ 'package.json': PRETTIER, '.prettierignore': ignore }, { 'AGENTS.md': '#  Agent\n', 'packets/C/PKT-X.md': '*  x\n', 'src/a.ts': 'export const a  =  "x"\n' });
+    expect(await run(dir)).toEqual({
+      status: 'FAIL', expected: 1, observed: 1, evaluated: 1,
+      findings: [{ locator: 'src/a.ts:1', message: 'not formatted', standard: 'S-41', hint: 'run prettier --write src/a.ts' }],
+    });
+    const only = workspace({ 'package.json': PRETTIER, '.prettierignore': ignore }, { 'AGENTS.md': '#  Agent\n' }, toolModules(), true);
+    const report = Report.parse(JSON.parse(devaiCheck(only, 'format').stdout));
+    expect(report.nodes.find((n) => n.id === 'format')).toMatchObject({ status: 'SKIPPED', evidence: 'no changed *.{ts,mjs,json,md}' });
+  });
+
   it('UNKNOWN tooling-missing: prettier absent from node_modules/.bin, install command on the finding line', async () => {
     const dir = workspace({}, { 'src/a.ts': 'export const a = 1;\n' }, null);
     expect(await run(dir)).toEqual({

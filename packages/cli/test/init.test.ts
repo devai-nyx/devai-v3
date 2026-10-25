@@ -2,16 +2,18 @@
 // identity, packets based on the template commit, preflight), attach, then the scaffold installed from
 // its own lock and checked by `inventory` and `layout` (C.2 reports).
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { Report } from '../src/report.js';
+import { pnpmShim } from './pnpm-shim.js';
 
 const cli = resolve(import.meta.dirname, '..');
 const bin = resolve(cli, 'dist/main.js');
-const devai = (cwd: string, ...args: string[]) =>
-  spawnSync(process.execPath, [bin, ...args], { cwd, encoding: 'utf8', env: { ...process.env, DEVAI_RUNTIME: '' }, maxBuffer: 64 * 1024 * 1024 });
+const run = (env: NodeJS.ProcessEnv, cwd: string, ...args: string[]) =>
+  spawnSync(process.execPath, [bin, ...args], { cwd, encoding: 'utf8', env: { ...env, DEVAI_RUNTIME: '' }, maxBuffer: 64 * 1024 * 1024 });
+const devai = (cwd: string, ...args: string[]) => run(process.env, cwd, ...args);
 const git = (cwd: string, ...args: string[]) => spawnSync('git', args, { cwd, encoding: 'utf8' }).stdout.trim();
 const tmp = () => mkdtempSync(resolve(tmpdir(), 'devai-init-'));
 
@@ -52,14 +54,15 @@ describe('devai init refusals (A.1 Failure → reason)', () => {
   });
 });
 
-describe('devai init --product demo --dir <tmp> (materialise)', () => {
+describe('devai init --product demo --dir <tmp> (materialise; the install stubbed by a PATH pnpm, D-097)', () => {
   const parent = tmp();
   const dir = resolve(parent, 'demo');
+  const shim = pnpmShim('stub');
   let out: { mode: string; product: string; written: string[]; gitConfig: Record<string, string>; preflight: { node: string; binary: string; status: string; remedy?: string }[]; exitCode: number; reason?: string };
   let status: number | null;
 
   beforeAll(() => {
-    const r = devai(parent, 'init', '--product', 'demo', '--dir', 'demo', '--format', 'json');
+    const r = run(shim.env, parent, 'init', '--product', 'demo', '--dir', 'demo', '--format', 'json');
     status = r.status;
     out = JSON.parse(r.stdout) as typeof out;
   });
@@ -67,6 +70,16 @@ describe('devai init --product demo --dir <tmp> (materialise)', () => {
   it('writes the template and reports it in the A.1 JSON shape', () => {
     expect(out).toMatchObject({ mode: 'materialise', product: 'demo', accepted: false });
     expect(out.written).toEqual(expect.arrayContaining(['devai.json', '.gitignore', '.npmrc', 'scripts/hooks/pre-commit', 'packets/CMP-DEMO-001/PKT-DEMO-004.md']));
+  });
+
+  it('installs @devai-nyx/cli at its own version before committing, then commits with the hooks live (D-097)', () => {
+    const calls = readFileSync(shim.log, 'utf8').trim().split('\n');
+    expect(calls[0]).toBe('add -D --save-exact @devai-nyx/cli@3.0.0');
+    // both commits ran pre-commit and commit-msg (no --no-verify)
+    expect(calls.filter((c) => c === 'exec devai check --hook pre-commit')).toHaveLength(2);
+    expect(calls.filter((c) => c.startsWith('exec devai check --hook commit-msg'))).toHaveLength(2);
+    const committed = JSON.parse(git(dir, 'show', 'HEAD~1:package.json')) as { devDependencies: Record<string, string> };
+    expect(committed.devDependencies['@devai-nyx/cli']).toBe('3.0.0');
   });
 
   it('makes the two commits, the first with the PKT-DEMO-001 trailer, as the agent identity', () => {
@@ -100,12 +113,13 @@ describe('devai init --product demo --dir <tmp> (materialise)', () => {
     expect(devai(dir, 'packets', 'status').status).toBe(0);
   });
 
-  it('ends with the preflight: before an install every package binary is missing, remedy pnpm install (exit 2 tooling-missing)', () => {
+  it('ends with the preflight: the stub installed only the CLI, so every other package binary is missing, remedy pnpm install (exit 2 tooling-missing)', () => {
     expect(status).toBe(2);
     expect(out).toMatchObject({ exitCode: 2, reason: 'tooling-missing' });
     const missing = out.preflight.filter((p) => p.status === 'missing');
     expect(missing.map((p) => p.binary)).toEqual(expect.arrayContaining(['tsc', 'eslint', 'vitest', 'stynx', 'knip']));
-    for (const p of missing.filter((p) => p.binary !== '@devai-nyx/cli' && p.binary !== 'psql')) expect(p.remedy, p.binary).toBe('pnpm install');
+    expect(out.preflight.filter((p) => p.binary === '@devai-nyx/cli').map((p) => p.status)).toEqual(['resolved', 'resolved']);
+    for (const p of missing.filter((p) => p.binary !== 'psql')) expect(p.remedy, p.binary).toBe('pnpm install');
   });
 
   it('prints the file classes, the git config lines, the preflight lines and the protection host line (D-091)', () => {
@@ -116,32 +130,50 @@ describe('devai init --product demo --dir <tmp> (materialise)', () => {
   });
 });
 
+describe('devai init when the install fails (D-097)', () => {
+  it('exit 2 tooling-missing, the pnpm add command as the remedy, the files written and nothing committed', () => {
+    const parent = tmp();
+    const dir = resolve(parent, 'demo');
+    const shim = pnpmShim('fail');
+    const text = run(shim.env, parent, 'init', '--product', 'demo', '--dir', 'demo');
+    expect(text.status).toBe(2);
+    expect(text.stdout.split('\n')).toContain('devai: tooling-missing — install with pnpm add -D --save-exact @devai-nyx/cli@3.0.0 (ERR_PNPM_FETCH_404  GET https://npm.pkg.github.com/@devai-nyx%2Fcli: Not Found - 404); nothing was committed');
+    expect(spawnSync('git', ['rev-parse', '--verify', 'HEAD'], { cwd: dir }).status).not.toBe(0);
+    expect(readFileSync(resolve(dir, 'devai.json'), 'utf8')).toContain('"productPrefix": "demo"');
+    const json = run(pnpmShim('fail').env, tmp(), 'init', '--product', 'demo', '--dir', 'demo', '--format', 'json');
+    const out = JSON.parse(json.stdout) as { exitCode: number; reason: string; preflight: { binary: string; status: string; remedy?: string }[] };
+    expect(out).toMatchObject({ exitCode: 2, reason: 'tooling-missing' });
+    expect(out.preflight.find((p) => p.binary === '@devai-nyx/cli')).toMatchObject({ status: 'missing', remedy: 'pnpm add -D --save-exact @devai-nyx/cli@3.0.0' });
+  });
+});
+
 const token = process.env['NODE_AUTH_TOKEN'];
-describe.skipIf(!token)('the scaffold installs from its own lock and is checked (needs NODE_AUTH_TOKEN for @stynx-nyx/*)', () => {
+describe.skipIf(!token)('init installs from the shipped lock, commits with the hooks live and is checked (needs NODE_AUTH_TOKEN for @stynx-nyx/*)', () => {
   const parent = tmp();
   const dir = resolve(parent, 'demo');
-  const pnpm = (...args: string[]) => spawnSync('pnpm', args, { cwd: dir, encoding: 'utf8', env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: '0' } });
+  // `real`: the shipped lock installed by the real pnpm, this repository's CLI linked in place of the
+  // unpublished @devai-nyx/cli 3.0.0, and the hooks run the real nodes (D-097).
+  const shim = pnpmShim('real');
+  let init: ReturnType<typeof run>;
 
   beforeAll(() => {
-    devai(parent, 'init', '--product', 'demo', '--dir', 'demo');
+    init = run(shim.env, parent, 'init', '--product', 'demo', '--dir', 'demo', '--format', 'json');
+  }, 900_000);
+
+  it('materialise exits 0: the install resolved every tool, both commits passed their hooks, the tree is clean', () => {
+    const out = JSON.parse(init.stdout) as { exitCode: number; preflight: { binary: string; status: string }[] };
+    // psql is a host tool (07 §4); CI installs it before the tests.
+    expect(out.preflight.filter((p) => p.status === 'missing').map((p) => p.binary).filter((b) => b !== 'psql')).toEqual([]);
+    if (!out.preflight.some((p) => p.status === 'missing')) expect([init.status, init.stderr]).toEqual([0, '']);
+    expect(git(dir, 'log', '--format=%s')).toBe('chore(packets): seed CMP-DEMO-001\nchore(template): devai init demo');
+    expect(git(dir, 'status', '--porcelain')).toBe('');
   });
 
-  it('pnpm install --frozen-lockfile succeeds and leaves the tree clean', () => {
-    const r = pnpm('install', '--frozen-lockfile', '--reporter=silent');
-    expect(r.status, r.stderr).toBe(0);
-    expect(git(dir, 'status', '--porcelain')).toBe('');
-  }, 600_000);
-
-  it('attach mode then resolves every package tool; the overlay comes from @devai-nyx/cli, linked here until it is published', () => {
-    mkdirSync(resolve(dir, 'node_modules/@devai-nyx'), { recursive: true });
-    symlinkSync(cli, resolve(dir, 'node_modules/@devai-nyx/cli'));
-    const r = devai(dir, 'init', '--format', 'json');
+  it('attach mode then resolves every package tool', () => {
+    const r = run(shim.env, dir, 'init', '--format', 'json');
     const out = JSON.parse(r.stdout) as { mode: string; preflight: { binary: string; status: string }[] };
     expect(out.mode).toBe('attach');
-    const missing = out.preflight.filter((p) => p.status === 'missing').map((p) => p.binary);
-    // psql is a host tool (07 §4); CI installs it before the tests.
-    expect(missing.filter((b) => b !== 'psql')).toEqual([]);
-    if (missing.length === 0) expect(r.status).toBe(0);
+    expect(out.preflight.filter((p) => p.status === 'missing').map((p) => p.binary).filter((b) => b !== 'psql')).toEqual([]);
   });
 
   it('every file init generated is Prettier-clean with the template\'s own options', () => {
@@ -149,22 +181,16 @@ describe.skipIf(!token)('the scaffold installs from its own lock and is checked 
     expect(r.status, r.stdout + r.stderr).toBe(0);
   });
 
-  it('check --only inventory: a C.2 report; before the first module the two domain globs match no package (D-084 item 7)', () => {
+  it('check --only inventory: PASS before the first module; the two seed globs are no finding (D-092)', () => {
     const r = devai(dir, 'check', '--only', 'inventory', '--format', 'json');
     const report = Report.parse(JSON.parse(r.stdout));
-    const inventory = report.nodes.find((n) => n.id === 'inventory')!;
-    expect(r.status).toBe(1);
-    expect(inventory).toMatchObject({ status: 'FAIL', expected: 2, observed: 2 });
-    expect(inventory.findings.map((f) => `${f.locator} ${f.message}`)).toEqual([
-      'pnpm-workspace.yaml:3 glob domain/*/api matches no package',
-      'pnpm-workspace.yaml:4 glob domain/*/web matches no package',
-    ]);
+    expect(report.nodes.find((n) => n.id === 'inventory')).toMatchObject({ status: 'PASS', expected: 2, observed: 2, findings: [] });
   }, 120_000);
 
-  it('check --only layout: a C.2 report; layout waits on inventory', () => {
+  it('check --only layout: PASS; the 09 §1.1 tier literals matching nothing are no finding (D-092)', () => {
     const r = devai(dir, 'check', '--only', 'layout', '--format', 'json');
     const report = Report.parse(JSON.parse(r.stdout));
-    expect(report.nodes.find((n) => n.id === 'layout')).toMatchObject({ status: 'UNKNOWN', reason: 'prerequisite-failed' });
+    expect(report.nodes.find((n) => n.id === 'layout')).toMatchObject({ status: 'PASS', findings: [] });
   }, 120_000);
 
   it('the compiled shells typecheck with tsc -b', () => {

@@ -1,22 +1,24 @@
 // 08 A.1 `devai init`, 09 §1. Materialise (no `devai.json` in --dir): validate every input, write the
 // 09 §1.1 tree from the installed package's `template/`, `git init` when the folder is not a work-tree
-// root, commit it as `chore(template): devai init <product>` (trailer `Packet: PKT-DEMO-001`), render
-// the four CMP-DEMO-001 packets with `base` = that commit and commit them. Attach (`devai.json` present):
-// rewrite only the three hooks. Both modes set the worktree's hooks path and agent identity (D-057,
-// D-058, 02 §5) and end with the preflight; exit 2 `tooling-missing` when an item does not resolve.
+// root, `pnpm add -D --save-exact @devai-nyx/cli@<own version>` (installs the workspace and completes the
+// lock, D-097), commit it as `chore(template): devai init <product>` (trailer `Packet: PKT-DEMO-001`),
+// render the four CMP-DEMO-001 packets with `base` = that commit and commit them, both commits with the
+// hooks live. Attach (`devai.json` present): rewrite only the three hooks. Both modes set the worktree's
+// hooks path and agent identity (D-057, D-058, 02 §5) and end with the preflight; exit 2
+// `tooling-missing` when an item does not resolve or the install failed (then nothing is committed).
 import { chmodSync, existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DevaiConfig } from '../config.js';
-import { git, topLevel } from '../git/git.js';
+import { git, GitFailed, topLevel } from '../git/git.js';
 import { CommandRefusal, cliVersion, type Format, loadConfig } from '../main.js';
 import { spawn } from '../proc/spawn.js';
 
 /** The template as installed with the CLI (`<package>/template`), never a repository checkout. */
 export const TEMPLATE_DIR = fileURLToPath(new URL('../../template/', import.meta.url));
 
-/** npm and pnpm drop these two names from a packed package, so the template stores them without the dot (D-074). */
-const RENAMED: Record<string, string> = { gitignore: '.gitignore', npmrc: '.npmrc' };
+/** npm and pnpm drop `.gitignore` and `.npmrc` from a packed package (D-074); the template stores its dotfiles without the dot. */
+const RENAMED: Record<string, string> = { gitignore: '.gitignore', npmrc: '.npmrc', prettierignore: '.prettierignore' };
 const HOOKS = ['scripts/hooks/pre-commit', 'scripts/hooks/pre-push', 'scripts/hooks/commit-msg'];
 const PACKETS = 'packets/';
 const BASE_LINE = /^base: [0-9a-f]{40}$/m;
@@ -208,9 +210,30 @@ function assertEmpty(dir: string): void {
 
 async function commit(dir: string, message: string, paths: string[]): Promise<string> {
   await git(dir, ['add', '-A', '--', ...paths]);
-  // The hooks run `pnpm exec devai`, which needs the install this command does not do (A.1 Writes).
-  await git(dir, ['commit', '--quiet', '--no-verify', '-F', '-'], { stdin: message });
+  // D-097: the install came first, so the hooks resolve and run; never `--no-verify`.
+  try {
+    await git(dir, ['commit', '--quiet', '-F', '-'], { stdin: message });
+  } catch (e) {
+    if (!(e instanceof GitFailed)) throw e;
+    // The hook's report (git sends hook output to stderr): its node lines and its closing stage line.
+    const lines = e.stderr.split('\n').map((l) => l.trim()).filter((l) => /^(FAIL|UNKNOWN)\b|^devai (pre-commit|commit-msg) /.test(l));
+    const tail = (lines.length > 0 ? lines : [e.message]).join(' · ');
+    throw new CommandRefusal('setup-failed', `git commit "${message.split('\n')[0]}" refused by the hooks: ${tail}; fix the findings, then commit by hand`);
+  }
   return (await git(dir, ['rev-parse', 'HEAD'])).toString('utf8').trim();
+}
+
+/** D-097: the one install materialise runs, and its remedy when it fails. */
+export const installCommand = (): [string, ...string[]] => ['pnpm', 'add', '-D', '--save-exact', `@devai-nyx/cli@${cliVersion()}`];
+const INSTALL_TIMEOUT_MS = 600_000;
+
+/** Runs the install in `dir` (host `pnpm` from PATH, the registry `.npmrc` names); the first error line on failure. */
+async function install(dir: string): Promise<string | null> {
+  const r = await spawn({ argv: installCommand(), cwd: dir, env: { ...process.env, COREPACK_ENABLE_DOWNLOAD_PROMPT: '0' }, timeoutMs: INSTALL_TIMEOUT_MS });
+  if (r.kind === 'missing') return 'pnpm not found on PATH';
+  if (r.code === 0 && !r.timedOut && !r.overflow) return null;
+  const text = `${r.stderr.toString('utf8')}\n${r.stdout.toString('utf8')}`;
+  return text.split('\n').map((l) => l.trim()).find((l) => /ERR_|error/i.test(l)) ?? (r.timedOut ? 'timed out' : `exited ${String(r.code)}`);
 }
 
 export async function init(opts: InitOptions, format: Format, cwd: string): Promise<{ stdout: string; exitCode: 0 | 2 }> {
@@ -220,6 +243,7 @@ export async function init(opts: InitOptions, format: Format, cwd: string): Prom
   let mode: 'bare' | 'docker';
   let gitConfig: Record<string, string>;
   const written: string[] = [];
+  let installFailure: string | null = null;
   const classes: Record<string, number> = {};
   const count = (cls: string, path: string) => {
     written.push(path);
@@ -258,16 +282,22 @@ export async function init(opts: InitOptions, format: Format, cwd: string): Prom
     const top = await topLevel(dir);
     if (top === null || realpathSync(top) !== realpathSync(dir)) await git(dir, ['init', '--quiet', '--initial-branch=main']);
     gitConfig = await configure(dir, product);
-    const template = await commit(dir, `chore(template): devai init ${product}\n\nPacket: PKT-DEMO-001\n`, ['.']);
-    for (const e of entries.filter((e) => e.path.startsWith(PACKETS))) {
-      write(dir, { ...e, bytes: Buffer.from(e.bytes!.toString('utf8').replace(BASE_LINE, `base: ${template}`), 'utf8') });
-      count('seed', e.path);
+    installFailure = await install(dir);
+    if (installFailure === null) {
+      const template = await commit(dir, `chore(template): devai init ${product}\n\nPacket: PKT-DEMO-001\n`, ['.']);
+      // D-095 as amended: `base` is the template commit for all four packets; campaign step 3 rebases
+      // PKT-DEMO-002 to HEAD before its commit.
+      for (const e of entries.filter((e) => e.path.startsWith(PACKETS))) {
+        write(dir, { ...e, bytes: Buffer.from(e.bytes!.toString('utf8').replace(BASE_LINE, `base: ${template}`), 'utf8') });
+        count('seed', e.path);
+      }
+      await commit(dir, 'chore(packets): seed CMP-DEMO-001\n', ['packets']);
     }
-    await commit(dir, 'chore(packets): seed CMP-DEMO-001\n', ['packets']);
   }
   const items = await preflight(dir, mode);
   const missing = items.filter((i) => i.status === 'missing');
-  const exitCode = missing.length > 0 ? 2 : 0;
+  const exitCode = missing.length > 0 || installFailure !== null ? 2 : 0;
+  const installLine = installFailure === null ? [] : [`devai: tooling-missing — install with ${installCommand().join(' ')} (${installFailure}); nothing was committed`];
 
   if (format === 'json') {
     return {
@@ -278,6 +308,7 @@ export async function init(opts: InitOptions, format: Format, cwd: string): Prom
   const lines = [
     ...Object.entries(classes).map(([cls, n]) => `${cls}: ${n} file${n === 1 ? '' : 's'} written`),
     ...Object.entries(gitConfig).map(([k, v]) => `git config ${k} ${v}`),
+    ...installLine,
     ...new Set(missing.map((i) => `UNKNOWN: tooling-missing — ${i.node}: install with ${i.remedy}`)),
     'protection: require the devai job',
   ];

@@ -69,13 +69,25 @@ describe('B.1 inventory', () => {
   });
 
   it('D-084 item 7: a workspace whose globs match no package is FAIL, never observed 0', async () => {
-    const dir = templateWorkspace({ 'pnpm-workspace.yaml': "packages:\n  - 'domain/*/api'\n" });
+    const dir = templateWorkspace({ 'pnpm-workspace.yaml': "packages:\n  - 'libs/*'\n" });
     const { outcome } = await inventoryOf(dir);
     expect(outcome).toMatchObject({ status: 'FAIL', expected: 0, observed: 0 });
-    expect(outcome.findings).toEqual([{ locator: 'pnpm-workspace.yaml:2', message: 'glob domain/*/api matches no package', standard: 'S-06', hint: 'remove it' }]);
+    expect(outcome.findings).toEqual([{ locator: 'pnpm-workspace.yaml:2', message: 'glob libs/* matches no package', standard: 'S-06', hint: 'remove it' }]);
     const none = await inventoryOf(templateWorkspace({ 'pnpm-workspace.yaml': 'packages: []\n' }));
     expect(none.outcome).toMatchObject({ status: 'FAIL', expected: 0, observed: 0 });
     expect(none.outcome.findings[0]).toMatchObject({ locator: 'pnpm-workspace.yaml:1', standard: 'S-06' });
+  });
+
+  it('D-092: the 09 §1.1 seed globs domain/*/api and domain/*/web never raise the no-match finding, before or after a module', async () => {
+    const ws = "packages:\n  - 'apps/*'\n  - 'domain/*/api'\n  - 'domain/*/web'\n  - 'libs/*'\n";
+    const fresh = await inventoryOf(templateWorkspace({ 'pnpm-workspace.yaml': ws }));
+    expect(fresh.outcome.findings.map((f) => f.message)).toEqual(['glob libs/* matches no package']);
+    const listed = await inventoryOf(templateWorkspace({
+      'pnpm-workspace.yaml': "packages:\n  - 'apps/*'\n  - 'domain/*/api'\n  - 'domain/*/web'\n",
+      'database/seed/modules.txt': `${'0'.repeat(64)}  domain/notes/db/demo_notes_notes.sql\n`,
+      'domain/notes/api/package.json': JSON.stringify({ name: '@demo/notes-api', type: 'module' }),
+    }));
+    expect(listed.outcome.findings.filter((f) => f.message.includes('matches no package'))).toEqual([]);
   });
 
   it('the root manifest is checked but not counted: a root without "type": "module" is FAIL with expected = packages', async () => {

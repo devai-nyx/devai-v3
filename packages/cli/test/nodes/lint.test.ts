@@ -67,6 +67,16 @@ describe('B.3 lint', () => {
     ]));
   });
 
+  it('devai/product-prefix leaves the mount census root alone: AppModule in apps/<app>/src/app.module.ts only (D-102 #66 Open 3, D-097)', async () => {
+    const files = "['src/**/*.ts', 'apps/*/src/**/*.ts']";
+    const config = ESLINT_CONFIG.split("files: ['src/**/*.ts']").join(`files: ${files}`);
+    const tsconfig = TSCONFIG.replace('"include": [\n    "src"\n  ]', '"include": [\n    "src",\n    "apps"\n  ]');
+    const mod = "declare function Module(o: object): ClassDecorator;\n@Module({})\nexport class AppModule {}\n";
+    const dir = workspace({ 'eslint.config.mjs': config, 'tsconfig.json': tsconfig, 'src/seed.ts': 'export const seed = 1;\n' }, { 'apps/api/src/app.module.ts': mod, 'src/app.module.ts': mod });
+    const o = await run(dir);
+    expect(o.findings.map((f) => `${f.locator} ${f.message}`)).toEqual(['src/app.module.ts:3:8 devai/product-prefix: class AppModule lacks the Demo prefix (D-032)']);
+  });
+
   it('FAIL: an expected file absent from the JSON (ignored by config) is a shortfall', async () => {
     const dir = workspace(BASE, { 'other.ts': 'export const o = 1;\n' });
     expect(await run(dir)).toEqual({

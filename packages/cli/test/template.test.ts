@@ -4,6 +4,8 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { prettyJson, renderConfig, TEMPLATE_DIR, templateEntries } from '../src/commands/init.js';
+import { defaultGlobs } from '../src/commands/packet.js';
+import { parsePacket } from '../src/packet/packet.js';
 import { DevaiConfig } from '../src/config.js';
 import { templateConfig } from './fixtures.js';
 
@@ -14,7 +16,7 @@ const tpl = (path: string) => readFileSync(resolve(TEMPLATE_DIR, path), 'utf8');
 /** 09 §1.1, row by row, as written by `init` (`devai.json` is rendered, not stored; D-074 renames). */
 const ROWS: string[] = [
   'README.md', 'AGENTS.md', 'CLAUDE.md', 'decisions.md', 'devai.json', 'package.json', 'pnpm-workspace.yaml', 'pnpm-lock.yaml',
-  '.gitignore', '.npmrc', '.stynxrc.json', 'tsconfig.test.json', 'eslint.config.mjs', 'vitest.config.ts', 'playwright.config.ts',
+  '.gitignore', '.npmrc', '.prettierignore', '.stynxrc.json', 'tsconfig.test.json', 'eslint.config.mjs', 'vitest.config.ts', 'playwright.config.ts',
   'tools/commitlint.config.mjs', '.changeset/config.json', 'compose.yaml',
   'scripts/hooks/pre-commit', 'scripts/hooks/pre-push', 'scripts/hooks/commit-msg', 'scripts/ci-local/run.sh',
   '.github/workflows/devai.yml',
@@ -124,6 +126,22 @@ describe('fixed-byte rows equal their law source', () => {
   it('the packets pin the spec digest', () => {
     const sha = createHash('sha256').update(readFileSync(resolve(TEMPLATE_DIR, 'specs/notes/SPEC-DEMO-001.md'))).digest('hex');
     for (const id of ['PKT-DEMO-002', 'PKT-DEMO-003', 'PKT-DEMO-004']) expect(tpl(`packets/CMP-DEMO-001/${id}.md`)).toContain(`sha256: "${sha}"`);
+  });
+
+  it('.prettierignore names the 09 §1.1 law texts, one per line (D-096); stored without its dot', () => {
+    expect(tpl('prettierignore')).toBe(['AGENTS.md', 'CLAUDE.md', '.agents/**', 'database/README.md', 'packets/**', 'specs/**', 'product/**', '.stynxrc.json'].join('\n') + '\n');
+  });
+
+  it('PKT-DEMO-002: paths.allowed are 08 A.4\'s generate globs plus its own path; protected [spec, standards, acceptance] (D-095)', () => {
+    const path = 'packets/CMP-DEMO-001/PKT-DEMO-002.md';
+    const p = parsePacket(path, tpl(path));
+    expect(p.allowed).toEqual([...defaultGlobs('generate', 'notes', null), path]);
+    expect(p.protected).toEqual(['spec', 'standards', 'acceptance']);
+  });
+
+  it('the template manifest ships without @devai-nyx/cli: materialise init adds it (D-097)', () => {
+    const pkg = JSON.parse(tpl('package.json')) as { devDependencies: Record<string, string>; dependencies?: Record<string, string> };
+    expect({ ...pkg.dependencies, ...pkg.devDependencies }).not.toHaveProperty('@devai-nyx/cli');
   });
 
   it('pnpm-workspace.yaml names the 09 §1.1 globs', () => expect(tpl('pnpm-workspace.yaml')).toBe('packages:\n  - apps/*\n  - domain/*/api\n  - domain/*/web\n'));

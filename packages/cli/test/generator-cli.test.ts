@@ -52,6 +52,8 @@ describe('09 §4 campaign steps 3–4 (PKT-DEMO-002)', () => {
     for (const row of s6.filter((x) => x.path.startsWith('domain/notes/') && x.mode !== '—')) expect(out).toContain(`${row.mode} ${row.path}`);
     expect(out).toContain('appended database/seed/modules.txt');
     expect(out).toContain(s6.find((x) => x.path === 'stdout')!.synopsis[0]);
+    expect(out).toContain('mount: add { "path": "../../domain/notes/api" } to apps/api/tsconfig.json references'); // D-093
+    expect(out.some((l) => l.includes('apps/web/tsconfig.json'))).toBe(false);
     expect(out).toContain('mount: add "domain/notes/api/src" to .stynxrc.json apiCoverage.sourceRoots');
     expect(out).toContain('mount: add "domain/notes" to .stynxrc.json publicApi.packageRoots');
     // 09 §6 row `database/seed/modules.txt  appended  <sha256>  domain/notes/db/demo_notes_notes.sql`

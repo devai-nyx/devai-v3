@@ -12,6 +12,7 @@ import { spawn } from '../proc/spawn.js';
 import { type NodeId, NODE_IDS } from '../runner/edges.js';
 import type { InventoryData, NodeOutcome, Population, RunContext } from '../runner/run.js';
 import { mountCensus } from '../ts/mounts.js';
+import { prettierIgnored } from './format.js';
 import { affectedClosure } from '../ts/program.js';
 
 type Finding = NodeOutcome['findings'][number];
@@ -60,6 +61,13 @@ export function satisfies(version: string, range: string): boolean {
 // ---- workspace globs ------------------------------------------------------------------------------
 
 /** One pnpm workspace glob against a package folder, with `ignore` (07 §3): anchored, one level per `*`. */
+/**
+ * D-092: the 09 §1.1 `domain/*` workspace globs are seed globs. A seed glob that matches no package is
+ * never the `glob <g> matches no package` finding (a module may be generated without `--web`); any
+ * other glob that matches nothing stays FAIL (D-084 item 7). `layout` reads the same set.
+ */
+export const SEED_GLOBS: ReadonlySet<string> = new Set(['domain/*/api', 'domain/*/web']);
+
 export function globMatches(glob: string, dir: string): boolean {
   const g = glob.replace(/^\.\//, '').replace(/\/$/, '');
   const ig = ignore().add(g.startsWith('/') ? g : `/${g}`);
@@ -91,6 +99,8 @@ interface PopulationFacts {
   locales: number;
   commitsSinceBase: number;
   packet: boolean;
+  /** D-096: a path `.prettierignore` names is not in `format`'s population. */
+  formatIgnored?: (path: string) => boolean;
 }
 
 const packageOf = (dirs: readonly string[], path: string): string =>
@@ -125,7 +135,7 @@ export function populations(f: PopulationFacts): Record<NodeId, Population> {
   const testPath = (p: string) => /^(test\/|apps\/[^/]+\/test\/|domain\/[^/]+\/(api|web)\/test\/)/.test(p);
   return {
     inventory: always('always applies', f.manifests.filter((m) => m.dir !== '.').length),
-    format: n('no changed *.{ts,mjs,json,md}', cp.filter((p) => ext(p, '.ts', '.mjs', '.json', '.md')).length),
+    format: n('no changed *.{ts,mjs,json,md}', cp.filter((p) => ext(p, '.ts', '.mjs', '.json', '.md') && !(f.formatIgnored?.(p) ?? false)).length),
     lint: n('no changed *.ts, *.mts or *.html', cp.filter((p) => ext(p, '.ts', '.mts', '.html')).length),
     'lint-tests': n('no changed *.spec.ts', cp.filter((p) => p.endsWith('.spec.ts')).length),
     typecheck: n('no affected project', affected.size),
@@ -194,7 +204,7 @@ export async function runInventory(ctx: RunContext): Promise<{ outcome: NodeOutc
   const findings: Finding[] = [];
   const unknown: { reason: Reason; finding: Finding }[] = [];
 
-  // Workspace globs → package folders (real packages only, 04 §1).
+  // Workspace globs → package folders (real packages only, 04 §1). A seed glob (D-092) is never a finding.
   const wsText = present.has('pnpm-workspace.yaml') ? readText(root, 'pnpm-workspace.yaml') : null;
   let globs: string[] = [];
   if (wsText !== null) {
@@ -211,7 +221,7 @@ export async function runInventory(ctx: RunContext): Promise<{ outcome: NodeOutc
   const packageDirs = candidates.filter((d) => positive.some((g) => globMatches(g, d)) && !negative.some((g) => globMatches(g, d))).sort();
   const wsLines = (wsText ?? '').split('\n');
   for (const g of positive) {
-    if (!candidates.some((d) => globMatches(g, d))) {
+    if (!SEED_GLOBS.has(g) && !candidates.some((d) => globMatches(g, d))) {
       const line = wsLines.findIndex((l) => l.includes(g)) + 1 || 1;
       findings.push({ locator: `pnpm-workspace.yaml:${line}`, message: `glob ${g} matches no package`, standard: 'S-06', hint: 'remove it' });
     }
@@ -306,7 +316,7 @@ export async function runInventory(ctx: RunContext): Promise<{ outcome: NodeOutc
   const changedSet = new Set<string>(ctx.hook === 'pre-commit'
     ? (await diffNameStatus(root, { cached: true, diffFilter: 'ACMRD' })).map((d) => d.path)
     : [
-      ...(await diffNameStatus(root, { from: 'HEAD' })).map((d) => d.path),
+      ...(await diffNameStatus(root, { from: ctx.head })).map((d) => d.path),
       ...listing.untracked,
       ...(ctx.base ? (await diffNameStatus(root, { from: ctx.base, to: 'HEAD' })).map((d) => d.path) : []),
     ]);
@@ -326,7 +336,7 @@ export async function runInventory(ctx: RunContext): Promise<{ outcome: NodeOutc
     packageDirs,
     populations: populations({
       paths, changed, changedPresent: changed.filter((p) => present.has(p)), packageDirs: ['.', ...packageDirs], manifests,
-      locales: ctx.config.locales.length, commitsSinceBase, packet: ctx.packet !== undefined,
+      locales: ctx.config.locales.length, commitsSinceBase, packet: ctx.packet !== undefined, formatIgnored: prettierIgnored(root),
     }),
   };
   const details = {

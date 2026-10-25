@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import ignore from 'ignore';
 import { parse as parseYaml } from 'yaml';
-import { globMatches } from './inventory.js';
+import { globMatches, SEED_GLOBS } from './inventory.js';
 import type { NodeAdapter, RunContext } from '../runner/run.js';
 import { type Finding, outcome, type Unknown } from '../ts/outcome.js';
 import { parse, walk, ts } from '../ts/program.js';
@@ -140,6 +140,20 @@ function pathPredicates(root: string, unreadable: string[]): Predicate[] {
   ];
 }
 
+/**
+ * D-092 (#66 Open 2): the 09 §1.1 `vitest.config.ts` tier literals are read as the seed globs are. The
+ * template enables a tier only when its patterns match a file, so a shipped literal matching nothing is
+ * a disabled tier, not a finding; any other tier literal that matches nothing stays FAIL (S-62).
+ */
+export const SEED_TIER_GLOBS: ReadonlySet<string> = new Set([
+  'domain/*/api/test/*.spec.ts',
+  'domain/*/web/test/*.spec.ts',
+  'apps/*/test/*.spec.ts',
+  'domain/*/api/test/acceptance/*.acceptance.spec.ts',
+  'test/integration/*.integration.spec.ts',
+  'test/db/*.db.spec.ts',
+]);
+
 /** Tier globs of `vitest.config.ts`: string literals that are path globs (contain `*`, end in `.ts`). */
 export function tierGlobs(text: string): { glob: string; line: number }[] {
   const sf = parse('vitest.config.ts', text);
@@ -179,7 +193,7 @@ export const layout: NodeAdapter = {
       n++;
       if (!present.has('docs/_ia/categories.json')) findings.push({ locator: 'docs/_ia/categories.json:1', message: 'docs layout: docs/_ia/categories.json is missing', standard: '04 §5', hint: 'add docs/_ia/categories.json' });
     }
-    // Workspace globs name real packages (04 §1).
+    // Workspace globs name real packages (04 §1); a seed glob is exempt (D-092, as in inventory).
     const ws = present.has('pnpm-workspace.yaml') ? read(ctx.root, 'pnpm-workspace.yaml') : null;
     if (present.has('pnpm-workspace.yaml') && ws === null) unreadable.push('pnpm-workspace.yaml');
     let globs: string[] = [];
@@ -193,7 +207,7 @@ export const layout: NodeAdapter = {
     const wsLines = (ws ?? '').split('\n');
     for (const g of globs) {
       n++;
-      if (!pkgDirs.some((d) => globMatches(g, d))) {
+      if (!SEED_GLOBS.has(g) && !pkgDirs.some((d) => globMatches(g, d))) {
         findings.push({ locator: `pnpm-workspace.yaml:${wsLines.findIndex((l) => l.includes(g)) + 1 || 1}`, message: `workspace globs: ${g} names no real package`, standard: '04 §1', hint: 'remove the glob' });
       }
     }
@@ -203,6 +217,7 @@ export const layout: NodeAdapter = {
       if (t === null) unreadable.push('vitest.config.ts');
       for (const { glob, line } of t === null ? [] : tierGlobs(t)) {
         n++;
+        if (SEED_TIER_GLOBS.has(glob)) continue;
         const ig = ignore().add(glob);
         if (!paths.some((p) => ig.ignores(p))) findings.push({ locator: `vitest.config.ts:${line}`, message: `tier glob: ${glob} matches no file`, standard: '04 §4', hint: "add the tier's first file or remove the glob (S-62)" });
       }

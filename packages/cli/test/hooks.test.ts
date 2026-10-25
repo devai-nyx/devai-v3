@@ -185,7 +185,7 @@ describe('A.7 pre-push in process (stub adapters for the nodes other waves own)'
     expect(lines).toContain('protected:ci — .github/workflows/ci.yml (no packet)');
     expect(lines.at(-2)).toBe(`devai pre-push PASS — 13 nodes over ${base.slice(0, 7)}..${head.slice(0, 7)}`);
 
-    // unresolvable base: protected-paths UNKNOWN base-unreadable (exit 2: C.2 has no non-gating UNKNOWN row)
+    // unresolvable base: protected-paths UNKNOWN base-unreadable, exit 2 like any gating UNKNOWN (D-099: C.2 over A.7's notice)
     const u = await check(['--hook', 'pre-push'], { hook: 'pre-push', stdin: '' }, 'json', ws);
     const report = Report.parse(JSON.parse(u.stdout));
     expect(report.nodes.find((n) => n.id === 'protected-paths')).toMatchObject({ status: 'UNKNOWN', reason: 'base-unreadable' });

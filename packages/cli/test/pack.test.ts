@@ -4,6 +4,7 @@ import { lstatSync, mkdtempSync, readdirSync, readlinkSync, symlinkSync } from '
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { pnpmShim } from './pnpm-shim.js';
 
 const root = resolve(import.meta.dirname, '..');
 
@@ -34,8 +35,10 @@ describe('pnpm pack', () => {
 
     expect(spawnSync('tar', ['-xzf', tarball, '-C', dest]).status).toBe(0);
     symlinkSync(resolve(root, 'node_modules'), resolve(dest, 'package/node_modules'));
-    const r = spawnSync(process.execPath, [resolve(dest, 'package/dist/main.js'), 'init', '--product', 'demo', '--dir', resolve(dest, 'w')], { encoding: 'utf8' });
-    expect(r.status, r.stdout + r.stderr).toBe(2); // tooling-missing: nothing is installed in w
+    // D-097: the install is stubbed by a PATH pnpm (test/pnpm-shim.ts), so only the CLI is in w.
+    const r = spawnSync(process.execPath, [resolve(dest, 'package/dist/main.js'), 'init', '--product', 'demo', '--dir', resolve(dest, 'w')], { encoding: 'utf8', env: pnpmShim('stub').env });
+    expect(r.status, r.stdout + r.stderr).toBe(2); // tooling-missing: nothing else is installed in w
+    expect(lstatSync(resolve(dest, 'w/.prettierignore')).isFile()).toBe(true);
     expect(lstatSync(resolve(dest, 'w/scripts/hooks/pre-commit')).mode & 0o111).not.toBe(0);
     expect(readlinkSync(resolve(dest, 'w/.claude/skills/devai-task'))).toBe('../../.agents/skills/devai-task');
     expect(lstatSync(resolve(dest, 'w/.npmrc')).isFile()).toBe(true);

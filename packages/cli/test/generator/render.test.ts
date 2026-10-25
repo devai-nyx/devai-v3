@@ -2,10 +2,11 @@
 // 09 §2.1 mapping across options, determinism and the shapes of the emitted TypeScript.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { check } from 'prettier';
 import ts from 'typescript';
-import { describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 import { entriesOf, manifestOf, manifestText } from '../../src/generator/manifest.js';
-import { render, renderBlock, type RenderOptions } from '../../src/generator/render.js';
+import { MODULE_PINS, PRETTIER_OPTIONS, render, renderBlock, type Rendered, type RenderOptions } from '../../src/generator/render.js';
 import { cliVersion } from '../../src/main.js';
 import { MachineBlock } from '../../src/spec/machine-block.js';
 import { parseSpec } from '../../src/spec/parse-spec.js';
@@ -16,26 +17,27 @@ const specBytes = readFileSync(resolve(template, 'specs/notes/SPEC-DEMO-001.md')
 /** 09 §6 configuration: 06 §7's (`productPrefix: demo`, `lgpd: true`, `locales: [en-US]`), no `--web`. */
 const S6: RenderOptions = { web: false, locales: ['en-US'], lgpd: true, productPrefix: 'demo' };
 const version = cliVersion();
-const text = (r: ReturnType<typeof render>, p: string) => r.get(p)!.bytes.toString('utf8');
+const text = (r: Rendered, p: string) => r.get(p)!.bytes.toString('utf8');
 const valid = () => { const p = parseSpec(specBytes.toString('utf8')); if (p.kind !== 'valid') throw new Error(p.kind); return p; };
 
 describe('09 §6 worked example', () => {
-  const rendered = render(specBytes, S6, version);
+  let rendered: Rendered;
+  beforeAll(async () => { rendered = await render(specBytes, S6, version); });
   const subst = { header: '// @generated from SPEC-DEMO-001 do not edit', version };
   const module = rows().filter((r) => r.path.startsWith('domain/notes/'));
 
-  it('the fixture is the bytes of the 09 §6 block', () => {
+  it('the fixture is the bytes of the 09 §6 block', async () => {
     expect(readFileSync(FIXTURE, 'utf8')).toBe(lawBlock());
   });
 
-  it('the file set and every mode are §6’s', () => {
+  it('the file set and every mode are §6’s', async () => {
     const files = module.filter((r) => r.path !== 'domain/notes/generation-manifest.json');
     expect([...rendered.keys()]).toEqual(files.map((r) => r.path.slice('domain/notes/'.length)).sort());
     for (const r of files) expect([r.path, rendered.get(r.path.slice('domain/notes/'.length))!.mode]).toEqual([r.path, r.mode]);
     expect(module.find((r) => r.path === 'domain/notes/generation-manifest.json')!.mode).toBe('—');
   });
 
-  it('every file carries §6’s text, in §6’s order', () => {
+  it('every file carries §6’s text, in §6’s order', async () => {
     const p = valid();
     const manifest = manifestText(manifestOf({ id: 'SPEC-DEMO-001', sha256: '0'.repeat(64), machineBlockSha256: p.machineBlockSha256 }, S6, version, entriesOf(rendered)));
     for (const r of module) {
@@ -45,15 +47,22 @@ describe('09 §6 worked example', () => {
     }
   });
 
-  it('rows §6 gives whole are byte-identical: api/tsconfig.json, api/src/index.ts, acceptance/.gitkeep', () => {
+  it('rows §6 gives whole are byte-identical: api/tsconfig.json (D-093), api/src/index.ts; no acceptance folder (D-095)', async () => {
     const whole = (path: string) => rows().find((r) => r.path === `domain/notes/${path}`)!.synopsis.map((l) => (l.trim() === 'G' ? subst.header : l)).join('\n');
     expect(normalise(text(rendered, 'api/tsconfig.json'))).toBe(normalise(whole('api/tsconfig.json')));
     expect(text(rendered, 'api/src/index.ts')).toBe(whole('api/src/index.ts').split('  ').join('\n') + '\n');
-    expect(rows().find((r) => r.path.endsWith('.gitkeep'))!.synopsis).toEqual(['(empty)']);
-    expect(rendered.get('api/test/acceptance/.gitkeep')!.bytes.length).toBe(0);
+    expect([...rendered.keys()].filter((p) => p.startsWith('api/test/acceptance'))).toEqual([]);
   });
 
-  it('headers: `//` in TS and JSONC, `--` in SQL, `<!-- -->` in Markdown; seeds carry none (02 §7, P-5-03)', () => {
+  it('api/package.json lists every package the emitted code imports, exact at the 07 §2 pins (D-094)', async () => {
+    const pkg = JSON.parse(text(rendered, 'api/package.json')) as { dependencies: Record<string, string> };
+    expect(pkg.dependencies).toEqual({ '@devai-nyx/decorators': version, ...MODULE_PINS });
+    const imported = new Set<string>();
+    for (const [p, f] of rendered) if (p.startsWith('api/src/')) for (const m of f.bytes.toString('utf8').matchAll(/from '(@[^/']+\/[^/']+|[^.@'][^/']*)'/g)) imported.add(m[1]!);
+    expect([...imported].sort()).toEqual(Object.keys(pkg.dependencies).sort());
+  });
+
+  it('headers: `//` in TS and JSONC, `--` in SQL, `<!-- -->` in Markdown; seeds carry none (02 §7, P-5-03)', async () => {
     for (const [path, f] of rendered) {
       const first = f.bytes.toString('utf8').split('\n')[0]!;
       const want = path.endsWith('.sql') ? '-- @generated from SPEC-DEMO-001 do not edit' : path.endsWith('.md') ? '<!-- @generated from SPEC-DEMO-001 do not edit -->' : subst.header;
@@ -64,14 +73,14 @@ describe('09 §6 worked example', () => {
 });
 
 describe('09 §2 render', () => {
-  it('is deterministic: identical inputs give identical bytes (INV-CLI-002)', () => {
-    const a = render(specBytes, S6, version);
-    const b = render(Buffer.from(specBytes), { ...S6 }, version);
+  it('is deterministic: identical inputs give identical bytes (INV-CLI-002)', async () => {
+    const a = await render(specBytes, S6, version);
+    const b = await render(Buffer.from(specBytes), { ...S6 }, version);
     expect([...a].map(([p, f]) => [p, f.mode, f.bytes.toString('hex')])).toEqual([...b].map(([p, f]) => [p, f.mode, f.bytes.toString('hex')]));
   });
 
-  it('every emitted TypeScript file is syntactically valid', () => {
-    const all = render(specBytes, { ...S6, web: true, locales: ['en-US', 'pt-BR'] }, version);
+  it('every emitted TypeScript file is syntactically valid', async () => {
+    const all = await render(specBytes, { ...S6, web: true, locales: ['en-US', 'pt-BR'] }, version);
     for (const [path, f] of all) {
       if (!path.endsWith('.ts')) continue;
       const out = ts.transpileModule(f.bytes.toString('utf8'), { reportDiagnostics: true, fileName: path, compilerOptions: { experimentalDecorators: true, target: ts.ScriptTarget.ES2022 } });
@@ -79,8 +88,19 @@ describe('09 §2 render', () => {
     }
   });
 
-  it('pt-BR: one catalog per configured locale, keys sorted, exported from the barrel', () => {
-    const r = render(specBytes, { ...S6, locales: ['en-US', 'pt-BR'] }, version);
+  it('every emitted file but SQL is Prettier-clean under the template options (09 §2, D-096)', async () => {
+    const pkg = JSON.parse(readFileSync(resolve(template, 'package.json'), 'utf8')) as { prettier: unknown };
+    expect(PRETTIER_OPTIONS).toEqual(pkg.prettier);
+    for (const web of [false, true]) {
+      for (const [path, f] of await render(specBytes, { ...S6, web, locales: ['en-US', 'pt-BR'] }, version)) {
+        if (path.endsWith('.sql')) continue;
+        expect([path, await check(f.bytes.toString('utf8'), { ...PRETTIER_OPTIONS, filepath: `domain/notes/${path}` })]).toEqual([path, true]);
+      }
+    }
+  });
+
+  it('pt-BR: one catalog per configured locale, keys sorted, exported from the barrel', async () => {
+    const r = await render(specBytes, { ...S6, locales: ['en-US', 'pt-BR'] }, version);
     expect(text(r, 'api/src/notes.i18n.pt-br.ts')).toBe([
       '// @generated from SPEC-DEMO-001 do not edit',
       'export const demoNotesPtBr = {',
@@ -95,13 +115,13 @@ describe('09 §2 render', () => {
     expect(text(r, 'api/src/index.ts')).toContain("export { demoNotesPtBr } from './notes.i18n.pt-br.js';");
   });
 
-  it('lgpd off: no `-- @pii` line (LINT012 applies only under lgpd)', () => {
-    expect(text(render(specBytes, { ...S6, lgpd: false }, version), 'db/demo_notes_notes.sql')).not.toContain('@pii');
-    expect(text(render(specBytes, S6, version), 'db/demo_notes_notes.sql')).toMatch(/-- @pii: basis=RN-DEMO-002\/demo-consent, retention=RN-DEMO-002\/until-workspace-destruction\n {2}"author_alias"/);
+  it('lgpd off: no `-- @pii` line (LINT012 applies only under lgpd)', async () => {
+    expect(text(await render(specBytes, { ...S6, lgpd: false }, version), 'db/demo_notes_notes.sql')).not.toContain('@pii');
+    expect(text(await render(specBytes, S6, version), 'db/demo_notes_notes.sql')).toMatch(/-- @pii: basis=RN-DEMO-002\/demo-consent, retention=RN-DEMO-002\/until-workspace-destruction\n {2}"author_alias"/);
   });
 
-  it('--web: the 09 §2.1 web row (detail component for the parameterised GET; no list without a collection GET)', () => {
-    const r = render(specBytes, { ...S6, web: true }, version);
+  it('--web: the 09 §2.1 web row (detail component for the parameterised GET; no list without a collection GET)', async () => {
+    const r = await render(specBytes, { ...S6, web: true }, version);
     const web = [...r].filter(([p]) => p.startsWith('web/')).map(([p, f]) => `${f.mode} ${p}`);
     expect(web).toEqual([
       'seed web/package.json', 'generated web/src/index.ts', 'seed web/src/note-detail.component.ts', 'seed web/src/note.service.ts',
@@ -114,12 +134,12 @@ describe('09 §2 render', () => {
     expect(text(r, 'web/src/notes.routes.ts')).toContain("export const demoNotesRoutes: Routes = [{ path: 'notes/:id', component: DemoNoteDetailComponent }];");
   });
 
-  it('api/package.json pins @devai-nyx/decorators at the generator version (09 §2, D-074)', () => {
-    const pkg = JSON.parse(text(render(specBytes, S6, '9.8.7'), 'api/package.json')) as { dependencies: Record<string, string> };
+  it('api/package.json pins @devai-nyx/decorators at the generator version (09 §2, D-074)', async () => {
+    const pkg = JSON.parse(text(await render(specBytes, S6, '9.8.7'), 'api/package.json')) as { dependencies: Record<string, string> };
     expect(pkg.dependencies['@devai-nyx/decorators']).toBe('9.8.7');
   });
 
-  it('lowering: key idempotency, integer/boolean/timestamptz leaves, nullable and optional inputs, CHECKs', () => {
+  it('lowering: key idempotency, integer/boolean/timestamptz leaves, nullable and optional inputs, CHECKs', async () => {
     const b = structuredClone(valid().block) as MachineBlock;
     b.data.tables[0]!.columns.push(
       { name: 'rank', type: 'integer', limits: { minimum: 0, maximum: 9 }, nullable: true },
@@ -131,11 +151,12 @@ describe('09 §2 render', () => {
     post.request.body['rank'] = { column: 'note.rank', required: false };
     post.request.body['pinned'] = { column: 'note.pinned', required: true };
     post.request.body['due_at'] = { column: 'note.due_at', required: true };
-    const r = renderBlock(MachineBlock.parse(b), S6, version);
+    const r = await renderBlock(MachineBlock.parse(b), S6, version);
     const dto = text(r, 'api/src/dto/create-note.dto.ts');
     expect(dto).toContain('  rank: z.number().int().min(0).max(9).nullable().optional(),');
     expect(dto).toContain('  pinned: z.boolean(),');
-    expect(dto).toContain(`  due_at: z.string().datetime().refine((v) => Date.parse(v) >= ${Date.parse('2026-01-01T00:00:00Z')} && Date.parse(v) <= ${Date.parse('2027-01-01T00:00:00Z')}),`);
+    // D-096: Prettier breaks the over-long member chain one call per line.
+    expect(dto).toContain(`  due_at: z\n    .string()\n    .datetime()\n    .refine((v) => Date.parse(v) >= ${Date.parse('2026-01-01T00:00:00Z')} && Date.parse(v) <= ${Date.parse('2027-01-01T00:00:00Z')}),`);
     const controller = text(r, 'api/src/notes.controller.ts');
     expect(controller).toContain("  @Idempotent({ headerName: 'Idempotency-Key', ttlMs: 86400000 })");
     expect(controller).toContain("import { Idempotent, NoIdempotent } from '@stynx-nyx/idempotency';");

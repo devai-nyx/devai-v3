@@ -1,0 +1,8 @@
+AGENTS.md
+CLAUDE.md
+.agents/**
+database/README.md
+packets/**
+specs/**
+product/**
+.stynxrc.json
