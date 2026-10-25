@@ -1,14 +1,14 @@
 ---
 title: Decisions
 sidebar_position: 12
-description: Index of the 121 numbered decisions D-001 to D-121 in decisions.md, with date and title.
+description: Index of the 122 numbered decisions D-001 to D-122 in decisions.md, with date and title.
 ---
 
 # Decisions
 
-[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **121 decisions** (D-001…D-121), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
+[`decisions.md`](../../decisions.md) at the repository root is the record of binding choices. It is part of the law: these pages explain and route to it, never amend it. This index lists all **122 decisions** (D-001…D-122), with the date and title exactly as each heading gives them. The text of a decision, its options and its source are in the file.
 
-Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 28 on 2026-10-24 (D-075…D-102), 19 on 2026-10-25 (D-103…D-121). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
+Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-065), 6 on 2026-10-19 (D-066…D-071), 3 on 2026-10-21 (D-072…D-074), 28 on 2026-10-24 (D-075…D-102), 20 on 2026-10-25 (D-103…D-122). Between D-035 and D-036 the file also holds a section "Corrections accepted from cross-review (no new decision needed)", which has no number.
 
 | Id | Date | Title |
 |---|---|---|
@@ -133,17 +133,17 @@ Dates: 24 decisions on 2026-10-17 (D-001…D-024), 41 on 2026-10-18 (D-025…D-0
 | D-119 | 2026-10-25 | R6 clause 2 is met at 09 §4 steps 1–4; steps 5–8 are R8 acceptance; R6 closes at 10/10 modulo the S10 list |
 | D-120 | 2026-10-25 | `init`'s packets commit carries `Packet: CMP-DEMO-001`; both `init` commits are recognised by their trailers (amends D-115, D-118) |
 | D-121 | 2026-10-25 | W11's `config-mismatch` readings are ratified (devai-v3#76 Open 1, 3, 4) |
+| D-122 | 2026-10-25 | The `Packet:` trailer takes the campaign id on `init`'s packets commit only; packet-id readers skip `CMP-` values (amends D-050's form) |
 
 ## Still open
 
-The file's closing "Open" section lists six items ([decisions.md](../../decisions.md)):
+The file's closing "Open" section lists five items ([decisions.md](../../decisions.md)):
 
 - [D-026](../../decisions.md) (`kind:` packets) is provisional until the first DETRAN module is built with `kind:` packets.
 - [D-047](../../decisions.md) (edit-loop ceiling) is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
 - Mutation testing's home ([D-004](../../decisions.md)): outside the cycle or not at all; not blocking v3.0.
 - The 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck ([D-058](../../decisions.md)); not blocking v3.0.
 - STYNX's local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 ([D-069](../../decisions.md)); a STYNX item, not blocking 3.0.0.
-- [D-120](../../decisions.md)'s trailer `Packet: CMP-DEMO-001` holds a campaign id where 02 §5 and 05 §2 give the trailer a packet id; not ruled.
 
 ## How decisions are made
 

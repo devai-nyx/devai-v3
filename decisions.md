@@ -1786,14 +1786,25 @@ reading changes framework text it is applied: 08 A.1 (Arguments: the field names
 ruled by D-120. No code change: W11 already behaves as ratified. Source: Owner (panels, 2026-10-25;
 packet `PACKET-2026-10-24-R6-CLOSE.md` Part G, Owner's workspace).
 
+## D-122 · 2026-10-25 · The `Packet:` trailer takes the campaign id on `init`'s packets commit only; packet-id readers skip `CMP-` values (amends D-050's form)
+[fact] D-120 gives `init`'s packets commit the trailer `Packet: CMP-DEMO-001`, a campaign id, while 02 §5
+gives agent commits the trailer `Packet: PKT-<PRODUCT>-nnn` (D-050; `02-architecture.md:256`) and 05 §2
+calls the trailer the packet `id` (`05-task-packet.md:31`); the code's trailer readers take any value
+(PL-12 builds a set, `packages/cli/src/packet/rules.ts:405`) (devai-v3#78 Open 1). Options: (a) 02 §5
+and 05 §2 widen the `Packet:` trailer form for `init`'s packets commit only, which carries the campaign
+id `CMP-<PRODUCT>-nnn` (`Packet: CMP-DEMO-001` in the template); every other commit keeps
+`PKT-<PRODUCT>-nnn` (D-050); readers that expect a packet id (PL-12 in `packet/rules.ts`, 05 §2's `id`
+reading) skip `CMP-` values and count such a commit as carrying no packet; (b) a separate `Campaign:`
+trailer key; (c) no form rule anywhere. Recommended: (a). It keeps D-120's one trailer key, which D-118's
+reading and `init`'s detection already use, and confines the exception to one commit; (b) adds a
+trailer key no reader has; (c) drops D-050's form for every commit. D-050 is not edited; this entry
+states its one exception. Amends 02 §5 (Identity), 02 §11 (Packets row), 05 §2 (`id` row), 05 §5
+(PL-12), docs/reference/glossary.md. Code follow-up: PL-12 skips `CMP-` trailer values. Chosen: (a).
+Source: Owner (panel, 2026-10-25; packet `PACKET-2026-10-24-R6-CLOSE.md` Part H, Owner's workspace).
+
 ## Open
 - D-026 is provisional until the first DETRAN module is built with `kind:` packets.
 - D-047 is provisional until the edit-loop p95 is measured on STYNX and DETRAN in both runtimes.
 - Mutation testing's home (D-004: outside the cycle or not at all) — not blocking v3.0.
 - 02 §3 step 3 `EXPLAIN` cardinality heuristic: finding or struck (D-058) — not blocking v3.0.
 - STYNX local RC runs PostgreSQL 18 while STYNX CI and v3 pin 16 (D-069) — STYNX item, not blocking 3.0.0.
-- D-120's trailer value `CMP-DEMO-001` is a campaign id, while 02 §5 gives agent commits the trailer
-  `Packet: PKT-<PRODUCT>-nnn` (D-050) and 05 §2 calls the trailer the packet `id`. The code's trailer
-  readers take any value (PL-12 builds a set, `packages/cli/src/packet/rules.ts:405`; `init` reads
-  them per commit, `packages/cli/src/commands/init.ts:247`), but whether 02 §5/05 §2 widen the trailer's form
-  for `init`'s commit, or readers that expect a packet id must skip it, is not ruled.
