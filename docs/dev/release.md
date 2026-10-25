@@ -44,6 +44,8 @@ readings ruled in [D-084](../../decisions.md)–[D-088](../../decisions.md) and 
 [D-092](../../decisions.md)–[D-102](../../decisions.md) rule W9's open items: R6 closes modulo the
 S10 list of STYNX defects ([D-100](../../decisions.md)), and the W10 fix wave applies the rulings in
 code and template.
+[D-103](../../decisions.md)–[D-107](../../decisions.md) rule W10's open items (module manifests,
+fresh-module dead code, the web `unit` setup, the step 3 build, W10's readings); W11 applies them.
 R7 is confirmed on the release host.
 
 **Not blocking 3.0.0** (12 §4): the D-047 edit-loop p95 measurement (3.0.0 ships 90000); the first
